@@ -1,0 +1,227 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Users (both agents and admins)
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String?
+  role          String    @default("agent") // agent, admin, recruiter
+  firstName     String
+  lastName      String
+  phone         String?
+  isActive      Boolean   @default(true)
+  lastLogin     DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  agent         Agent?
+  adminUser     AdminUser?
+  reviewedApplications Application[] @relation("ReviewedBy")
+}
+
+// Agent profile
+model Agent {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  atsId           String    @unique @default(cuid())
+  pipelineStatus  String    @default("applied")
+  pipelineStage   Int       @default(1)
+  applicationDate DateTime  @default(now())
+  lastStatusChange DateTime @default(now())
+
+  // Profile data stored as JSON
+  address         String?   // JSON
+  languages       String?   // JSON array
+  skills          String?   // JSON array
+  experience      String?   // JSON array
+  equipment       String?   // JSON
+  availability    String?   // JSON
+  scores          String?   // JSON
+
+  preferredLanguage String  @default("en")
+  timezone          String  @default("America/New_York")
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  applications    Application[]
+  documents       Document[]
+  notifications   Notification[]
+}
+
+// Admin users
+model AdminUser {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  department  String?
+  createdBy   String?
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+// Opportunities (formerly Campaigns)
+model Opportunity {
+  id          String    @id @default(cuid())
+  name        String
+  description String
+  client      String
+  status      String    @default("draft") // draft, active, paused, closed
+  category    String?
+
+  // Requirements stored as JSON
+  requirements String?  // JSON
+
+  // Compensation stored as JSON
+  compensation String?  // JSON
+
+  // Schedule stored as JSON
+  schedule    String?   // JSON
+
+  // Capacity
+  maxAgents       Int     @default(50)
+  currentAgents   Int     @default(0)
+  openPositions   Int     @default(50)
+
+  // Training stored as JSON
+  training    String?   // JSON
+
+  // Tags as JSON array
+  tags        String?   // JSON array
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  questions   ApplicationQuestion[]
+  applications Application[]
+}
+
+// Application Questions for Opportunities
+model ApplicationQuestion {
+  id              String    @id @default(cuid())
+  opportunityId   String
+  opportunity     Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  question        String
+  questionEs      String?
+  type            String    // text, textarea, select, multiselect, checkbox, radio, file, date, number
+  required        Boolean   @default(false)
+  order           Int       @default(0)
+
+  // Options stored as JSON for select/multiselect/radio
+  options         String?   // JSON array
+
+  placeholder     String?
+  placeholderEs   String?
+
+  // Validation stored as JSON
+  validation      String?   // JSON
+
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations
+  answers         ApplicationAnswer[]
+}
+
+// Applications
+model Application {
+  id              String    @id @default(cuid())
+  agentId         String
+  agent           Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  opportunityId   String
+  opportunity     Opportunity @relation(fields: [opportunityId], references: [id], onDelete: Cascade)
+
+  status          String    @default("pending") // pending, in_review, approved, rejected, withdrawn
+
+  submittedAt     DateTime  @default(now())
+  reviewedAt      DateTime?
+  reviewedById    String?
+  reviewedBy      User?     @relation("ReviewedBy", fields: [reviewedById], references: [id])
+  notes           String?
+
+  // Email notification tracking
+  confirmationEmailSent Boolean @default(false)
+  confirmationEmailSentAt DateTime?
+
+  // Relations
+  answers         ApplicationAnswer[]
+
+  @@unique([agentId, opportunityId])
+}
+
+// Application Answers
+model ApplicationAnswer {
+  id              String    @id @default(cuid())
+  applicationId   String
+  application     Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  questionId      String
+  question        ApplicationQuestion @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  // Value stored as JSON to support different types
+  value           String    // JSON
+
+  createdAt       DateTime  @default(now())
+}
+
+// Documents
+model Document {
+  id          String    @id @default(cuid())
+  agentId     String
+  agent       Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  type        String    // w9, nda, contract, id_front, id_back, etc.
+  name        String
+  url         String
+  status      String    @default("pending") // pending, approved, rejected
+
+  uploadedAt  DateTime  @default(now())
+  reviewedAt  DateTime?
+  reviewedBy  String?
+  expiresAt   DateTime?
+  notes       String?
+}
+
+// Notifications
+model Notification {
+  id          String    @id @default(cuid())
+  agentId     String
+  agent       Agent     @relation(fields: [agentId], references: [id], onDelete: Cascade)
+
+  type        String    // status_change, document_approved, opportunity_available, etc.
+  title       String
+  message     String
+  read        Boolean   @default(false)
+  actionUrl   String?
+
+  createdAt   DateTime  @default(now())
+}
+
+// Email logs
+model EmailLog {
+  id          String    @id @default(cuid())
+  to          String
+  subject     String
+  template    String
+  status      String    @default("pending") // pending, sent, failed
+  error       String?
+
+  metadata    String?   // JSON
+
+  createdAt   DateTime  @default(now())
+  sentAt      DateTime?
+}
