@@ -86,45 +86,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const fetchProfile = useCallback(async (userId: string): Promise<{ profile: Profile | null; agent: Agent | null }> => {
-    console.log('Fetching profile for user:', userId);
-
     try {
       // Try direct Supabase query first
-      console.log('[v0] Attempting direct Supabase profile query...');
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      console.log('[v0] Profile query result:', profileData ? 'found' : 'null', 'error:', profileError?.code || 'none');
-
       if (profileError) {
-        console.warn('Direct profile fetch failed (code: ' + profileError.code + '), falling back to API route...');
         // Fallback to API route which uses service role to bypass RLS
         return await fetchProfileViaAPI();
       }
 
       let agentData = null;
       if (profileData && profileData.role === 'agent') {
-        console.log('[v0] Fetching agent data...');
         const { data, error: agentError } = await supabase
           .from('agents')
           .select('*')
           .eq('user_id', userId)
           .single();
 
-        console.log('[v0] Agent query result:', data ? 'found' : 'null', 'error:', agentError?.code || 'none');
-
         if (agentError) {
-          console.warn('Direct agent fetch failed, falling back to API route...');
           return await fetchProfileViaAPI();
         }
 
         agentData = data;
       }
 
-      console.log('[v0] fetchProfile complete - profile:', !!profileData, 'agent:', !!agentData);
       return {
         profile: profileData as Profile,
         agent: agentData as Agent | null
@@ -147,10 +136,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    // Track whether getInitialSession already handled the session
+    // to prevent onAuthStateChange from re-fetching redundantly
+    let initialSessionHandled = false;
 
     const getInitialSession = async () => {
       try {
-        console.log('Getting initial session...');
         const { data: { session: s }, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -159,11 +150,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return;
         }
 
-        console.log('Session:', s ? 'Found' : 'None');
-
         if (s?.user && mounted) {
           setUser(s.user);
           setSession(s);
+          initialSessionHandled = true;
 
           const { profile: p, agent: a } = await fetchProfile(s.user.id);
 
@@ -171,11 +161,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setProfile(p);
             setAgent(a);
             setAuth(p as never, a as never);
-            console.log('[v0] getInitialSession complete, setting isLoading=false, profile:', !!p);
             setIsLoading(false);
           }
         } else if (mounted) {
-          console.log('[v0] No session found, setting isLoading=false');
           setIsLoading(false);
         }
       } catch (error) {
@@ -187,13 +175,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     getInitialSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
-      console.log('Auth state change:', event);
+      if (!mounted) return;
 
-      if (event === 'SIGNED_IN' && s?.user && mounted) {
+      if (event === 'SIGNED_IN' && s?.user) {
+        // On page refresh, getInitialSession already handles the session.
+        // The SIGNED_IN event fires redundantly — skip re-fetching.
+        if (initialSessionHandled) {
+          return;
+        }
+
         setUser(s.user);
         setSession(s);
-
-        await new Promise(resolve => setTimeout(resolve, 500));
 
         const { profile: p, agent: a } = await fetchProfile(s.user.id);
 
@@ -201,22 +193,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(p);
           setAgent(a);
           setAuth(p as never, a as never);
-          console.log('[v0] onAuthStateChange SIGNED_IN complete, setting isLoading=false, profile:', !!p);
           setIsLoading(false);
         }
+      } else if (event === 'TOKEN_REFRESHED' && s?.user) {
+        // Just update session, don't re-fetch profile
+        setSession(s);
       } else if (event === 'SIGNED_OUT' && mounted) {
         setUser(null);
         setSession(null);
         setProfile(null);
         setAgent(null);
-        // Sync with store
         setAuth(null, null);
         setIsLoading(false);
       }
     });
 
+    // Safety timeout: if isLoading is still true after 10s, force it off
+    const safetyTimer = setTimeout(() => {
+      if (mounted) {
+        setIsLoading(prev => {
+          if (prev) {
+            console.warn('Auth loading safety timeout triggered');
+            return false;
+          }
+          return prev;
+        });
+      }
+    }, 10000);
+
     return () => {
       mounted = false;
+      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, [supabase, fetchProfile, setAuth]);
