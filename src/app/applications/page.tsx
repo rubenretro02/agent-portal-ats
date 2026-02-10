@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { PortalLayout } from '@/components/layout/PortalLayout';
 import { RequirePersonalInfo } from '@/components/RequirePersonalInfo';
 import { useAuthContext } from '@/components/providers/AuthProvider';
-import { getSupabaseClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -50,35 +49,22 @@ export default function ApplicationsPage() {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const supabase = getSupabaseClient();
-
   useEffect(() => {
     async function fetchApplications() {
       if (!agent) return;
 
       setLoading(true);
-      const { data, error } = await supabase
-        .from('applications')
-        .select(`
-          id,
-          opportunity_id,
-          status,
-          submitted_at,
-          reviewed_at,
-          opportunity:opportunities (
-            id,
-            name,
-            client,
-            description,
-            compensation,
-            tags
-          )
-        `)
-        .eq('agent_id', agent.id)
-        .order('submitted_at', { ascending: false });
+      const { adminDb } = await import('@/lib/adminDb');
+      const { data, error } = await adminDb<Application[]>({
+        action: 'select',
+        table: 'applications',
+        select: 'id, opportunity_id, status, submitted_at, reviewed_at, opportunity:opportunities (id, name, client, description, compensation, tags)',
+        filters: { agent_id: agent.id },
+        order: { column: 'submitted_at', ascending: false },
+      });
 
       if (!error && data) {
-        setApplications(data as unknown as Application[]);
+        setApplications(data);
       }
       setLoading(false);
     }
@@ -86,7 +72,7 @@ export default function ApplicationsPage() {
     if (agent) {
       fetchApplications();
     }
-  }, [agent, supabase]);
+  }, [agent]);
 
   if (authLoading) {
     return (

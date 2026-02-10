@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useAdminStore } from '@/store/adminStore';
-import { getSupabaseClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -75,70 +74,73 @@ export default function AdminDashboard() {
   const [recentAgents, setRecentAgents] = useState<AgentWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
-  const supabase = getSupabaseClient();
-
   useEffect(() => {
     async function fetchDashboardData() {
       setLoading(true);
 
       try {
+        const { adminDb } = await import('@/lib/adminDb');
+
         // Fetch agents with profiles
-        const { data: agents, error: agentsError } = await supabase
-          .from('agents')
-          .select(`
-            *,
-            profiles (first_name, last_name, email)
-          `)
-          .order('created_at', { ascending: false })
-          .limit(10);
+        const { data: agents, error: agentsError } = await adminDb<AgentWithProfile[]>({
+          action: 'select',
+          table: 'agents',
+          select: '*, profiles (first_name, last_name, email)',
+          order: { column: 'created_at', ascending: false },
+          limit: 10,
+        });
 
         if (!agentsError && agents) {
-          setRecentAgents(agents as unknown as AgentWithProfile[]);
+          setRecentAgents(agents);
         }
 
         // Fetch total agent count
-        const { count: totalAgents } = await supabase
-          .from('agents')
-          .select('*', { count: 'exact', head: true });
+        const { data: allAgents } = await adminDb<Record<string, unknown>[]>({
+          action: 'select', table: 'agents', select: 'id',
+        });
+        const totalAgents = allAgents?.length || 0;
 
         // Fetch pending applications count
-        const { count: pendingApps } = await supabase
-          .from('agents')
-          .select('*', { count: 'exact', head: true })
-          .eq('pipeline_status', 'applied');
+        const { data: pendingAgents } = await adminDb<Record<string, unknown>[]>({
+          action: 'select', table: 'agents', select: 'id',
+          filters: { pipeline_status: 'applied' },
+        });
+        const pendingApps = pendingAgents?.length || 0;
 
         // Fetch approved/hired count for approval rate
-        const { count: approvedCount } = await supabase
-          .from('agents')
-          .select('*', { count: 'exact', head: true })
-          .in('pipeline_status', ['approved', 'hired', 'active']);
+        const { data: approvedAgents } = await adminDb<Record<string, unknown>[]>({
+          action: 'select', table: 'agents', select: 'id, pipeline_status',
+        });
+        const approvedCount = approvedAgents?.filter((a: Record<string, unknown>) =>
+          ['approved', 'hired', 'active'].includes(a.pipeline_status as string)
+        ).length || 0;
 
         // Fetch active opportunities count
-        const { count: activeOpps } = await supabase
-          .from('opportunities')
-          .select('*', { count: 'exact', head: true })
-          .eq('status', 'active');
+        const { data: activeOppData } = await adminDb<Record<string, unknown>[]>({
+          action: 'select', table: 'opportunities', select: 'id',
+          filters: { status: 'active' },
+        });
+        const activeOpps = activeOppData?.length || 0;
 
         // Calculate approval rate
-        const approvalRate = totalAgents && totalAgents > 0
-          ? Math.round(((approvedCount || 0) / totalAgents) * 100)
+        const approvalRate = totalAgents > 0
+          ? Math.round((approvedCount / totalAgents) * 100)
           : 0;
 
         setMetrics({
-          totalAgents: totalAgents || 0,
-          pendingApplications: pendingApps || 0,
+          totalAgents,
+          pendingApplications: pendingApps,
           approvalRate,
-          activeOpportunities: activeOpps || 0,
+          activeOpportunities: activeOpps,
         });
 
-        // Build pipeline data
+        // Build pipeline data from allAgents
         const pipelineCounts: Record<string, number> = {};
-        for (const stage of PIPELINE_STAGES) {
-          const { count } = await supabase
-            .from('agents')
-            .select('*', { count: 'exact', head: true })
-            .eq('pipeline_status', stage.status);
-          pipelineCounts[stage.status] = count || 0;
+        if (allAgents) {
+          for (const a of allAgents) {
+            const status = a.pipeline_status as string;
+            pipelineCounts[status] = (pipelineCounts[status] || 0) + 1;
+          }
         }
 
         setPipelineData(
@@ -156,7 +158,7 @@ export default function AdminDashboard() {
     }
 
     fetchDashboardData();
-  }, [supabase]);
+  }, []);
 
   const getStageInfo = (status: string) => {
     return PIPELINE_STAGES.find(s => s.status === status);
@@ -165,14 +167,16 @@ export default function AdminDashboard() {
   const handleMoveAgent = async (agentId: string, newStatus: string) => {
     const stageIndex = PIPELINE_STAGES.findIndex(s => s.status === newStatus);
 
-    const { error } = await supabase
-      .from('agents')
-      .update({
+    const { adminDb } = await import('@/lib/adminDb');
+    const { error } = await adminDb({
+      action: 'update', table: 'agents',
+      data: {
         pipeline_status: newStatus,
         pipeline_stage: stageIndex + 1,
         last_status_change: new Date().toISOString(),
-      })
-      .eq('id', agentId);
+      },
+      match: { id: agentId },
+    });
 
     if (!error) {
       // Refresh the data

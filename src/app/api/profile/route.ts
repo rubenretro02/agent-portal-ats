@@ -20,7 +20,7 @@ export async function GET() {
 
     // Use the service role client to bypass RLS and avoid infinite recursion
     if (!SUPABASE_SERVICE_ROLE_KEY) {
-      console.warn('[v0] SUPABASE_SERVICE_ROLE_KEY not set, trying regular client');
+      // No service role key - try with regular client
       const { data: profile, error: profileError } = await serverSupabase
         .from('profiles')
         .select('*')
@@ -28,7 +28,7 @@ export async function GET() {
         .single();
 
       if (profileError) {
-        console.error('[v0] Regular client profile fetch error:', profileError.code, profileError.message);
+        console.error('Regular client profile fetch error:', profileError.code, profileError.message);
         return NextResponse.json({ error: profileError.message, code: profileError.code }, { status: 500 });
       }
 
@@ -55,7 +55,7 @@ export async function GET() {
       .single();
 
     if (profileError) {
-      console.error('[v0] Admin client profile fetch error:', profileError.code, profileError.message);
+      console.error('Admin client profile fetch error:', profileError.code, profileError.message);
       return NextResponse.json({ error: profileError.message, code: profileError.code }, { status: 500 });
     }
 
@@ -69,10 +69,9 @@ export async function GET() {
       agent = agentData;
     }
 
-    console.log('[v0] Profile fetched successfully for user:', user.id, 'role:', profile?.role);
     return NextResponse.json({ profile, agent });
   } catch (error) {
-    console.error('[v0] Profile API error:', error);
+    console.error('Profile API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

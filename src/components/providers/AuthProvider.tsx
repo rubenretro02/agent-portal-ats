@@ -236,13 +236,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Wait a bit for the profile to be created by the trigger
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Update the profile with the username
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({ username: metadata.username.toLowerCase() } as never)
-        .eq('id', data.user.id);
-
-      if (updateError) {
+      // Update the profile with the username via API to bypass RLS
+      try {
+        const res = await fetch('/api/profile/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: metadata.username.toLowerCase() }),
+        });
+        if (!res.ok) {
+          console.error('Error updating username in profile via API');
+        }
+      } catch (updateError) {
         console.error('Error updating username in profile:', updateError);
       }
     }

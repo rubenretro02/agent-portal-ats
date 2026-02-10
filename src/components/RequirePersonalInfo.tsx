@@ -146,19 +146,24 @@ export function RequirePersonalInfo({ children }: RequirePersonalInfoProps) {
     setError('');
 
     try {
-      const { error: updateError } = await supabase
-        .from('profiles')
-        .update({
+      // Use API route to bypass RLS infinite recursion on profiles table
+      const res = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           first_name: personalForm.firstName,
           middle_name: personalForm.middleName,
           last_name: personalForm.lastName,
           sex: personalForm.sex,
           date_of_birth: dateOfBirth,
           phone: personalForm.phone,
-        } as never)
-        .eq('id', profile.id);
+        }),
+      });
 
-      if (updateError) throw updateError;
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to update profile');
+      }
 
       await refreshProfile();
       setShowPopup(false);

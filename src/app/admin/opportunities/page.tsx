@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { useAdminStore } from '@/store/adminStore';
 import { useOpportunityStore } from '@/store/supabaseStore';
-import { getSupabaseClient } from '@/lib/supabase/client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -116,11 +115,9 @@ export default function OpportunitiesManagementPage() {
   useEffect(() => {
     fetchOpportunities(true);
     const fetchApplicationCount = async () => {
-      const supabase = getSupabaseClient();
-      const { count } = await supabase
-        .from('applications')
-        .select('*', { count: 'exact', head: true });
-      setTotalApplications(count || 0);
+      const { adminDb } = await import('@/lib/adminDb');
+      const result = await adminDb({ action: 'count', table: 'applications' });
+      setTotalApplications(result.count || 0);
     };
     fetchApplicationCount();
   }, [fetchOpportunities]);
@@ -210,22 +207,27 @@ export default function OpportunitiesManagementPage() {
       });
 
       if (result.success && result.id) {
-        // Create questions for this opportunity
+        // Create questions for this opportunity using admin API to bypass RLS
         if (questions.length > 0) {
-          const supabase = getSupabaseClient();
+          const { adminDb } = await import('@/lib/adminDb');
           for (let i = 0; i < questions.length; i++) {
             const q = questions[i];
-            await supabase.from('application_questions').insert({
-              opportunity_id: result.id,
-              question: q.question,
-              question_es: q.questionEs || null,
-              type: q.type,
-              required: q.required,
-              order: i + 1,
-              placeholder: q.placeholder || null,
-              options: q.options.length > 0
-                ? q.options.map(opt => ({ value: opt.toLowerCase().replace(/\s+/g, '_'), label: opt }))
-                : null,
+            await adminDb({
+              action: 'insert',
+              table: 'application_questions',
+              data: {
+                opportunity_id: result.id,
+                question: q.question,
+                question_es: q.questionEs || null,
+                type: q.type,
+                required: q.required,
+                order: i + 1,
+                placeholder: q.placeholder || null,
+                options: q.options.length > 0
+                  ? q.options.map(opt => ({ value: opt.toLowerCase().replace(/\s+/g, '_'), label: opt }))
+                  : null,
+              },
+              select: false,
             });
           }
         }
