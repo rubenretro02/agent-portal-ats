@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { PortalLayout } from '@/components/layout/PortalLayout';
 import { RequirePersonalInfo } from '@/components/RequirePersonalInfo';
 import { useAuthContext } from '@/components/providers/AuthProvider';
@@ -50,6 +51,7 @@ import type { ApplicationQuestion, ApplicationAnswer } from '@/types';
 import type { SystemCheckResult } from '@/lib/systemCheck';
 
 export default function OpportunitiesPage() {
+  const router = useRouter();
   const { agent: authAgent, profile, isLoading: authLoading } = useAuthContext();
   const { language } = useAuthStore();
   const { opportunities, fetchOpportunities, applyToOpportunity, isLoading, appliedOpportunityIds, fetchAppliedOpportunities } = useOpportunityStore();
@@ -926,7 +928,7 @@ export default function OpportunitiesPage() {
               </Button>
               <Button
                 className="flex-1 bg-teal-500 hover:bg-teal-600"
-                onClick={() => window.location.href = '/dashboard'}
+                onClick={() => router.push('/dashboard')}
               >
                 {language === 'es' ? 'Ir al Dashboard' : 'Go to Dashboard'}
               </Button>
