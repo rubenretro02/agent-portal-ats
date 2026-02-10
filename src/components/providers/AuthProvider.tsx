@@ -150,60 +150,61 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    // Helper: retry getSession with exponential backoff for AbortErrors
-    const getSessionWithRetry = async (retries = 3): Promise<{ session: Session | null; error: Error | null }> => {
-      for (let attempt = 0; attempt < retries; attempt++) {
-        try {
-          const { data: { session }, error } = await supabase.auth.getSession();
-          if (error) return { session: null, error };
-          return { session, error: null };
-        } catch (err) {
-          const isAbortError = err instanceof Error && err.name === 'AbortError';
-          if (isAbortError && attempt < retries - 1) {
-            // Wait before retrying: 200ms, 500ms
-            await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 250));
-            continue;
+    // Primary init: use the server-side API route to check auth and fetch
+    // profile in a single call. This avoids the client-side getSession()
+    // AbortError that occurs when middleware refreshes tokens concurrently.
+    const initViaAPI = async () => {
+      try {
+        const res = await fetch('/api/profile');
+        if (res.ok) {
+          const data = await res.json();
+          if (mounted && data.profile) {
+            profileLoaded = true;
+            setProfile(data.profile as Profile);
+            setAgent(data.agent as Agent | null);
+            setAuth(data.profile as never, data.agent as never);
+            // Also try to get the client-side session silently for signOut etc.
+            try {
+              const { data: { session: s } } = await supabase.auth.getSession();
+              if (s?.user && mounted) {
+                setUser(s.user);
+                setSession(s);
+              }
+            } catch {
+              // Ignore AbortError - we already have the profile from the API
+            }
+            if (mounted) setIsLoading(false);
+            return;
           }
-          // Not an AbortError or last retry -- don't give up yet,
-          // let onAuthStateChange handle it
-          return { session: null, error: err as Error };
         }
-      }
-      return { session: null, error: new Error('Max retries reached') };
-    };
-
-    const getInitialSession = async () => {
-      const { session: s, error } = await getSessionWithRetry(3);
-
-      if (!mounted) return;
-
-      if (error) {
-        // Don't set isLoading=false here -- let onAuthStateChange handle it.
-        // The AbortError means the session fetch was interrupted, but
-        // onAuthStateChange will still fire with the correct session.
-        console.warn('[v0] getSession failed, deferring to onAuthStateChange:', error.message);
-        return;
-      }
-
-      if (s?.user) {
-        setUser(s.user);
-        setSession(s);
-        await loadProfile(s.user.id);
-      } else {
-        // Genuinely no session
-        setIsLoading(false);
+        // API returned non-ok (401 = no session) or no profile
+        if (mounted) setIsLoading(false);
+      } catch {
+        // Network error - try getSession as fallback
+        try {
+          const { data: { session: s } } = await supabase.auth.getSession();
+          if (s?.user && mounted) {
+            setUser(s.user);
+            setSession(s);
+            await loadProfile(s.user.id);
+            return;
+          }
+        } catch {
+          // Both paths failed
+        }
+        if (mounted) setIsLoading(false);
       }
     };
 
-    getInitialSession();
+    initViaAPI();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
       if (!mounted) return;
 
-      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && s?.user) {
+      if (event === 'SIGNED_IN' && s?.user) {
         setUser(s.user);
         setSession(s);
-        // loadProfile is a no-op if already loaded
+        // loadProfile is a no-op if already loaded via initViaAPI
         await loadProfile(s.user.id);
       } else if (event === 'TOKEN_REFRESHED' && s?.user) {
         setSession(s);
@@ -218,22 +219,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Safety timeout: if isLoading is still true after 8s, force it off
-    const safetyTimer = setTimeout(() => {
-      if (mounted) {
-        setIsLoading(prev => {
-          if (prev) {
-            console.warn('[v0] Auth loading safety timeout triggered');
-            return false;
-          }
-          return prev;
-        });
-      }
-    }, 8000);
-
     return () => {
       mounted = false;
-      clearTimeout(safetyTimer);
       subscription.unsubscribe();
     };
   }, [supabase, fetchProfile, setAuth]);
