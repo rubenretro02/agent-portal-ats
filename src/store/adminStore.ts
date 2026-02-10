@@ -57,14 +57,31 @@ export const useAdminStore = create<AdminAuthState>()(
             return { success: false, error: 'No user returned from authentication' };
           }
 
-          // Fetch the profile to verify role
-          const { data: profile, error: profileError } = await supabase
+          // Fetch the profile to verify role - try direct query first, fallback to API
+          let profile: Record<string, unknown> | null = null;
+
+          const { data: directProfile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', authData.user.id)
             .single();
 
-          if (profileError || !profile) {
+          if (profileError) {
+            // Fallback to API route to bypass RLS recursion
+            try {
+              const res = await fetch('/api/profile');
+              if (res.ok) {
+                const apiData = await res.json();
+                profile = apiData.profile;
+              }
+            } catch (e) {
+              console.error('API fallback error:', e);
+            }
+          } else {
+            profile = directProfile;
+          }
+
+          if (!profile) {
             // Sign out if profile not found
             await supabase.auth.signOut();
             set({ isLoading: false });
@@ -72,7 +89,8 @@ export const useAdminStore = create<AdminAuthState>()(
           }
 
           // Check if user has admin or recruiter role
-          if (profile.role !== 'admin' && profile.role !== 'recruiter') {
+          const role = profile.role as string;
+          if (role !== 'admin' && role !== 'recruiter') {
             await supabase.auth.signOut();
             set({ isLoading: false });
             return { success: false, error: 'Access denied. This portal is for admins and recruiters only.' };
@@ -87,14 +105,14 @@ export const useAdminStore = create<AdminAuthState>()(
 
           // Build AdminUser object
           const adminUser: AdminUser = {
-            id: profile.id,
-            email: profile.email,
-            firstName: profile.first_name,
-            lastName: profile.last_name,
-            role: profile.role as 'admin' | 'recruiter',
-            isActive: profile.is_active,
+            id: profile.id as string,
+            email: profile.email as string,
+            firstName: profile.first_name as string,
+            lastName: profile.last_name as string,
+            role: role as 'admin' | 'recruiter',
+            isActive: profile.is_active as boolean,
             lastLogin: new Date(),
-            createdAt: new Date(profile.created_at),
+            createdAt: new Date(profile.created_at as string),
           };
 
           // Get permissions based on role
@@ -145,34 +163,51 @@ export const useAdminStore = create<AdminAuthState>()(
             return;
           }
 
-          // Fetch profile
-          const { data: profile, error: profileError } = await supabase
+          // Fetch profile - try direct query first, fallback to API
+          let profile: Record<string, unknown> | null = null;
+
+          const { data: directProfile, error: profileError } = await supabase
             .from('profiles')
             .select('*')
             .eq('id', session.user.id)
             .single();
 
-          if (profileError || !profile) {
+          if (profileError) {
+            try {
+              const res = await fetch('/api/profile');
+              if (res.ok) {
+                const apiData = await res.json();
+                profile = apiData.profile;
+              }
+            } catch (e) {
+              console.error('API fallback error in checkSession:', e);
+            }
+          } else {
+            profile = directProfile;
+          }
+
+          if (!profile) {
             set({ isLoading: false, isAuthenticated: false, currentUser: null });
             return;
           }
 
           // Verify admin/recruiter role
-          if (profile.role !== 'admin' && profile.role !== 'recruiter') {
+          const sessionRole = profile.role as string;
+          if (sessionRole !== 'admin' && sessionRole !== 'recruiter') {
             set({ isLoading: false, isAuthenticated: false, currentUser: null });
             return;
           }
 
           // Build AdminUser object
           const adminUser: AdminUser = {
-            id: profile.id,
-            email: profile.email,
-            firstName: profile.first_name,
-            lastName: profile.last_name,
-            role: profile.role as 'admin' | 'recruiter',
-            isActive: profile.is_active,
+            id: profile.id as string,
+            email: profile.email as string,
+            firstName: profile.first_name as string,
+            lastName: profile.last_name as string,
+            role: sessionRole as 'admin' | 'recruiter',
+            isActive: profile.is_active as boolean,
             lastLogin: new Date(),
-            createdAt: new Date(profile.created_at),
+            createdAt: new Date(profile.created_at as string),
           };
 
           const permissions = ROLE_PERMISSIONS[adminUser.role];
