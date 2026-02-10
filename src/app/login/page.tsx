@@ -49,31 +49,41 @@ export default function LoginPage() {
 
     // Check if identifier is a username (not an email)
     if (!identifier.includes('@')) {
-      // Look up email by username (case-insensitive)
+      // Look up email by username - try direct query first, fallback to API
+      let foundEmail: string | null = null;
+
       const { data: profileData, error: lookupError } = await supabase
         .from('profiles')
         .select('email')
         .ilike('username', identifier)
         .single();
 
-      if (lookupError || !profileData) {
-        // Also try looking up by exact match in case ilike doesn't work
-        const { data: profileData2, error: lookupError2 } = await supabase
-          .from('profiles')
-          .select('email')
-          .eq('username', identifier)
-          .single();
-
-        if (lookupError2 || !profileData2) {
-          setError(language === 'es' ? 'Usuario no encontrado. Intente con su correo electrónico.' : 'Username not found. Try using your email address.');
-          setIsLoading(false);
-          return;
-        }
-
-        email = profileData2.email;
+      if (!lookupError && profileData) {
+        foundEmail = profileData.email;
       } else {
-        email = profileData.email;
+        // Fallback to API route to bypass RLS recursion
+        try {
+          const res = await fetch('/api/lookup-username', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: identifier }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            foundEmail = data.email;
+          }
+        } catch (e) {
+          console.error('Username API lookup error:', e);
+        }
       }
+
+      if (!foundEmail) {
+        setError(language === 'es' ? 'Usuario no encontrado. Intente con su correo electrónico.' : 'Username not found. Try using your email address.');
+        setIsLoading(false);
+        return;
+      }
+
+      email = foundEmail;
     }
 
     const { error: signInError } = await signIn(email, password);

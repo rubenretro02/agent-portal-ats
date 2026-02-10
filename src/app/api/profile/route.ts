@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { createClient as createServerClient } from '@/lib/supabase/server';
+import { createClient as createServerSupabaseClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -8,7 +8,7 @@ const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 export async function GET() {
   try {
     // First, verify the user is authenticated using the regular server client
-    const serverSupabase = await createServerClient();
+    const serverSupabase = await createServerSupabaseClient();
     if (!serverSupabase) {
       return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
     }
@@ -20,7 +20,7 @@ export async function GET() {
 
     // Use the service role client to bypass RLS and avoid infinite recursion
     if (!SUPABASE_SERVICE_ROLE_KEY) {
-      // Fallback: try with the regular client anyway
+      console.warn('[v0] SUPABASE_SERVICE_ROLE_KEY not set, trying regular client');
       const { data: profile, error: profileError } = await serverSupabase
         .from('profiles')
         .select('*')
@@ -28,6 +28,7 @@ export async function GET() {
         .single();
 
       if (profileError) {
+        console.error('[v0] Regular client profile fetch error:', profileError.code, profileError.message);
         return NextResponse.json({ error: profileError.message, code: profileError.code }, { status: 500 });
       }
 
@@ -54,6 +55,7 @@ export async function GET() {
       .single();
 
     if (profileError) {
+      console.error('[v0] Admin client profile fetch error:', profileError.code, profileError.message);
       return NextResponse.json({ error: profileError.message, code: profileError.code }, { status: 500 });
     }
 
@@ -67,9 +69,10 @@ export async function GET() {
       agent = agentData;
     }
 
+    console.log('[v0] Profile fetched successfully for user:', user.id, 'role:', profile?.role);
     return NextResponse.json({ profile, agent });
   } catch (error) {
-    console.error('Profile API error:', error);
+    console.error('[v0] Profile API error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
