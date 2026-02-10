@@ -49,7 +49,7 @@ export function PortalLayout({ children, title }: PortalLayoutProps) {
   useEffect(() => {
     // Only redirect if not loading and not authenticated
     if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+      router.replace('/login');
     }
   }, [isLoading, isAuthenticated, router]);
 

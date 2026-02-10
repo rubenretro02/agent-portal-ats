@@ -538,6 +538,18 @@ export default function DashboardPage() {
     e.stopPropagation();
     setShowLanguagesPopup(true);
   };
+  // If profile is not loaded after auth is done, redirect to login
+  useEffect(() => {
+    if (!isLoading && !profile) {
+      redirectTimerRef.current = setTimeout(() => {
+        router.push('/login');
+      }, 3000);
+    }
+    return () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    };
+  }, [isLoading, profile, router]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
@@ -545,24 +557,13 @@ export default function DashboardPage() {
       </div>
     );
   }
-  // If profile is not loaded after auth is done, redirect to login
-  useEffect(() => {
-    if (!isLoading && !profile) {
-      redirectTimerRef.current = setTimeout(() => {
-        router.push('/login');
-      }, 2000);
-    }
-    return () => {
-      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
-    };
-  }, [isLoading, profile, router]);
 
   if (!profile) {
     return (
       <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-zinc-500">{isLoading ? 'Loading...' : 'Redirecting to login...'}</p>
+          <p className="text-zinc-500">Redirecting to login...</p>
         </div>
       </div>
     );

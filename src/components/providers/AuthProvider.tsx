@@ -140,10 +140,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let initialSessionHandled = false;
 
     const getInitialSession = async () => {
       try {
-        console.log('Getting initial session...');
         const { data: { session: s }, error } = await supabase.auth.getSession();
 
         if (error) {
@@ -151,8 +151,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (mounted) setIsLoading(false);
           return;
         }
-
-        console.log('Session:', s ? 'Found' : 'None');
 
         if (s?.user && mounted) {
           setUser(s.user);
@@ -163,36 +161,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (mounted) {
             setProfile(p);
             setAgent(a);
-            // Sync with store
             setAuth(p as never, a as never);
             setIsLoading(false);
           }
         } else if (mounted) {
           setIsLoading(false);
         }
+
+        initialSessionHandled = true;
       } catch (error) {
         console.error('Error getting session:', error);
         if (mounted) setIsLoading(false);
+        initialSessionHandled = true;
       }
     };
 
     getInitialSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
-      console.log('Auth state change:', event);
+      // Skip the INITIAL_SESSION event and the first SIGNED_IN that duplicates getSession
+      if (event === 'INITIAL_SESSION') return;
+
+      // If this is a SIGNED_IN event right after initial session, skip it to avoid double fetch
+      if (event === 'SIGNED_IN' && !initialSessionHandled) return;
 
       if (event === 'SIGNED_IN' && s?.user && mounted) {
         setUser(s.user);
         setSession(s);
-
-        await new Promise(resolve => setTimeout(resolve, 500));
 
         const { profile: p, agent: a } = await fetchProfile(s.user.id);
 
         if (mounted) {
           setProfile(p);
           setAgent(a);
-          // Sync with store
           setAuth(p as never, a as never);
           setIsLoading(false);
         }
@@ -201,9 +202,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(null);
         setProfile(null);
         setAgent(null);
-        // Sync with store
         setAuth(null, null);
         setIsLoading(false);
+      } else if (event === 'TOKEN_REFRESHED' && s?.user && mounted) {
+        setUser(s.user);
+        setSession(s);
       }
     });
 
@@ -266,7 +269,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setAuth(null, null);
-    window.location.href = '/';
+    window.location.href = '/login';
   }, [supabase, setAuth]);
 
   const value = useMemo(() => ({

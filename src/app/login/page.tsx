@@ -25,14 +25,16 @@ export default function LoginPage() {
   const supabase = getSupabaseClient();
 
   useEffect(() => {
-    if (isAuthenticated && profile) {
+    // Only redirect if fully authenticated AND profile is loaded
+    // Avoid redirecting if still loading to prevent loops
+    if (!authLoading && isAuthenticated && profile) {
       if (profile.role === 'agent') {
-        router.push('/dashboard');
+        router.replace('/dashboard');
       } else {
-        router.push('/admin');
+        router.replace('/admin');
       }
     }
-  }, [isAuthenticated, profile, router]);
+  }, [authLoading, isAuthenticated, profile, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
