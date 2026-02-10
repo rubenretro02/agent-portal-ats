@@ -67,6 +67,18 @@ export default function DashboardPage() {
     );
   }, [profile, agent]);
 
+  // Redirect if no profile
+  useEffect(() => {
+    if (!isLoading && !profile) {
+      redirectTimerRef.current = setTimeout(() => {
+        router.push('/login');
+      }, 2000);
+    }
+    return () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    };
+  }, [isLoading, profile, router]);
+
   // Fetch opportunities
   useEffect(() => {
     fetchOpportunities();
@@ -100,18 +112,6 @@ export default function DashboardPage() {
       </div>
     );
   }
-
-  // Redirect if no profile
-  useEffect(() => {
-    if (!isLoading && !profile) {
-      redirectTimerRef.current = setTimeout(() => {
-        router.push('/login');
-      }, 2000);
-    }
-    return () => {
-      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
-    };
-  }, [isLoading, profile, router]);
 
   if (!profile) {
     return (
