@@ -77,11 +77,11 @@ export async function POST(request: Request) {
       }
 
       case 'insert': {
-        let query = adminSupabase.from(table).insert(data);
-        if (selectFields !== false) {
-          query = query.select();
+        if (selectFields === false) {
+          result = await adminSupabase.from(table).insert(data);
+        } else {
+          result = await adminSupabase.from(table).insert(data).select();
         }
-        result = await query;
         break;
       }
 
@@ -91,20 +91,23 @@ export async function POST(request: Request) {
       }
 
       case 'update': {
-        let query = adminSupabase.from(table).update(data);
+        // Build the update query with match/filters, then optionally select
+        const baseUpdate = adminSupabase.from(table).update(data);
+        let updateQuery = baseUpdate;
         if (match) {
           for (const [key, value] of Object.entries(match)) {
-            query = query.eq(key, value as string);
+            updateQuery = updateQuery.eq(key, value as string);
           }
         } else if (filters) {
           for (const [key, value] of Object.entries(filters)) {
-            query = query.eq(key, value as string);
+            updateQuery = updateQuery.eq(key, value as string);
           }
         }
         if (selectFields !== false) {
-          query = query.select();
+          result = await updateQuery.select();
+        } else {
+          result = await updateQuery;
         }
-        result = await query;
         break;
       }
 
