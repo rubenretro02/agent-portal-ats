@@ -67,23 +67,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const supabase = useMemo(() => getSupabaseClient(), []);
   const setAuth = useAuthStore((state) => state.setAuth);
 
+  const fetchProfileViaAPI = useCallback(async (): Promise<{ profile: Profile | null; agent: Agent | null }> => {
+    try {
+      const res = await fetch('/api/profile');
+      if (!res.ok) {
+        console.error('Profile API error:', res.status);
+        return { profile: null, agent: null };
+      }
+      const data = await res.json();
+      return {
+        profile: data.profile as Profile | null,
+        agent: data.agent as Agent | null,
+      };
+    } catch (error) {
+      console.error('Profile API fetch error:', error);
+      return { profile: null, agent: null };
+    }
+  }, []);
+
   const fetchProfile = useCallback(async (userId: string): Promise<{ profile: Profile | null; agent: Agent | null }> => {
     console.log('Fetching profile for user:', userId);
 
     try {
-      const profilePromise = supabase
+      // Try direct Supabase query first
+      const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      const { data: profileData, error: profileError } = await profilePromise;
-
-      console.log('Profile result:', profileData, profileError);
-
       if (profileError) {
-        console.error('Profile fetch error:', profileError);
-        return { profile: null, agent: null };
+        console.warn('Direct profile fetch failed (code: ' + profileError.code + '), falling back to API route...');
+        // Fallback to API route which uses service role to bypass RLS
+        return await fetchProfileViaAPI();
       }
 
       let agentData = null;
@@ -94,11 +110,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           .eq('user_id', userId)
           .single();
 
-        console.log('Agent result:', data, agentError);
-
-        if (!agentError) {
-          agentData = data;
+        if (agentError) {
+          console.warn('Direct agent fetch failed, falling back to API route...');
+          return await fetchProfileViaAPI();
         }
+
+        agentData = data;
       }
 
       return {
@@ -106,10 +123,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         agent: agentData as Agent | null
       };
     } catch (error) {
-      console.error('Fetch profile error:', error);
-      return { profile: null, agent: null };
+      console.error('Fetch profile error, falling back to API route...', error);
+      return await fetchProfileViaAPI();
     }
-  }, [supabase]);
+  }, [supabase, fetchProfileViaAPI]);
 
   const refreshProfile = useCallback(async () => {
     if (user) {
@@ -168,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(s.user);
         setSession(s);
 
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         const { profile: p, agent: a } = await fetchProfile(s.user.id);
 

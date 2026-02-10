@@ -1,5 +1,6 @@
 'use client';
-import { useEffect, useState, useMemo, useCallback } from 'react';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { useAuthContext } from '@/components/providers/AuthProvider';
@@ -200,9 +201,11 @@ interface StepStatus {
   systemCheck: boolean;
 }
 export default function DashboardPage() {
+  const router = useRouter();
   const { profile, agent, isLoading, refreshProfile } = useAuthContext();
   const { opportunities, fetchOpportunities, appliedOpportunityIds, fetchAppliedOpportunities, applyToOpportunity } = useOpportunityStore();
   const supabase = getSupabaseClient();
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Open step tracking
   const [openStep, setOpenStep] = useState<string | null>(null);
   // Popup states for each section
@@ -529,13 +532,24 @@ export default function DashboardPage() {
       </div>
     );
   }
-  // If profile is not loaded, show loading or redirect
+  // If profile is not loaded after auth is done, redirect to login
+  useEffect(() => {
+    if (!isLoading && !profile) {
+      redirectTimerRef.current = setTimeout(() => {
+        router.push('/login');
+      }, 2000);
+    }
+    return () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+    };
+  }, [isLoading, profile, router]);
+
   if (!profile) {
     return (
       <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-zinc-500">Loading profile...</p>
+          <p className="text-zinc-500">{isLoading ? 'Loading...' : 'Redirecting to login...'}</p>
         </div>
       </div>
     );

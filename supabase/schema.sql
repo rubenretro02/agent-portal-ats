@@ -34,13 +34,13 @@ create policy "Users can update own profile"
   on public.profiles for update
   using (auth.uid() = id);
 
+-- NOTE: Admin profile updates should be done via service role (API route) to avoid
+-- infinite recursion. This policy uses auth.jwt() metadata to check role without
+-- querying profiles table (which would cause infinite recursion).
 create policy "Admins can update any profile"
   on public.profiles for update
   using (
-    exists (
-      select 1 from public.profiles
-      where id = auth.uid() and role in ('admin', 'recruiter')
-    )
+    coalesce(auth.jwt() -> 'user_metadata' ->> 'role', '') in ('admin', 'recruiter')
   );
 
 -- =====================================================
