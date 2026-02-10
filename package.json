@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -H 0.0.0.0 --turbopack",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "bunx tsc --noEmit",
@@ -39,7 +39,6 @@
     "react-dom": "^18.3.1",
     "react-hook-form": "^7.71.1",
     "recharts": "^3.6.0",
-    "same-runtime": "^0.0.1",
     "tailwind-merge": "^3.3.0",
     "tailwindcss-animate": "^1.0.7",
     "zod": "^4.3.5",
