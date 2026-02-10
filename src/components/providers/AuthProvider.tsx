@@ -69,16 +69,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfileViaAPI = useCallback(async (): Promise<{ profile: Profile | null; agent: Agent | null }> => {
     try {
-      console.log('[v0] fetchProfileViaAPI: starting fetch to /api/profile');
       const res = await fetch('/api/profile');
-      console.log('[v0] fetchProfileViaAPI: response status:', res.status);
       if (!res.ok) {
-        const errorText = await res.text();
-        console.error('[v0] Profile API error:', res.status, errorText);
         return { profile: null, agent: null };
       }
       const data = await res.json();
-      console.log('[v0] fetchProfileViaAPI: got profile:', !!data.profile, 'agent:', !!data.agent);
       return {
         profile: data.profile as Profile | null,
         agent: data.agent as Agent | null,
@@ -90,20 +85,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const fetchProfile = useCallback(async (userId: string): Promise<{ profile: Profile | null; agent: Agent | null }> => {
-    console.log('[v0] fetchProfile called for userId:', userId);
     try {
       // Try direct Supabase query first
-      console.log('[v0] fetchProfile: trying direct Supabase query...');
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      console.log('[v0] fetchProfile: direct query result - data:', !!profileData, 'error:', profileError?.code, profileError?.message);
-
       if (profileError) {
-        console.log('[v0] fetchProfile: direct query failed, falling back to API...');
         // Fallback to API route which uses service role to bypass RLS
         return await fetchProfileViaAPI();
       }
@@ -145,45 +135,63 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    // Track whether getInitialSession already handled the session
-    // to prevent onAuthStateChange from re-fetching redundantly
-    let initialSessionHandled = false;
+    let profileLoaded = false;
+
+    // Helper: fetch profile and update state
+    const loadProfile = async (userId: string) => {
+      if (profileLoaded || !mounted) return;
+      const { profile: p, agent: a } = await fetchProfile(userId);
+      if (mounted) {
+        profileLoaded = true;
+        setProfile(p);
+        setAgent(a);
+        setAuth(p as never, a as never);
+        setIsLoading(false);
+      }
+    };
+
+    // Helper: retry getSession with exponential backoff for AbortErrors
+    const getSessionWithRetry = async (retries = 3): Promise<{ session: Session | null; error: Error | null }> => {
+      for (let attempt = 0; attempt < retries; attempt++) {
+        try {
+          const { data: { session }, error } = await supabase.auth.getSession();
+          if (error) return { session: null, error };
+          return { session, error: null };
+        } catch (err) {
+          const isAbortError = err instanceof Error && err.name === 'AbortError';
+          if (isAbortError && attempt < retries - 1) {
+            // Wait before retrying: 200ms, 500ms
+            await new Promise(resolve => setTimeout(resolve, (attempt + 1) * 250));
+            continue;
+          }
+          // Not an AbortError or last retry -- don't give up yet,
+          // let onAuthStateChange handle it
+          return { session: null, error: err as Error };
+        }
+      }
+      return { session: null, error: new Error('Max retries reached') };
+    };
 
     const getInitialSession = async () => {
-      try {
-        console.log('[v0] getInitialSession: calling getSession...');
-        const { data: { session: s }, error } = await supabase.auth.getSession();
-        console.log('[v0] getInitialSession: session result - hasSession:', !!s, 'hasUser:', !!s?.user, 'error:', error?.message);
+      const { session: s, error } = await getSessionWithRetry(3);
 
-        if (error) {
-          console.error('[v0] Session error:', error);
-          if (mounted) setIsLoading(false);
-          return;
-        }
+      if (!mounted) return;
 
-        if (s?.user && mounted) {
-          setUser(s.user);
-          setSession(s);
-          initialSessionHandled = true;
+      if (error) {
+        // Don't set isLoading=false here -- let onAuthStateChange handle it.
+        // The AbortError means the session fetch was interrupted, but
+        // onAuthStateChange will still fire with the correct session.
+        console.warn('[v0] getSession failed, deferring to onAuthStateChange:', error.message);
+        return;
+      }
 
-          console.log('[v0] getInitialSession: fetching profile for user:', s.user.id);
-          const { profile: p, agent: a } = await fetchProfile(s.user.id);
-          console.log('[v0] getInitialSession: fetchProfile returned - profile:', !!p, 'agent:', !!a);
-
-          if (mounted) {
-            setProfile(p);
-            setAgent(a);
-            setAuth(p as never, a as never);
-            console.log('[v0] getInitialSession: setting isLoading=false');
-            setIsLoading(false);
-          }
-        } else if (mounted) {
-          console.log('[v0] getInitialSession: no session found, setting isLoading=false');
-          setIsLoading(false);
-        }
-      } catch (error) {
-        console.error('[v0] getInitialSession error:', error);
-        if (mounted) setIsLoading(false);
+      if (s?.user) {
+        setUser(s.user);
+        setSession(s);
+        await loadProfile(s.user.id);
+      } else {
+        // Genuinely no session
+        setIsLoading(false);
       }
     };
 
@@ -192,28 +200,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
       if (!mounted) return;
 
-      if (event === 'SIGNED_IN' && s?.user) {
-        // On page refresh, getInitialSession already handles the session.
-        // The SIGNED_IN event fires redundantly — skip re-fetching.
-        if (initialSessionHandled) {
-          return;
-        }
-
+      if ((event === 'SIGNED_IN' || event === 'INITIAL_SESSION') && s?.user) {
         setUser(s.user);
         setSession(s);
-
-        const { profile: p, agent: a } = await fetchProfile(s.user.id);
-
-        if (mounted) {
-          setProfile(p);
-          setAgent(a);
-          setAuth(p as never, a as never);
-          setIsLoading(false);
-        }
+        // loadProfile is a no-op if already loaded
+        await loadProfile(s.user.id);
       } else if (event === 'TOKEN_REFRESHED' && s?.user) {
-        // Just update session, don't re-fetch profile
         setSession(s);
-      } else if (event === 'SIGNED_OUT' && mounted) {
+      } else if (event === 'SIGNED_OUT') {
+        profileLoaded = false;
         setUser(null);
         setSession(null);
         setProfile(null);
@@ -223,18 +218,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    // Safety timeout: if isLoading is still true after 10s, force it off
+    // Safety timeout: if isLoading is still true after 8s, force it off
     const safetyTimer = setTimeout(() => {
       if (mounted) {
         setIsLoading(prev => {
           if (prev) {
-            console.warn('Auth loading safety timeout triggered');
+            console.warn('[v0] Auth loading safety timeout triggered');
             return false;
           }
           return prev;
         });
       }
-    }, 10000);
+    }, 8000);
 
     return () => {
       mounted = false;
