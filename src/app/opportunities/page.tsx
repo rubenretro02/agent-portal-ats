@@ -48,7 +48,6 @@ import {
 } from 'lucide-react';
 import type { ApplicationQuestion, ApplicationAnswer } from '@/types';
 import type { SystemCheckResult } from '@/lib/systemCheck';
-import { AlertCircle } from 'lucide-react';
 
 export default function OpportunitiesPage() {
   const { agent: authAgent, profile, isLoading: authLoading } = useAuthContext();
