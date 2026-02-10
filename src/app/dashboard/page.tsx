@@ -200,13 +200,13 @@ export default function DashboardPage() {
                               {opp.compensation && (
                                 <span className="flex items-center gap-1">
                                   <DollarSign className="h-3.5 w-3.5" />
-                                  {'$'}{opp.compensation.baseRate}/{opp.compensation.type === 'hourly' ? 'hr' : opp.compensation.type}
+                                  {'$'}{String(opp.compensation.baseRate)}/{opp.compensation.type === 'hourly' ? 'hr' : String(opp.compensation.type)}
                                 </span>
                               )}
                               {opp.capacity && (
                                 <span className="flex items-center gap-1">
                                   <Users className="h-3.5 w-3.5" />
-                                  {opp.capacity.openPositions} spots
+                                  {String((opp.capacity as Record<string, unknown>).openPositions)} spots
                                 </span>
                               )}
                             </div>
@@ -246,7 +246,7 @@ export default function DashboardPage() {
                 <div className="flex items-center gap-2 text-sm">
                   <DollarSign className="h-4 w-4 text-zinc-400" />
                   <span className="text-zinc-900 font-medium">
-                    {'$'}{selectedOpp.compensation.baseRate} / {selectedOpp.compensation.type}
+                    {'$'}{String(selectedOpp.compensation.baseRate)} / {String(selectedOpp.compensation.type)}
                   </span>
                 </div>
               )}
