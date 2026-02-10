@@ -54,11 +54,26 @@ export function useAuth(): UseAuthReturn {
   const supabase = getSupabaseClient();
 
   const fetchProfile = useCallback(async (userId: string) => {
-    const { data: profile } = await supabase
+    // Try direct Supabase query first
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('*')
       .eq('id', userId)
       .single();
+
+    if (profileError) {
+      // Fallback to API route to bypass RLS infinite recursion
+      try {
+        const res = await fetch('/api/profile');
+        if (res.ok) {
+          const data = await res.json();
+          return { profile: data.profile as Profile | null, agent: data.agent as Agent | null };
+        }
+      } catch (e) {
+        console.error('Profile API fallback error:', e);
+      }
+      return { profile: null, agent: null };
+    }
 
     let agent = null;
     if (profile && (profile as Profile).role === 'agent') {

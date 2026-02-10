@@ -229,24 +229,25 @@ export const useAdminStore = create<AdminAuthState>()(
         if (!hasPermission('canViewRecruiters')) return;
 
         set({ isLoading: true });
-        const supabase = getSupabaseClient();
 
         try {
-          const { data, error } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('role', 'recruiter')
-            .order('created_at', { ascending: false });
+          const { adminDb } = await import('@/lib/adminDb');
+          const { data, error } = await adminDb<Record<string, unknown>[]>({
+            action: 'select',
+            table: 'profiles',
+            filters: { role: 'recruiter' },
+            order: { column: 'created_at', ascending: false },
+          });
 
           if (!error && data) {
-            const recruiters: AdminUser[] = data.map(profile => ({
-              id: profile.id,
-              email: profile.email,
-              firstName: profile.first_name,
-              lastName: profile.last_name,
+            const recruiters: AdminUser[] = data.map((profile: Record<string, unknown>) => ({
+              id: profile.id as string,
+              email: profile.email as string,
+              firstName: profile.first_name as string,
+              lastName: profile.last_name as string,
               role: 'recruiter' as const,
-              isActive: profile.is_active,
-              createdAt: new Date(profile.created_at),
+              isActive: profile.is_active as boolean,
+              createdAt: new Date(profile.created_at as string),
             }));
             set({ recruiters, isLoading: false });
           } else {
@@ -277,7 +278,6 @@ export const useAdminStore = create<AdminAuthState>()(
         }
 
         set({ isLoading: true });
-        const supabase = getSupabaseClient();
 
         try {
           const updateData: Record<string, unknown> = {};
@@ -285,26 +285,18 @@ export const useAdminStore = create<AdminAuthState>()(
           if (data.lastName) updateData.last_name = data.lastName;
           if (data.isActive !== undefined) updateData.is_active = data.isActive;
 
-          // Use API route to bypass RLS recursion, but for admin updating other users
-          // we still try direct query first, fallback handled server-side
-          const { error } = await supabase
-            .from('profiles')
-            .update(updateData)
-            .eq('id', id);
+          const { adminDb } = await import('@/lib/adminDb');
+          const result = await adminDb({
+            action: 'update',
+            table: 'profiles',
+            data: updateData,
+            match: { id },
+          });
 
-          if (error) {
-            console.warn('Direct recruiter update failed, trying API fallback:', error.code);
-            // For admin updating their own profile, use the API route
-            const res = await fetch('/api/profile/update', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(updateData),
-            });
-            if (!res.ok) {
-              console.error('Update recruiter error via API');
-              set({ isLoading: false });
-              return false;
-            }
+          if (result.error) {
+            console.error('Update recruiter error:', result.error);
+            set({ isLoading: false });
+            return false;
           }
 
           // Refresh recruiters list

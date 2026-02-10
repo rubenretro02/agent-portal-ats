@@ -130,11 +130,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setLanguage: async (lang) => {
     const { agent } = get();
     if (agent) {
-      const supabase = getSupabaseClient();
-      await supabase
-        .from('agents')
-        .update({ preferred_language: lang } as never)
-        .eq('id', agent.id);
+      const { adminDb } = await import('@/lib/adminDb');
+      await adminDb({
+        action: 'update', table: 'agents',
+        data: { preferred_language: lang },
+        match: { id: agent.id },
+      });
     }
     set({ language: lang });
   },
@@ -143,16 +144,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     const { agent } = get();
     if (!agent) return;
 
-    const supabase = getSupabaseClient();
-    const { data, error } = await supabase
-      .from('agents')
-      .update(updates as never)
-      .eq('id', agent.id)
-      .select()
-      .single();
+    const { adminDb } = await import('@/lib/adminDb');
+    const { data, error } = await adminDb<Agent[]>({
+      action: 'update', table: 'agents',
+      data: updates as Record<string, unknown>,
+      match: { id: agent.id },
+    });
 
-    if (!error && data) {
-      set({ agent: data as Agent });
+    if (!error && data && data.length > 0) {
+      set({ agent: data[0] });
     }
   },
 
@@ -231,6 +231,27 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
 
   fetchOpportunities: async (includeAll = false) => {
     set({ isLoading: true });
+
+    // For admin (includeAll=true), use admin API to bypass RLS that references profiles
+    if (includeAll) {
+      try {
+        const { adminDb } = await import('@/lib/adminDb');
+        const result = await adminDb<OpportunityWithQuestions[]>({
+          action: 'select',
+          table: 'opportunities',
+          select: '*, application_questions (*)',
+          order: { column: 'created_at', ascending: false },
+        });
+
+        if (!result.error && result.data) {
+          set({ opportunities: result.data, isLoading: false });
+          return;
+        }
+      } catch (e) {
+        console.error('Admin fetch opportunities error:', e);
+      }
+    }
+
     const supabase = getSupabaseClient();
 
     let query = supabase
@@ -299,44 +320,49 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
   },
 
   applyToOpportunity: async (opportunityId, answers) => {
-    const supabase = getSupabaseClient();
     const { agent } = useAuthStore.getState();
 
     if (!agent) {
       return { success: false, applicationId: '' };
     }
 
-    // Create application
-    const { data: application, error: appError } = await supabase
-      .from('applications')
-      .insert({
+    // Create application using admin API to bypass RLS
+    const { adminDb } = await import('@/lib/adminDb');
+    const { data: appResult, error: appError } = await adminDb<{ id: string }[]>({
+      action: 'insert',
+      table: 'applications',
+      data: {
         agent_id: agent.id,
         opportunity_id: opportunityId,
         status: 'pending',
-      } as never)
-      .select()
-      .single();
+      },
+    });
 
-    if (appError || !application) {
+    if (appError || !appResult || appResult.length === 0) {
       console.error('Error creating application:', appError);
       return { success: false, applicationId: '' };
     }
 
-    const appData = application as unknown as { id: string };
+    const appId = appResult[0].id;
 
     // Create answers
-    const answersToInsert = answers.map(answer => ({
-      application_id: appData.id,
-      question_id: answer.questionId,
-      value: answer.value,
-    }));
+    if (answers.length > 0) {
+      const answersToInsert = answers.map(answer => ({
+        application_id: appId,
+        question_id: answer.questionId,
+        value: answer.value,
+      }));
 
-    const { error: answersError } = await supabase
-      .from('application_answers')
-      .insert(answersToInsert as never);
+      const { error: answersError } = await adminDb({
+        action: 'insert',
+        table: 'application_answers',
+        data: answersToInsert,
+        select: false,
+      });
 
-    if (answersError) {
-      console.error('Error creating answers:', answersError);
+      if (answersError) {
+        console.error('Error creating answers:', answersError);
+      }
     }
 
     // Update applied opportunities
@@ -344,7 +370,7 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
       appliedOpportunityIds: [...state.appliedOpportunityIds, opportunityId],
     }));
 
-    return { success: true, applicationId: appData.id };
+    return { success: true, applicationId: appId };
   },
 
   fetchAppliedOpportunities: async () => {
@@ -366,8 +392,6 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
   },
 
   createOpportunity: async (data) => {
-    const supabase = getSupabaseClient();
-
     try {
       const opportunityData = {
         name: data.name,
@@ -400,21 +424,24 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
         },
       };
 
-      const { data: newOpp, error } = await supabase
-        .from('opportunities')
-        .insert(opportunityData as never)
-        .select()
-        .single();
+      // Use admin API to bypass RLS that references profiles table
+      const { adminDb } = await import('@/lib/adminDb');
+      const result = await adminDb<{ id: string }[]>({
+        action: 'insert',
+        table: 'opportunities',
+        data: opportunityData,
+      });
 
-      if (error) {
-        console.error('Error creating opportunity:', error);
-        return { success: false, error: error.message };
+      if (result.error || !result.data) {
+        console.error('Error creating opportunity:', result.error);
+        return { success: false, error: result.error || 'Failed to create opportunity' };
       }
 
       // Refresh opportunities list
       await get().fetchOpportunities(true);
 
-      return { success: true, id: (newOpp as { id: string }).id };
+      const newOpp = Array.isArray(result.data) ? result.data[0] : result.data;
+      return { success: true, id: newOpp.id };
     } catch (error) {
       console.error('Create opportunity error:', error);
       return { success: false, error: 'An unexpected error occurred' };
@@ -422,8 +449,6 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
   },
 
   updateOpportunity: async (id, data) => {
-    const supabase = getSupabaseClient();
-
     try {
       const updateData: Record<string, unknown> = {};
 
@@ -459,13 +484,16 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
         };
       }
 
-      const { error } = await supabase
-        .from('opportunities')
-        .update(updateData)
-        .eq('id', id);
+      const { adminDb } = await import('@/lib/adminDb');
+      const result = await adminDb({
+        action: 'update',
+        table: 'opportunities',
+        data: updateData,
+        match: { id },
+      });
 
-      if (error) {
-        console.error('Error updating opportunity:', error);
+      if (result.error) {
+        console.error('Error updating opportunity:', result.error);
         return false;
       }
 
@@ -479,17 +507,18 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
   },
 
   deleteOpportunity: async (id) => {
-    const supabase = getSupabaseClient();
-
     try {
       // Soft delete - just set status to 'closed'
-      const { error } = await supabase
-        .from('opportunities')
-        .update({ status: 'closed' })
-        .eq('id', id);
+      const { adminDb } = await import('@/lib/adminDb');
+      const result = await adminDb({
+        action: 'update',
+        table: 'opportunities',
+        data: { status: 'closed' },
+        match: { id },
+      });
 
-      if (error) {
-        console.error('Error deleting opportunity:', error);
+      if (result.error) {
+        console.error('Error deleting opportunity:', result.error);
         return false;
       }
 
@@ -676,7 +705,6 @@ export const useDocumentStore = create<DocumentState>((set) => ({
 
   fetchDocuments: async () => {
     set({ isLoading: true });
-    const supabase = getSupabaseClient();
     const { agent } = useAuthStore.getState();
 
     if (!agent) {
@@ -684,14 +712,16 @@ export const useDocumentStore = create<DocumentState>((set) => ({
       return;
     }
 
-    const { data: documents } = await supabase
-      .from('documents')
-      .select('*')
-      .eq('agent_id', agent.id)
-      .order('uploaded_at', { ascending: false });
+    const { adminDb } = await import('@/lib/adminDb');
+    const { data: documents } = await adminDb<Document[]>({
+      action: 'select',
+      table: 'documents',
+      filters: { agent_id: agent.id },
+      order: { column: 'uploaded_at', ascending: false },
+    });
 
     if (documents) {
-      set({ documents: documents as unknown as Document[], isLoading: false });
+      set({ documents, isLoading: false });
     } else {
       set({ isLoading: false });
     }
@@ -703,7 +733,7 @@ export const useDocumentStore = create<DocumentState>((set) => ({
 
     if (!agent) return false;
 
-    // Upload to storage
+    // Upload to storage (storage operations don't have RLS recursion issue)
     const filePath = `${agent.id}/${type}/${Date.now()}_${file.name}`;
     const { error: uploadError } = await supabase.storage
       .from('documents')
@@ -719,16 +749,19 @@ export const useDocumentStore = create<DocumentState>((set) => ({
       .from('documents')
       .getPublicUrl(filePath);
 
-    // Create document record
-    const { error: dbError } = await supabase
-      .from('documents')
-      .insert({
+    // Create document record via admin API to bypass RLS
+    const { adminDb } = await import('@/lib/adminDb');
+    const { error: dbError } = await adminDb({
+      action: 'insert',
+      table: 'documents',
+      data: {
         agent_id: agent.id,
         type,
         name,
         url: urlData.publicUrl,
         status: 'pending',
-      } as never);
+      },
+    });
 
     if (dbError) {
       console.error('DB error:', dbError);

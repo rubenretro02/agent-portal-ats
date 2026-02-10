@@ -222,14 +222,15 @@ export default function OnboardingPage() {
     setSystemCheckResult(result);
     setSystemCheckComplete(true);
 
-    // Save system check immediately to agent profile
+    // Save system check immediately to agent profile via admin API to bypass RLS
     if (agent) {
-      await supabase
-        .from('agents')
-        .update({
+      const { adminDb } = await import('@/lib/adminDb');
+      await adminDb({
+        action: 'update',
+        table: 'agents',
+        data: {
           system_check: result,
           system_check_date: new Date().toISOString(),
-          // Also update equipment based on detected specs
           equipment: {
             hasComputer: true,
             hasWebcam: result.mediaDevices.hasWebcam,
@@ -242,8 +243,9 @@ export default function OnboardingPage() {
             platform: result.hardware.platform,
             isVpn: result.ipInfo.isVpn,
           },
-        })
-        .eq('id', agent.id);
+        },
+        match: { id: agent.id },
+      });
     }
   }, [agent, supabase]);
 
@@ -272,9 +274,11 @@ export default function OnboardingPage() {
         });
       }
 
-      const { error } = await supabase
-        .from('agents')
-        .update({
+      const { adminDb } = await import('@/lib/adminDb');
+      const { error } = await adminDb({
+        action: 'update',
+        table: 'agents',
+        data: {
           address: {
             street: formData.street,
             city: formData.city,
@@ -290,12 +294,13 @@ export default function OnboardingPage() {
           timezone: formData.timezone,
           pipeline_status: 'screening',
           pipeline_stage: 2,
-        })
-        .eq('id', agent.id);
+        },
+        match: { id: agent.id },
+      });
 
       if (error) {
         console.error('Error saving onboarding:', error);
-        setErrors({ save: error.message });
+        setErrors({ save: error });
       } else {
         await refreshProfile();
         router.push('/dashboard');

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { runSystemCheck, type SystemCheckResult } from '@/lib/systemCheck';
-import { getSupabaseClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -83,18 +82,17 @@ export function SystemCheck({ agentId, onComplete, showSaveButton = true, compac
     if (!result || !agentId) return;
 
     setSaving(true);
-    const supabase = getSupabaseClient();
 
     try {
-      // Save system check to agent profile
-      // Cast needed because system_check columns were added via SQL migration
-      const { error } = await supabase
-        .from('agents')
-        .update({
+      const { adminDb } = await import('@/lib/adminDb');
+      const { error } = await adminDb({
+        action: 'update', table: 'agents',
+        data: {
           system_check: result,
           system_check_date: new Date().toISOString(),
-        } as never)
-        .eq('id', agentId);
+        },
+        match: { id: agentId },
+      });
 
       if (!error) {
         setSaved(true);

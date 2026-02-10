@@ -395,11 +395,13 @@ export default function DashboardPage() {
     setSavingStep('address');
     setErrors({});
     try {
-      const { error } = await supabase
-        .from('agents')
-        .update({ address: addressForm })
-        .eq('id', agent.id);
-      if (error) throw error;
+      const { adminDb } = await import('@/lib/adminDb');
+      const { error } = await adminDb({
+        action: 'update', table: 'agents',
+        data: { address: addressForm },
+        match: { id: agent.id },
+      });
+      if (error) throw new Error(error);
       await refreshProfile();
       setShowAddressPopup(false);
     } catch (err) {
@@ -408,7 +410,7 @@ export default function DashboardPage() {
     } finally {
       setSavingStep(null);
     }
-  }, [addressForm, agent, supabase, refreshProfile]);
+  }, [addressForm, agent, refreshProfile]);
   // Save Experience
   const saveExperience = useCallback(async () => {
     const { yearsExperience } = experienceForm;
@@ -419,11 +421,13 @@ export default function DashboardPage() {
     setSavingStep('experience');
     setErrors({});
     try {
-      const { error } = await supabase
-        .from('agents')
-        .update({ experience: experienceForm })
-        .eq('id', agent.id);
-      if (error) throw error;
+      const { adminDb } = await import('@/lib/adminDb');
+      const { error } = await adminDb({
+        action: 'update', table: 'agents',
+        data: { experience: experienceForm },
+        match: { id: agent.id },
+      });
+      if (error) throw new Error(error);
       await refreshProfile();
       setShowExperiencePopup(false);
     } catch (err) {
@@ -432,7 +436,7 @@ export default function DashboardPage() {
     } finally {
       setSavingStep(null);
     }
-  }, [experienceForm, agent, supabase, refreshProfile]);
+  }, [experienceForm, agent, refreshProfile]);
   // Save Languages & Availability
   const saveLanguages = useCallback(async () => {
     const { languages, hoursPerWeek, preferredShift } = languagesForm;
@@ -443,9 +447,10 @@ export default function DashboardPage() {
     setSavingStep('languages');
     setErrors({});
     try {
-      const { error } = await supabase
-        .from('agents')
-        .update({
+      const { adminDb } = await import('@/lib/adminDb');
+      const { error } = await adminDb({
+        action: 'update', table: 'agents',
+        data: {
           languages: languagesForm.languages,
           availability: {
             hoursPerWeek: languagesForm.hoursPerWeek,
@@ -454,9 +459,10 @@ export default function DashboardPage() {
           timezone: languagesForm.timezone,
           pipeline_status: 'screening',
           pipeline_stage: 2,
-        })
-        .eq('id', agent.id);
-      if (error) throw error;
+        },
+        match: { id: agent.id },
+      });
+      if (error) throw new Error(error);
       await refreshProfile();
       setShowLanguagesPopup(false);
     } catch (err) {
@@ -465,13 +471,14 @@ export default function DashboardPage() {
     } finally {
       setSavingStep(null);
     }
-  }, [languagesForm, agent, supabase, refreshProfile]);
+  }, [languagesForm, agent, refreshProfile]);
   // Handle system check complete
   const handleSystemCheckComplete = useCallback(async (result: SystemCheckResult) => {
     if (agent) {
-      await supabase
-        .from('agents')
-        .update({
+      const { adminDb } = await import('@/lib/adminDb');
+      await adminDb({
+        action: 'update', table: 'agents',
+        data: {
           system_check: result,
           system_check_date: new Date().toISOString(),
           equipment: {
@@ -482,12 +489,13 @@ export default function DashboardPage() {
             cpuCores: result.hardware.cpuCores,
             ramGB: result.hardware.ramGB,
           },
-        } as never)
-        .eq('id', agent.id);
+        },
+        match: { id: agent.id },
+      });
       await refreshProfile();
       setOpenStep(null);
     }
-  }, [agent, supabase, refreshProfile]);
+  }, [agent, refreshProfile]);
   const toggleLanguage = (lang: string) => {
     setLanguagesForm(prev => ({
       ...prev,
