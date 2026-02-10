@@ -105,10 +105,9 @@ export function RequirePersonalInfo({ children }: RequirePersonalInfoProps) {
     return !!(profile.first_name && profile.last_name && profileExt.sex && profileExt.date_of_birth && profile.phone);
   }, [profile]);
 
-  // Show popup if personal info is not complete
+  // Pre-fill form data when profile loads (but don't auto-show popup)
   useEffect(() => {
     if (!isLoading && profile && !isPersonalInfoComplete()) {
-      // Pre-fill form with existing data
       const profileExt = profile as unknown as { middle_name?: string; sex?: string; date_of_birth?: string };
       const dob = parseDOB(profileExt.date_of_birth || '');
 
@@ -122,8 +121,6 @@ export function RequirePersonalInfo({ children }: RequirePersonalInfoProps) {
         dobYear: dob.year,
         phone: profile.phone || '',
       });
-
-      setShowPopup(true);
     }
   }, [isLoading, profile, isPersonalInfoComplete]);
 
@@ -184,24 +181,19 @@ export function RequirePersonalInfo({ children }: RequirePersonalInfoProps) {
     );
   }
 
-  // If personal info is complete, render children
-  if (isPersonalInfoComplete()) {
-    return <>{children}</>;
-  }
-
-  // Otherwise, show the page with a blocking popup
+  // Always render children - the dialog is now dismissible
   return (
     <>
       {children}
-      <Dialog open={showPopup} onOpenChange={() => {}}>
-        <DialogContent className="max-w-lg" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+      <Dialog open={showPopup} onOpenChange={(open) => setShowPopup(open)}>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle className="text-xl flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-amber-500" />
               Complete Your Profile
             </DialogTitle>
             <DialogDescription>
-              You must complete your personal information before accessing this page.
+              Complete your personal information to apply to opportunities. You can close this and explore first.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">

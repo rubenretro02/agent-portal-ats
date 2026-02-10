@@ -90,11 +90,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       // Try direct Supabase query first
+      console.log('[v0] Attempting direct Supabase profile query...');
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
+
+      console.log('[v0] Profile query result:', profileData ? 'found' : 'null', 'error:', profileError?.code || 'none');
 
       if (profileError) {
         console.warn('Direct profile fetch failed (code: ' + profileError.code + '), falling back to API route...');
@@ -104,11 +107,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       let agentData = null;
       if (profileData && profileData.role === 'agent') {
+        console.log('[v0] Fetching agent data...');
         const { data, error: agentError } = await supabase
           .from('agents')
           .select('*')
           .eq('user_id', userId)
           .single();
+
+        console.log('[v0] Agent query result:', data ? 'found' : 'null', 'error:', agentError?.code || 'none');
 
         if (agentError) {
           console.warn('Direct agent fetch failed, falling back to API route...');
@@ -118,6 +124,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         agentData = data;
       }
 
+      console.log('[v0] fetchProfile complete - profile:', !!profileData, 'agent:', !!agentData);
       return {
         profile: profileData as Profile,
         agent: agentData as Agent | null
@@ -163,11 +170,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (mounted) {
             setProfile(p);
             setAgent(a);
-            // Sync with store
             setAuth(p as never, a as never);
+            console.log('[v0] getInitialSession complete, setting isLoading=false, profile:', !!p);
             setIsLoading(false);
           }
         } else if (mounted) {
+          console.log('[v0] No session found, setting isLoading=false');
           setIsLoading(false);
         }
       } catch (error) {
@@ -192,8 +200,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mounted) {
           setProfile(p);
           setAgent(a);
-          // Sync with store
           setAuth(p as never, a as never);
+          console.log('[v0] onAuthStateChange SIGNED_IN complete, setting isLoading=false, profile:', !!p);
           setIsLoading(false);
         }
       } else if (event === 'SIGNED_OUT' && mounted) {

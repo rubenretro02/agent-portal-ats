@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { PortalLayout } from '@/components/layout/PortalLayout';
 import { RequirePersonalInfo } from '@/components/RequirePersonalInfo';
 import { useAuthContext } from '@/components/providers/AuthProvider';
@@ -47,8 +48,10 @@ import {
   Check,
 } from 'lucide-react';
 import type { ApplicationQuestion, ApplicationAnswer } from '@/types';
+import type { SystemCheckResult } from '@/lib/systemCheck';
 
 export default function OpportunitiesPage() {
+  const router = useRouter();
   const { agent: authAgent, profile, isLoading: authLoading } = useAuthContext();
   const { language } = useAuthStore();
   const { opportunities, fetchOpportunities, applyToOpportunity, isLoading, appliedOpportunityIds, fetchAppliedOpportunities } = useOpportunityStore();
@@ -59,9 +62,28 @@ export default function OpportunitiesPage() {
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showApplyDialog, setShowApplyDialog] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [showOnboardingWarning, setShowOnboardingWarning] = useState(false);
   const [applying, setApplying] = useState(false);
   const [applicationId, setApplicationId] = useState('');
   const [copied, setCopied] = useState(false);
+
+  // Check if full onboarding is complete
+  const isOnboardingComplete = (() => {
+    if (!profile || !authAgent) return false;
+    const address = authAgent.address as Record<string, string> | null;
+    const experience = authAgent.experience as Record<string, string> | null;
+    const availability = authAgent.availability as Record<string, string> | null;
+    const langs = authAgent.languages as string[] | null;
+    const systemCheck = authAgent.system_check as SystemCheckResult | null;
+    const profileExt = profile as unknown as { sex?: string; date_of_birth?: string };
+    return !!(
+      profile.first_name && profile.last_name && profileExt.sex && profileExt.date_of_birth && profile.phone &&
+      address?.street && address?.city && address?.state && address?.zipCode &&
+      experience?.yearsExperience &&
+      langs && langs.length > 0 && availability?.hoursPerWeek && availability?.preferredShift &&
+      systemCheck
+    );
+  })();
 
   // Form state
   const [formAnswers, setFormAnswers] = useState<Record<string, string | string[] | number | boolean>>({});
@@ -166,6 +188,10 @@ export default function OpportunitiesPage() {
 
   const handleOpenDetailsDialog = (opportunity: typeof opportunities[0]) => {
     setSelectedOpportunity(opportunity);
+    if (!isOnboardingComplete) {
+      setShowOnboardingWarning(true);
+      return;
+    }
     setShowDetailsDialog(true);
   };
 
@@ -874,6 +900,40 @@ export default function OpportunitiesPage() {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Onboarding Warning Dialog */}
+      <Dialog open={showOnboardingWarning} onOpenChange={setShowOnboardingWarning}>
+        <DialogContent className="sm:max-w-md">
+          <div className="flex flex-col items-center py-6 text-center">
+            <div className="w-14 h-14 bg-amber-100 rounded-full flex items-center justify-center mb-4">
+              <AlertCircle className="h-7 w-7 text-amber-600" />
+            </div>
+            <DialogTitle className="text-lg mb-2">
+              {language === 'es' ? 'Completa tu Onboarding' : 'Complete Your Onboarding'}
+            </DialogTitle>
+            <DialogDescription className="text-center mb-6">
+              {language === 'es'
+                ? 'Necesitas completar todos los pasos del onboarding antes de poder aplicar a oportunidades. Ve al Dashboard para completar tu perfil.'
+                : 'You need to complete all onboarding steps before you can apply to opportunities. Go to the Dashboard to complete your profile.'}
+            </DialogDescription>
+            <div className="flex gap-3 w-full">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => setShowOnboardingWarning(false)}
+              >
+                {language === 'es' ? 'Seguir Explorando' : 'Keep Exploring'}
+              </Button>
+              <Button
+                className="flex-1 bg-teal-500 hover:bg-teal-600"
+                onClick={() => router.push('/dashboard')}
+              >
+                {language === 'es' ? 'Ir al Dashboard' : 'Go to Dashboard'}
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
