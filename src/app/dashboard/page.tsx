@@ -105,22 +105,12 @@ export default function DashboardPage() {
 
   const selectedOpp = opportunities.find(o => o.id === selectedOpportunity);
 
-  console.log('[v0] Dashboard render - isLoading:', isLoading, 'profile:', !!profile, 'agent:', !!agent, 'isOnboardingComplete:', isOnboardingComplete);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
-
-  if (!profile) {
+  if (isLoading || !profile) {
     return (
       <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-zinc-500">{isLoading ? 'Loading...' : 'Redirecting to login...'}</p>
+          <p className="text-zinc-500">Loading...</p>
         </div>
       </div>
     );

@@ -86,45 +86,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const fetchProfile = useCallback(async (userId: string): Promise<{ profile: Profile | null; agent: Agent | null }> => {
-    console.log('Fetching profile for user:', userId);
-
     try {
       // Try direct Supabase query first
-      console.log('[v0] Attempting direct Supabase profile query...');
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      console.log('[v0] Profile query result:', profileData ? 'found' : 'null', 'error:', profileError?.code || 'none');
-
       if (profileError) {
-        console.warn('Direct profile fetch failed (code: ' + profileError.code + '), falling back to API route...');
         // Fallback to API route which uses service role to bypass RLS
         return await fetchProfileViaAPI();
       }
 
       let agentData = null;
       if (profileData && profileData.role === 'agent') {
-        console.log('[v0] Fetching agent data...');
         const { data, error: agentError } = await supabase
           .from('agents')
           .select('*')
           .eq('user_id', userId)
           .single();
 
-        console.log('[v0] Agent query result:', data ? 'found' : 'null', 'error:', agentError?.code || 'none');
-
         if (agentError) {
-          console.warn('Direct agent fetch failed, falling back to API route...');
           return await fetchProfileViaAPI();
         }
 
         agentData = data;
       }
 
-      console.log('[v0] fetchProfile complete - profile:', !!profileData, 'agent:', !!agentData);
       return {
         profile: profileData as Profile,
         agent: agentData as Agent | null
@@ -147,21 +136,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    let initialSessionHandled = false;
 
-    const getInitialSession = async () => {
-      try {
-        console.log('Getting initial session...');
-        const { data: { session: s }, error } = await supabase.auth.getSession();
+    // Set up onAuthStateChange FIRST so it can catch the session
+    // even if getSession fails (abort error on page refresh)
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
+      if (!mounted) return;
 
-        if (error) {
-          console.error('Session error:', error);
-          if (mounted) setIsLoading(false);
-          return;
-        }
+      if (event === 'INITIAL_SESSION') {
+        // This is the most reliable way to get the session on load
+        // It fires even when getSession fails with abort errors
+        initialSessionHandled = true;
 
-        console.log('Session:', s ? 'Found' : 'None');
-
-        if (s?.user && mounted) {
+        if (s?.user) {
           setUser(s.user);
           setSession(s);
 
@@ -171,29 +158,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setProfile(p);
             setAgent(a);
             setAuth(p as never, a as never);
-            console.log('[v0] getInitialSession complete, setting isLoading=false, profile:', !!p);
             setIsLoading(false);
           }
-        } else if (mounted) {
-          console.log('[v0] No session found, setting isLoading=false');
+        } else {
           setIsLoading(false);
         }
-      } catch (error) {
-        console.error('Error getting session:', error);
-        if (mounted) setIsLoading(false);
-      }
-    };
-
-    getInitialSession();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
-      console.log('Auth state change:', event);
-
-      if (event === 'SIGNED_IN' && s?.user && mounted) {
+      } else if (event === 'SIGNED_IN' && s?.user) {
         setUser(s.user);
         setSession(s);
-
-        await new Promise(resolve => setTimeout(resolve, 500));
 
         const { profile: p, agent: a } = await fetchProfile(s.user.id);
 
@@ -201,22 +173,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(p);
           setAgent(a);
           setAuth(p as never, a as never);
-          console.log('[v0] onAuthStateChange SIGNED_IN complete, setting isLoading=false, profile:', !!p);
           setIsLoading(false);
         }
-      } else if (event === 'SIGNED_OUT' && mounted) {
+      } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setSession(null);
         setProfile(null);
         setAgent(null);
-        // Sync with store
         setAuth(null, null);
         setIsLoading(false);
+      } else if (event === 'TOKEN_REFRESHED' && s?.user) {
+        setUser(s.user);
+        setSession(s);
       }
     });
 
+    // Safety timeout: if onAuthStateChange never fires INITIAL_SESSION
+    // within 10 seconds, stop loading to avoid infinite spinner
+    const safetyTimeout = setTimeout(() => {
+      if (mounted && !initialSessionHandled) {
+        console.warn('Auth: safety timeout reached, setting isLoading=false');
+        setIsLoading(false);
+      }
+    }, 10000);
+
     return () => {
       mounted = false;
+      clearTimeout(safetyTimeout);
       subscription.unsubscribe();
     };
   }, [supabase, fetchProfile, setAuth]);
