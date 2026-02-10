@@ -105,6 +105,8 @@ export default function DashboardPage() {
 
   const selectedOpp = opportunities.find(o => o.id === selectedOpportunity);
 
+  console.log('[v0] Dashboard render - isLoading:', isLoading, 'profile:', !!profile, 'agent:', !!agent, 'isOnboardingComplete:', isOnboardingComplete);
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
