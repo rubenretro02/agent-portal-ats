@@ -46,12 +46,9 @@ export function PortalLayout({ children, title }: PortalLayoutProps) {
   const { profile, agent, isLoading, isAuthenticated, signOut } = useAuthContext();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
-    // Only redirect if not loading and not authenticated
-    if (!isLoading && !isAuthenticated) {
-      router.push('/login');
-    }
-  }, [isLoading, isAuthenticated, router]);
+  // NOTE: Redirect to /login is handled by the middleware (server-side).
+  // Do NOT redirect here to avoid client-side redirect loops with the middleware
+  // and individual page-level redirect logic.
 
   if (isLoading) {
     return (

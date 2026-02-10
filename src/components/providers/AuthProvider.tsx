@@ -181,6 +181,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
       console.log('Auth state change:', event);
 
+      // Only handle explicit sign-in/sign-out events, not TOKEN_REFRESHED or INITIAL_SESSION
+      // to avoid re-triggering profile fetches that cause loops
       if (event === 'SIGNED_IN' && s?.user && mounted) {
         setUser(s.user);
         setSession(s);
@@ -192,7 +194,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mounted) {
           setProfile(p);
           setAgent(a);
-          // Sync with store
           setAuth(p as never, a as never);
           setIsLoading(false);
         }
@@ -201,9 +202,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(null);
         setProfile(null);
         setAgent(null);
-        // Sync with store
         setAuth(null, null);
         setIsLoading(false);
+      } else if (event === 'TOKEN_REFRESHED' && s?.user && mounted) {
+        // Only update session/user, do NOT refetch profile to avoid loops
+        setUser(s.user);
+        setSession(s);
       }
     });
 
