@@ -252,22 +252,20 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
       }
     }
 
-    const supabase = getSupabaseClient();
-
-    let query = supabase
-      .from('opportunities')
-      .select(`
-        *,
-        application_questions (*)
-      `)
-      .order('created_at', { ascending: false });
-
-    // Only filter by active status if not fetching all (for admin)
+    // Use admin API for all opportunity fetches to bypass RLS that references profiles
+    const { adminDb } = await import('@/lib/adminDb');
+    const filters: Record<string, unknown> = {};
     if (!includeAll) {
-      query = query.eq('status', 'active');
+      filters.status = 'active';
     }
 
-    const { data: opportunities, error } = await query;
+    const { data: opportunities, error } = await adminDb<Record<string, unknown>[]>({
+      action: 'select',
+      table: 'opportunities',
+      select: '*, application_questions (*)',
+      filters: Object.keys(filters).length > 0 ? filters : undefined,
+      order: { column: 'created_at', ascending: false },
+    });
 
     if (!error && opportunities) {
       const formattedOpportunities: OpportunityWithQuestions[] = (opportunities as unknown as Record<string, unknown>[]).map((opp) => ({
@@ -374,19 +372,21 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
   },
 
   fetchAppliedOpportunities: async () => {
-    const supabase = getSupabaseClient();
     const { agent } = useAuthStore.getState();
 
     if (!agent) return;
 
-    const { data: applications } = await supabase
-      .from('applications')
-      .select('opportunity_id')
-      .eq('agent_id', agent.id);
+    const { adminDb } = await import('@/lib/adminDb');
+    const { data: applications } = await adminDb<{ opportunity_id: string }[]>({
+      action: 'select',
+      table: 'applications',
+      select: 'opportunity_id',
+      filters: { agent_id: agent.id },
+    });
 
     if (applications) {
       set({
-        appliedOpportunityIds: (applications as unknown as { opportunity_id: string }[]).map(a => a.opportunity_id),
+        appliedOpportunityIds: applications.map(a => a.opportunity_id),
       });
     }
   },
