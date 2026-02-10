@@ -69,32 +69,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfileViaAPI = useCallback(async (): Promise<{ profile: Profile | null; agent: Agent | null }> => {
     try {
+      console.log('[v0] fetchProfileViaAPI: starting fetch to /api/profile');
       const res = await fetch('/api/profile');
+      console.log('[v0] fetchProfileViaAPI: response status:', res.status);
       if (!res.ok) {
-        console.error('Profile API error:', res.status);
+        const errorText = await res.text();
+        console.error('[v0] Profile API error:', res.status, errorText);
         return { profile: null, agent: null };
       }
       const data = await res.json();
+      console.log('[v0] fetchProfileViaAPI: got profile:', !!data.profile, 'agent:', !!data.agent);
       return {
         profile: data.profile as Profile | null,
         agent: data.agent as Agent | null,
       };
     } catch (error) {
-      console.error('Profile API fetch error:', error);
+      console.error('[v0] Profile API fetch error:', error);
       return { profile: null, agent: null };
     }
   }, []);
 
   const fetchProfile = useCallback(async (userId: string): Promise<{ profile: Profile | null; agent: Agent | null }> => {
+    console.log('[v0] fetchProfile called for userId:', userId);
     try {
       // Try direct Supabase query first
+      console.log('[v0] fetchProfile: trying direct Supabase query...');
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
+      console.log('[v0] fetchProfile: direct query result - data:', !!profileData, 'error:', profileError?.code, profileError?.message);
+
       if (profileError) {
+        console.log('[v0] fetchProfile: direct query failed, falling back to API...');
         // Fallback to API route which uses service role to bypass RLS
         return await fetchProfileViaAPI();
       }
@@ -142,10 +151,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const getInitialSession = async () => {
       try {
+        console.log('[v0] getInitialSession: calling getSession...');
         const { data: { session: s }, error } = await supabase.auth.getSession();
+        console.log('[v0] getInitialSession: session result - hasSession:', !!s, 'hasUser:', !!s?.user, 'error:', error?.message);
 
         if (error) {
-          console.error('Session error:', error);
+          console.error('[v0] Session error:', error);
           if (mounted) setIsLoading(false);
           return;
         }
@@ -155,19 +166,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(s);
           initialSessionHandled = true;
 
+          console.log('[v0] getInitialSession: fetching profile for user:', s.user.id);
           const { profile: p, agent: a } = await fetchProfile(s.user.id);
+          console.log('[v0] getInitialSession: fetchProfile returned - profile:', !!p, 'agent:', !!a);
 
           if (mounted) {
             setProfile(p);
             setAgent(a);
             setAuth(p as never, a as never);
+            console.log('[v0] getInitialSession: setting isLoading=false');
             setIsLoading(false);
           }
         } else if (mounted) {
+          console.log('[v0] getInitialSession: no session found, setting isLoading=false');
           setIsLoading(false);
         }
       } catch (error) {
-        console.error('Error getting session:', error);
+        console.error('[v0] getInitialSession error:', error);
         if (mounted) setIsLoading(false);
       }
     };
