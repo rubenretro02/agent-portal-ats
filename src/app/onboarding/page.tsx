@@ -265,10 +265,11 @@ export default function OnboardingPage() {
 
     try {
       if (profile) {
-        await supabase
-          .from('profiles')
-          .update({ phone: formData.phone })
-          .eq('id', profile.id);
+        await fetch('/api/profile/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: formData.phone }),
+        });
       }
 
       const { error } = await supabase

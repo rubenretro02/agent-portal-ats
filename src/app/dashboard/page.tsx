@@ -354,18 +354,23 @@ export default function DashboardPage() {
     setSavingStep('personal');
     setErrors({});
     try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
+      // Use API route to bypass RLS infinite recursion on profiles table
+      const res = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
           first_name: personalForm.firstName,
           middle_name: personalForm.middleName,
           last_name: personalForm.lastName,
           sex: personalForm.sex,
           date_of_birth: dateOfBirth,
           phone: personalForm.phone,
-        } as never)
-        .eq('id', profile.id);
-      if (error) throw error;
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to update profile');
+      }
       await refreshProfile();
       setShowPersonalPopup(false);
     } catch (err) {

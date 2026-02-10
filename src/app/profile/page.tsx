@@ -65,14 +65,18 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     setSaving(true);
-    const { error } = await supabase
-      .from('profiles')
-      .update({ phone: formData.phone })
-      .eq('id', profile.id);
-
-    if (!error) {
-      await refreshProfile();
-      setEditing(false);
+    try {
+      const res = await fetch('/api/profile/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: formData.phone }),
+      });
+      if (res.ok) {
+        await refreshProfile();
+        setEditing(false);
+      }
+    } catch (err) {
+      console.error('Error saving profile:', err);
     }
     setSaving(false);
   };

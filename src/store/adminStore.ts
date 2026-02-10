@@ -285,15 +285,26 @@ export const useAdminStore = create<AdminAuthState>()(
           if (data.lastName) updateData.last_name = data.lastName;
           if (data.isActive !== undefined) updateData.is_active = data.isActive;
 
+          // Use API route to bypass RLS recursion, but for admin updating other users
+          // we still try direct query first, fallback handled server-side
           const { error } = await supabase
             .from('profiles')
             .update(updateData)
             .eq('id', id);
 
           if (error) {
-            console.error('Update recruiter error:', error);
-            set({ isLoading: false });
-            return false;
+            console.warn('Direct recruiter update failed, trying API fallback:', error.code);
+            // For admin updating their own profile, use the API route
+            const res = await fetch('/api/profile/update', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(updateData),
+            });
+            if (!res.ok) {
+              console.error('Update recruiter error via API');
+              set({ isLoading: false });
+              return false;
+            }
           }
 
           // Refresh recruiters list
