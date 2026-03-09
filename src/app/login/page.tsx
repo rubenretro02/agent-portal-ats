@@ -25,14 +25,12 @@ export default function LoginPage() {
   const supabase = getSupabaseClient();
 
   useEffect(() => {
-    if (isAuthenticated && profile) {
-      if (profile.role === 'agent') {
-        router.push('/dashboard');
-      } else {
-        router.push('/admin');
-      }
+    // Solo redirigir si está autenticado, tiene perfil, y no está cargando
+    if (!authLoading && isAuthenticated && profile) {
+      const redirectPath = profile.role === 'agent' ? '/dashboard' : '/admin';
+      router.push(redirectPath);
     }
-  }, [isAuthenticated, profile, router]);
+  }, [authLoading, isAuthenticated, profile, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

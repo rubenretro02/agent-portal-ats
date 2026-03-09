@@ -114,7 +114,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   profile: null,
   agent: null,
   isAuthenticated: false,
-  isLoading: true,
+  isLoading: false, // Cambiado a false - el AuthProvider maneja el loading real
   language: 'en',
 
   setAuth: (profile, agent) => {

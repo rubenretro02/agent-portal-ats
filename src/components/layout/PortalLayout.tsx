@@ -47,10 +47,21 @@ export function PortalLayout({ children, title }: PortalLayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    // Only redirect if not loading and not authenticated
+    // Solo redirigir si definitivamente no está cargando y no está autenticado
+    // Agregar un pequeño delay para evitar redirecciones prematuras durante el refresh
+    let redirectTimeout: ReturnType<typeof setTimeout> | null = null;
+
     if (!isLoading && !isAuthenticated) {
-      router.push('/login');
+      redirectTimeout = setTimeout(() => {
+        router.push('/login');
+      }, 100);
     }
+
+    return () => {
+      if (redirectTimeout) {
+        clearTimeout(redirectTimeout);
+      }
+    };
   }, [isLoading, isAuthenticated, router]);
 
   if (isLoading) {

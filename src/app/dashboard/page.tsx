@@ -67,15 +67,27 @@ export default function DashboardPage() {
     );
   }, [profile, agent]);
 
-  // Redirect if no profile
+  // Redirect if no profile - pero solo después de verificar que realmente no hay sesión
   useEffect(() => {
+    // Limpiar timeout previo
+    if (redirectTimerRef.current) {
+      clearTimeout(redirectTimerRef.current);
+      redirectTimerRef.current = null;
+    }
+
+    // Solo redirigir si no está cargando Y no hay perfil
+    // El timeout corto es solo para dar tiempo al AuthProvider de inicializarse
     if (!isLoading && !profile) {
       redirectTimerRef.current = setTimeout(() => {
         router.push('/login');
-      }, 2000);
+      }, 500); // Reducido de 2000ms a 500ms
     }
+
     return () => {
-      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current);
+      if (redirectTimerRef.current) {
+        clearTimeout(redirectTimerRef.current);
+        redirectTimerRef.current = null;
+      }
     };
   }, [isLoading, profile, router]);
 

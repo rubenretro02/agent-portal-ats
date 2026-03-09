@@ -1,10 +1,24 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
+// Función para validar si es una URL válida
+function isValidUrl(url: string | undefined): boolean {
+  if (!url) return false;
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export async function updateSession(request: NextRequest) {
-  // Skip middleware if Supabase is not configured
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    console.warn('Supabase not configured. Skipping auth middleware.');
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  // Skip middleware if Supabase is not configured or URL is invalid
+  if (!isValidUrl(supabaseUrl) || !supabaseAnonKey || supabaseAnonKey.length < 10) {
+    console.warn('Supabase not configured or invalid. Skipping auth middleware.');
     return NextResponse.next({ request });
   }
 
