@@ -57,9 +57,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Timeout de seguridad reducido a 15 segundos
-const AUTH_TIMEOUT_MS = 15000;
-
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -67,231 +64,162 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [agent, setAgent] = useState<Agent | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Refs para control de flujo
-  const isInitialized = useRef(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mountedRef = useRef(true);
+  const initStartedRef = useRef(false);
 
   const supabase = useMemo(() => getSupabaseClient(), []);
   const setAuth = useAuthStore((state) => state.setAuth);
 
-  // Limpiar timeout de seguridad
-  const clearSafetyTimeout = useCallback(() => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-  }, []);
+  // Fetch profile via API
+  const fetchProfile = useCallback(async (userId: string): Promise<{ profile: Profile | null; agent: Agent | null }> => {
+    console.log('[AuthProvider] Fetching profile for:', userId);
 
-  // Establecer timeout de seguridad
-  const setSafetyTimeout = useCallback(() => {
-    clearSafetyTimeout();
-    timeoutRef.current = setTimeout(() => {
-      console.warn('[AuthProvider] Safety timeout reached, forcing isLoading to false');
-      setIsLoading(false);
-      // No limpiamos el auth aquí, solo el loading
-    }, AUTH_TIMEOUT_MS);
-  }, [clearSafetyTimeout]);
-
-  // Fetch profile usando la API route (más confiable, evita problemas de RLS)
-  const fetchProfileViaAPI = useCallback(async (): Promise<{ profile: Profile | null; agent: Agent | null }> => {
-    console.log('[AuthProvider] Fetching profile via API route...');
     try {
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout for API call
-
+      // Try API route first
       const res = await fetch('/api/profile', {
-        signal: controller.signal,
         credentials: 'include',
+        cache: 'no-store',
       });
 
-      clearTimeout(timeoutId);
-
-      if (!res.ok) {
-        console.error('[AuthProvider] Profile API error:', res.status);
-        return { profile: null, agent: null };
+      if (res.ok) {
+        const data = await res.json();
+        console.log('[AuthProvider] Profile loaded via API');
+        return {
+          profile: data.profile as Profile | null,
+          agent: data.agent as Agent | null,
+        };
       }
-      const data = await res.json();
-      console.log('[AuthProvider] Profile API success:', !!data.profile);
-      return {
-        profile: data.profile as Profile | null,
-        agent: data.agent as Agent | null,
-      };
-    } catch (error) {
-      if (error instanceof Error && error.name === 'AbortError') {
-        console.error('[AuthProvider] Profile API timeout');
-      } else {
-        console.error('[AuthProvider] Profile API fetch error:', error);
-      }
-      return { profile: null, agent: null };
-    }
-  }, []);
 
-  // Fetch profile - Usar API primero (evita problemas de RLS)
-  const fetchProfile = useCallback(async (userId: string): Promise<{ profile: Profile | null; agent: Agent | null }> => {
-    console.log('[AuthProvider] Fetching profile for user:', userId);
+      console.log('[AuthProvider] API failed, trying direct query');
 
-    // Usar API route primero (más confiable)
-    const apiResult = await fetchProfileViaAPI();
-    if (apiResult.profile) {
-      console.log('[AuthProvider] Got profile from API');
-      return apiResult;
-    }
-
-    // Fallback: intentar consulta directa a Supabase
-    console.log('[AuthProvider] API failed, trying direct Supabase query...');
-    try {
-      const { data: profileData, error: profileError } = await supabase
+      // Fallback to direct query
+      const { data: profileData, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      if (profileError) {
-        console.error('[AuthProvider] Direct Supabase query failed:', profileError.code);
+      if (error || !profileData) {
+        console.error('[AuthProvider] Profile fetch failed');
         return { profile: null, agent: null };
       }
 
       let agentData = null;
-      if (profileData && profileData.role === 'agent') {
-        const { data, error: agentError } = await supabase
+      if (profileData.role === 'agent') {
+        const { data } = await supabase
           .from('agents')
           .select('*')
           .eq('user_id', userId)
           .single();
-
-        if (!agentError) {
-          agentData = data;
-        }
+        agentData = data;
       }
 
-      console.log('[AuthProvider] Direct query success');
       return {
         profile: profileData as Profile,
-        agent: agentData as Agent | null
+        agent: agentData as Agent | null,
       };
     } catch (error) {
-      console.error('[AuthProvider] Direct query error:', error);
+      console.error('[AuthProvider] Fetch error:', error);
       return { profile: null, agent: null };
     }
-  }, [supabase, fetchProfileViaAPI]);
+  }, [supabase]);
 
   const refreshProfile = useCallback(async () => {
     if (user) {
       const { profile: p, agent: a } = await fetchProfile(user.id);
-      setProfile(p);
-      setAgent(a);
-      setAuth(p as never, a as never);
+      if (mountedRef.current) {
+        setProfile(p);
+        setAgent(a);
+        setAuth(p as never, a as never);
+      }
     }
   }, [user, fetchProfile, setAuth]);
 
+  // Main initialization effect - runs once
   useEffect(() => {
-    let mounted = true;
+    mountedRef.current = true;
 
-    const initializeAuth = async () => {
-      // Prevenir múltiples inicializaciones
-      if (isInitialized.current) {
-        console.log('[AuthProvider] Already initialized, skipping...');
-        return;
-      }
-      isInitialized.current = true;
+    const initialize = async () => {
+      if (initStartedRef.current) return;
+      initStartedRef.current = true;
 
-      // Establecer timeout de seguridad
-      setSafetyTimeout();
+      console.log('[AuthProvider] Initializing...');
 
       try {
-        console.log('[AuthProvider] Getting initial session...');
-        const { data: { session: s }, error } = await supabase.auth.getSession();
+        const { data: { session: s } } = await supabase.auth.getSession();
 
-        if (error) {
-          console.error('[AuthProvider] Session error:', error);
-          clearSafetyTimeout();
-          if (mounted) {
-            setIsLoading(false);
-          }
-          return;
-        }
+        if (!mountedRef.current) return;
 
-        console.log('[AuthProvider] Session:', s ? 'Found' : 'None');
-
-        if (s?.user && mounted) {
+        if (s?.user) {
+          console.log('[AuthProvider] Session found');
           setUser(s.user);
           setSession(s);
 
           const { profile: p, agent: a } = await fetchProfile(s.user.id);
 
-          if (mounted) {
+          if (mountedRef.current) {
             setProfile(p);
             setAgent(a);
             setAuth(p as never, a as never);
-            console.log('[AuthProvider] Initial load complete, profile:', !!p);
-            clearSafetyTimeout();
-            setIsLoading(false);
           }
-        } else if (mounted) {
-          console.log('[AuthProvider] No session found');
-          clearSafetyTimeout();
-          setIsLoading(false);
+        } else {
+          console.log('[AuthProvider] No session');
         }
       } catch (error) {
         console.error('[AuthProvider] Init error:', error);
-        clearSafetyTimeout();
-        if (mounted) {
+      } finally {
+        if (mountedRef.current) {
+          console.log('[AuthProvider] Init complete');
           setIsLoading(false);
         }
       }
     };
 
-    initializeAuth();
+    initialize();
 
+    // Auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
-      console.log('[AuthProvider] Auth state change:', event);
+      console.log('[AuthProvider] Auth event:', event);
 
-      // Solo procesar si ya estamos inicializados y es un cambio real
-      if (event === 'SIGNED_IN' && s?.user && mounted) {
-        // Si ya tenemos el mismo usuario, no re-fetch
-        if (user?.id === s.user.id && profile) {
-          console.log('[AuthProvider] Same user, skipping re-fetch');
-          return;
-        }
+      if (!mountedRef.current) return;
 
+      if (event === 'SIGNED_IN' && s?.user) {
         setUser(s.user);
         setSession(s);
 
-        const { profile: p, agent: a } = await fetchProfile(s.user.id);
-
-        if (mounted) {
-          setProfile(p);
-          setAgent(a);
-          setAuth(p as never, a as never);
-          console.log('[AuthProvider] SIGNED_IN complete, profile:', !!p);
-          clearSafetyTimeout();
-          setIsLoading(false);
+        // Only fetch if we don't have a profile yet
+        if (!profile) {
+          const { profile: p, agent: a } = await fetchProfile(s.user.id);
+          if (mountedRef.current) {
+            setProfile(p);
+            setAgent(a);
+            setAuth(p as never, a as never);
+            setIsLoading(false);
+          }
         }
-      } else if (event === 'SIGNED_OUT' && mounted) {
+      } else if (event === 'SIGNED_OUT') {
         setUser(null);
         setSession(null);
         setProfile(null);
         setAgent(null);
         setAuth(null, null);
         setIsLoading(false);
-      } else if (event === 'TOKEN_REFRESHED' && s?.user && mounted) {
+      } else if (event === 'TOKEN_REFRESHED' && s) {
         setSession(s);
       }
     });
 
     return () => {
-      mounted = false;
-      clearSafetyTimeout();
+      mountedRef.current = false;
       subscription.unsubscribe();
     };
-  }, [supabase, fetchProfile, setAuth, setSafetyTimeout, clearSafetyTimeout, user, profile]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Empty deps - run once
 
   const signUp = useCallback(async (
     email: string,
     password: string,
-    metadata: {
-      username: string;
-    }
+    metadata: { username: string }
   ) => {
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -306,18 +234,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!error && data.user) {
       await new Promise(resolve => setTimeout(resolve, 1000));
-
       try {
-        const res = await fetch('/api/profile/update', {
+        await fetch('/api/profile/update', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ username: metadata.username.toLowerCase() }),
         });
-        if (!res.ok) {
-          console.error('Error updating username in profile via API');
-        }
-      } catch (updateError) {
-        console.error('Error updating username in profile:', updateError);
+      } catch (e) {
+        console.error('Username update error:', e);
       }
     }
 
@@ -325,14 +249,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase]);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    // Reset para nuevo login
-    isInitialized.current = false;
+    initStartedRef.current = false; // Allow re-init after sign in
     setIsLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
       setIsLoading(false);
@@ -344,7 +264,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setAuth(null, null);
-    isInitialized.current = false;
+    initStartedRef.current = false;
     window.location.href = '/';
   }, [supabase, setAuth]);
 
@@ -354,7 +274,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profile,
     agent,
     isLoading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !!profile,
     signUp,
     signIn,
     signOut,
