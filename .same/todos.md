@@ -1,45 +1,43 @@
-# Tareas - Arreglar página colgada al refrescar
+# Tareas - Agent Portal ATS
 
-## Problema Identificado
-La página se quedaba colgada al refrescar debido a problemas en el flujo de autenticación.
+## Problema Original
+La página se quedaba colgada al refrescar.
 
-## Causas Raíz Encontradas
-- [x] `AuthProvider.tsx` - estado `isLoading` no se actualizaba correctamente en algunos casos
-- [x] `PortalLayout.tsx` - redirecciones prematuras podían causar loops
-- [x] Zustand store tenía `isLoading: true` inicial que nunca se sincronizaba
-- [x] Timeout de 500ms en `onAuthStateChange` causaba delays innecesarios
-- [x] Múltiples llamadas simultáneas a `fetchProfile` causaban condiciones de carrera
-- [x] Middleware de Supabase no validaba correctamente las URLs
+## Solución Implementada
 
-## Soluciones Implementadas ✅
+### 1. Fix de carga infinita ✅
+- Timeout de seguridad de 15s en AuthProvider
+- API route primero para evitar RLS
+- Validación de configuración de Supabase
 
-### 1. AuthProvider.tsx
-- [x] Agregado timeout de seguridad de 10 segundos (`AUTH_TIMEOUT_MS`) para forzar `isLoading: false` si algo falla
-- [x] Agregado `useRef` `isFetchingProfile` para prevenir múltiples llamadas simultáneas
-- [x] Agregado `useRef` `isInitialized` para prevenir múltiples inicializaciones
-- [x] Reducido timeout en `onAuthStateChange` de 500ms a 100ms
-- [x] Mejorado manejo de errores con `clearSafetyTimeout()` antes de `setIsLoading(false)`
-- [x] Reset de flags en `signIn` y `signOut`
+### 2. Dashboard Unificado ✅
+- Un solo `/dashboard` que detecta el rol del usuario
+- Admin/Recruiter → ve AdminDashboard
+- Agent → ve AgentDashboard
+- Eliminadas rutas duplicadas `/admin/*`
 
-### 2. PortalLayout.tsx
-- [x] Agregado delay de 100ms antes de redirigir para evitar redirecciones prematuras
-- [x] Limpieza de timeout en cleanup del useEffect
+## Nueva Estructura de Rutas
 
-### 3. Dashboard page.tsx
-- [x] Reducido timeout de redirección de 2000ms a 500ms
-- [x] Mejor limpieza de timers
+| Ruta | Acceso | Descripción |
+|------|--------|-------------|
+| `/dashboard` | Todos | Dashboard según rol |
+| `/agents` | Admin/Recruiter | Gestión de agentes |
+| `/opportunities` | Todos | Ver/crear oportunidades |
+| `/applications` | Agent | Mis aplicaciones |
+| `/profile` | Todos | Perfil de usuario |
+| `/onboarding` | Agent | Onboarding |
+| `/settings` | Todos | Configuración |
 
-### 4. supabaseStore.ts
-- [x] Cambiado `isLoading` inicial de `true` a `false` (el AuthProvider maneja el loading real)
+## Archivos Nuevos
+- `src/components/layout/UnifiedLayout.tsx`
+- `src/components/dashboard/AdminDashboard.tsx`
+- `src/components/dashboard/AgentDashboard.tsx`
+- `src/app/agents/page.tsx`
 
-### 5. middleware.ts
-- [x] Agregada función `isValidUrl()` para validar URLs antes de crear el cliente Supabase
-- [x] Skip del middleware si la URL o key no son válidas
-
-### 6. client.ts
-- [x] Agregadas funciones `isValidUrl()` e `isSupabaseConfigured()`
-- [x] Mock client ahora incluye método `getUser`
-- [x] Mejor validación antes de crear cliente real
+## Redirecciones
+- `/admin` → `/dashboard`
+- `/admin/agents` → `/agents`
+- `/admin/opportunities` → `/opportunities`
 
 ## Estado
-- ✅ COMPLETADO
+✅ COMPLETADO - Rama: `fix/page-loading-hang`
