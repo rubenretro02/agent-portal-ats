@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { PortalLayout } from '@/components/layout/PortalLayout';
+import { UnifiedLayout } from '@/components/layout/UnifiedLayout';
 import { useAuthStore } from '@/store';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Card, CardContent } from '@/components/ui/card';
@@ -116,7 +116,7 @@ export default function DocumentsPage() {
   };
 
   return (
-    <PortalLayout title={t('documents', 'title')}>
+    <UnifiedLayout title={t('documents', 'title')}>
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -276,6 +276,6 @@ export default function DocumentsPage() {
           ))}
         </div>
       </div>
-    </PortalLayout>
+    </UnifiedLayout>
   );
 }

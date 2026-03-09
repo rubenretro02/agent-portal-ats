@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getSupabaseClient } from '@/lib/supabase/client';
 import { useAuthContext } from '@/components/providers/AuthProvider';
-import { PortalLayout } from '@/components/layout/PortalLayout';
+import { UnifiedLayout } from '@/components/layout/UnifiedLayout';
 import { SystemCheck } from '@/components/SystemCheck';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -348,7 +348,7 @@ export default function OnboardingPage() {
     const shiftLabel = SHIFTS.find(s => s.value === availability?.preferredShift)?.labelEs || availability?.preferredShift;
 
     return (
-      <PortalLayout title="Onboarding">
+      <UnifiedLayout title="Onboarding">
         <div className="max-w-3xl mx-auto space-y-6">
           {/* Success Header */}
           <Card className="border-emerald-200 bg-gradient-to-r from-emerald-50 to-teal-50">
@@ -507,7 +507,7 @@ export default function OnboardingPage() {
             </CardContent>
           </Card>
         </div>
-      </PortalLayout>
+      </UnifiedLayout>
     );
   }
 

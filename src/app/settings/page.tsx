@@ -1,6 +1,6 @@
 'use client';
 
-import { PortalLayout } from '@/components/layout/PortalLayout';
+import { UnifiedLayout } from '@/components/layout/UnifiedLayout';
 import { useAuthStore } from '@/store';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,7 +21,7 @@ export default function SettingsPage() {
   const { t } = useTranslation();
 
   return (
-    <PortalLayout title={t('nav', 'settings')}>
+    <UnifiedLayout title={t('nav', 'settings')}>
       <div className="max-w-2xl mx-auto space-y-6">
         {/* Language Settings */}
         <Card className="border-zinc-200">
@@ -117,6 +117,6 @@ export default function SettingsPage() {
           </CardContent>
         </Card>
       </div>
-    </PortalLayout>
+    </UnifiedLayout>
   );
 }

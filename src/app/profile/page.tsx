@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PortalLayout } from '@/components/layout/PortalLayout';
+import { UnifiedLayout } from '@/components/layout/UnifiedLayout';
 import { RequirePersonalInfo } from '@/components/RequirePersonalInfo';
 import { useAuthContext } from '@/components/providers/AuthProvider';
 import { getSupabaseClient } from '@/lib/supabase/client';
@@ -91,7 +91,7 @@ export default function ProfilePage() {
 
   return (
     <RequirePersonalInfo>
-    <PortalLayout title="My Profile">
+    <UnifiedLayout title="My Profile">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Profile Header */}
         <Card className="border-zinc-200 overflow-hidden">
@@ -315,7 +315,7 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
       </div>
-    </PortalLayout>
+    </UnifiedLayout>
     </RequirePersonalInfo>
   );
 }

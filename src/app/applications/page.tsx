@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { PortalLayout } from '@/components/layout/PortalLayout';
+import { UnifiedLayout } from '@/components/layout/UnifiedLayout';
 import { RequirePersonalInfo } from '@/components/RequirePersonalInfo';
 import { useAuthContext } from '@/components/providers/AuthProvider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -95,7 +95,7 @@ export default function ApplicationsPage() {
 
   return (
     <RequirePersonalInfo>
-    <PortalLayout title="My Applications">
+    <UnifiedLayout title="My Applications">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -246,7 +246,7 @@ export default function ApplicationsPage() {
           </div>
         )}
       </div>
-    </PortalLayout>
+    </UnifiedLayout>
     </RequirePersonalInfo>
   );
 }

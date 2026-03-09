@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PortalLayout } from '@/components/layout/PortalLayout';
+import { UnifiedLayout } from '@/components/layout/UnifiedLayout';
 import { RequirePersonalInfo } from '@/components/RequirePersonalInfo';
 import { useAuthContext } from '@/components/providers/AuthProvider';
 import { useAuthStore, useOpportunityStore } from '@/store/supabaseStore';
@@ -451,7 +451,7 @@ export default function OpportunitiesPage() {
 
   return (
     <RequirePersonalInfo>
-    <PortalLayout title={t('opportunities', 'title')}>
+    <UnifiedLayout title={t('opportunities', 'title')}>
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Search and Filters */}
         <div className="flex flex-col sm:flex-row gap-4">
@@ -975,7 +975,7 @@ export default function OpportunitiesPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </PortalLayout>
+    </UnifiedLayout>
     </RequirePersonalInfo>
   );
 }

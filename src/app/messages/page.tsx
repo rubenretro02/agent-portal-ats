@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { PortalLayout } from '@/components/layout/PortalLayout';
+import { UnifiedLayout } from '@/components/layout/UnifiedLayout';
 import { useNotificationStore } from '@/store';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Card, CardContent } from '@/components/ui/card';
@@ -22,7 +22,7 @@ export default function MessagesPage() {
   const unreadMessages = messages.filter(m => !m.read);
 
   return (
-    <PortalLayout title={t('dashboard', 'recentMessages')}>
+    <UnifiedLayout title={t('dashboard', 'recentMessages')}>
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Stats */}
         <div className="grid grid-cols-2 gap-4">
@@ -101,6 +101,6 @@ export default function MessagesPage() {
           )}
         </div>
       </div>
-    </PortalLayout>
+    </UnifiedLayout>
   );
 }
