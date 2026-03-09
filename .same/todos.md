@@ -1,43 +1,36 @@
 # Tareas - Agent Portal ATS
 
-## Problema Original
-La página se quedaba colgada al refrescar.
+## Problema Actual (RESUELTO)
+El usuario no podía ver las oportunidades desde el lado de agente porque el system check nunca se completaba.
 
 ## Solución Implementada
 
-### 1. Fix de carga infinita ✅
-- Timeout de seguridad de 15s en AuthProvider
-- API route primero para evitar RLS
-- Validación de configuración de Supabase
+### Fix: Dashboard siempre muestra oportunidades ✅
+- El AgentDashboard ahora muestra **siempre** las oportunidades
+- System check removido de los requisitos de onboarding
+- Onboarding progress se muestra como barra de porcentaje compacta
+- Los campos faltantes se muestran en un banner informativo
+- El botón "Apply" está deshabilitado si el perfil no está completo
+- Usuario puede VER las oportunidades aunque no pueda aplicar todavía
 
-### 2. Dashboard Unificado ✅
-- Un solo `/dashboard` que detecta el rol del usuario
-- Admin/Recruiter → ve AdminDashboard
-- Agent → ve AgentDashboard
-- Eliminadas rutas duplicadas `/admin/*`
+### Cambios en AgentDashboard.tsx
+1. `onboardingProgress` calcula porcentaje y campos faltantes
+2. Welcome banner con barra de progreso si no está completo
+3. Banner compacto mostrando campos faltantes con link a /onboarding
+4. Lista de oportunidades siempre visible
+5. Badge "Complete Profile First" en lugar de bloquear la vista
 
-## Nueva Estructura de Rutas
+## Estado
+✅ COMPLETADO - Las oportunidades son visibles desde el dashboard
+
+## Estructura de Rutas
 
 | Ruta | Acceso | Descripción |
 |------|--------|-------------|
 | `/dashboard` | Todos | Dashboard según rol |
 | `/agents` | Admin/Recruiter | Gestión de agentes |
-| `/opportunities` | Todos | Ver/crear oportunidades |
+| `/opportunities` | Todos | Ver/aplicar oportunidades |
 | `/applications` | Agent | Mis aplicaciones |
 | `/profile` | Todos | Perfil de usuario |
-| `/onboarding` | Agent | Onboarding |
+| `/onboarding` | Agent | Completar onboarding |
 | `/settings` | Todos | Configuración |
-
-## Archivos Nuevos
-- `src/components/layout/UnifiedLayout.tsx`
-- `src/components/dashboard/AdminDashboard.tsx`
-- `src/components/dashboard/AgentDashboard.tsx`
-- `src/app/agents/page.tsx`
-
-## Redirecciones
-- `/admin` → `/dashboard`
-- `/admin/agents` → `/agents`
-- `/admin/opportunities` → `/opportunities`
-
-## Estado
-✅ COMPLETADO - Rama: `fix/page-loading-hang`

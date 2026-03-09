@@ -67,21 +67,19 @@ export default function OpportunitiesPage() {
   const [applicationId, setApplicationId] = useState('');
   const [copied, setCopied] = useState(false);
 
-  // Check if full onboarding is complete
+  // Check if full onboarding is complete - system check is OPTIONAL
   const isOnboardingComplete = (() => {
     if (!profile || !authAgent) return false;
     const address = authAgent.address as Record<string, string> | null;
     const experience = authAgent.experience as Record<string, string> | null;
     const availability = authAgent.availability as Record<string, string> | null;
     const langs = authAgent.languages as string[] | null;
-    const systemCheck = authAgent.system_check as SystemCheckResult | null;
     const profileExt = profile as unknown as { sex?: string; date_of_birth?: string };
     return !!(
       profile.first_name && profile.last_name && profileExt.sex && profileExt.date_of_birth && profile.phone &&
       address?.street && address?.city && address?.state && address?.zipCode &&
       experience?.yearsExperience &&
-      langs && langs.length > 0 && availability?.hoursPerWeek && availability?.preferredShift &&
-      systemCheck
+      langs && langs.length > 0 && availability?.hoursPerWeek && availability?.preferredShift
     );
   })();
 
