@@ -57,8 +57,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Timeout de seguridad para evitar loading infinito (10 segundos)
-const AUTH_TIMEOUT_MS = 10000;
+// Timeout de seguridad reducido a 15 segundos
+const AUTH_TIMEOUT_MS = 15000;
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -68,7 +68,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   // Refs para control de flujo
-  const isFetchingProfile = useRef(false);
   const isInitialized = useRef(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -89,88 +88,90 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     timeoutRef.current = setTimeout(() => {
       console.warn('[AuthProvider] Safety timeout reached, forcing isLoading to false');
       setIsLoading(false);
-      setAuth(null, null);
+      // No limpiamos el auth aquí, solo el loading
     }, AUTH_TIMEOUT_MS);
-  }, [clearSafetyTimeout, setAuth]);
+  }, [clearSafetyTimeout]);
 
+  // Fetch profile usando la API route (más confiable, evita problemas de RLS)
   const fetchProfileViaAPI = useCallback(async (): Promise<{ profile: Profile | null; agent: Agent | null }> => {
+    console.log('[AuthProvider] Fetching profile via API route...');
     try {
-      const res = await fetch('/api/profile');
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 second timeout for API call
+
+      const res = await fetch('/api/profile', {
+        signal: controller.signal,
+        credentials: 'include',
+      });
+
+      clearTimeout(timeoutId);
+
       if (!res.ok) {
-        console.error('Profile API error:', res.status);
+        console.error('[AuthProvider] Profile API error:', res.status);
         return { profile: null, agent: null };
       }
       const data = await res.json();
+      console.log('[AuthProvider] Profile API success:', !!data.profile);
       return {
         profile: data.profile as Profile | null,
         agent: data.agent as Agent | null,
       };
     } catch (error) {
-      console.error('Profile API fetch error:', error);
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.error('[AuthProvider] Profile API timeout');
+      } else {
+        console.error('[AuthProvider] Profile API fetch error:', error);
+      }
       return { profile: null, agent: null };
     }
   }, []);
 
+  // Fetch profile - Usar API primero (evita problemas de RLS)
   const fetchProfile = useCallback(async (userId: string): Promise<{ profile: Profile | null; agent: Agent | null }> => {
-    // Prevenir múltiples llamadas simultáneas
-    if (isFetchingProfile.current) {
-      console.log('[AuthProvider] fetchProfile already in progress, skipping...');
-      return { profile: null, agent: null };
+    console.log('[AuthProvider] Fetching profile for user:', userId);
+
+    // Usar API route primero (más confiable)
+    const apiResult = await fetchProfileViaAPI();
+    if (apiResult.profile) {
+      console.log('[AuthProvider] Got profile from API');
+      return apiResult;
     }
 
-    isFetchingProfile.current = true;
-    console.log('Fetching profile for user:', userId);
-
+    // Fallback: intentar consulta directa a Supabase
+    console.log('[AuthProvider] API failed, trying direct Supabase query...');
     try {
-      // Try direct Supabase query first
-      console.log('[AuthProvider] Attempting direct Supabase profile query...');
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      console.log('[AuthProvider] Profile query result:', profileData ? 'found' : 'null', 'error:', profileError?.code || 'none');
-
       if (profileError) {
-        console.warn('Direct profile fetch failed (code: ' + profileError.code + '), falling back to API route...');
-        // Fallback to API route which uses service role to bypass RLS
-        const result = await fetchProfileViaAPI();
-        isFetchingProfile.current = false;
-        return result;
+        console.error('[AuthProvider] Direct Supabase query failed:', profileError.code);
+        return { profile: null, agent: null };
       }
 
       let agentData = null;
       if (profileData && profileData.role === 'agent') {
-        console.log('[AuthProvider] Fetching agent data...');
         const { data, error: agentError } = await supabase
           .from('agents')
           .select('*')
           .eq('user_id', userId)
           .single();
 
-        console.log('[AuthProvider] Agent query result:', data ? 'found' : 'null', 'error:', agentError?.code || 'none');
-
-        if (agentError) {
-          console.warn('Direct agent fetch failed, falling back to API route...');
-          const result = await fetchProfileViaAPI();
-          isFetchingProfile.current = false;
-          return result;
+        if (!agentError) {
+          agentData = data;
         }
-
-        agentData = data;
       }
 
-      console.log('[AuthProvider] fetchProfile complete - profile:', !!profileData, 'agent:', !!agentData);
-      isFetchingProfile.current = false;
+      console.log('[AuthProvider] Direct query success');
       return {
         profile: profileData as Profile,
         agent: agentData as Agent | null
       };
     } catch (error) {
-      console.error('Fetch profile error, falling back to API route...', error);
-      isFetchingProfile.current = false;
-      return await fetchProfileViaAPI();
+      console.error('[AuthProvider] Direct query error:', error);
+      return { profile: null, agent: null };
     }
   }, [supabase, fetchProfileViaAPI]);
 
@@ -179,7 +180,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { profile: p, agent: a } = await fetchProfile(user.id);
       setProfile(p);
       setAgent(a);
-      // Sync with store
       setAuth(p as never, a as never);
     }
   }, [user, fetchProfile, setAuth]);
@@ -187,7 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    const getInitialSession = async () => {
+    const initializeAuth = async () => {
       // Prevenir múltiples inicializaciones
       if (isInitialized.current) {
         console.log('[AuthProvider] Already initialized, skipping...');
@@ -207,7 +207,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           clearSafetyTimeout();
           if (mounted) {
             setIsLoading(false);
-            setAuth(null, null);
           }
           return;
         }
@@ -224,37 +223,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setProfile(p);
             setAgent(a);
             setAuth(p as never, a as never);
-            console.log('[AuthProvider] getInitialSession complete, setting isLoading=false, profile:', !!p);
+            console.log('[AuthProvider] Initial load complete, profile:', !!p);
             clearSafetyTimeout();
             setIsLoading(false);
           }
         } else if (mounted) {
-          console.log('[AuthProvider] No session found, setting isLoading=false');
+          console.log('[AuthProvider] No session found');
           clearSafetyTimeout();
           setIsLoading(false);
-          setAuth(null, null);
         }
       } catch (error) {
-        console.error('[AuthProvider] Error getting session:', error);
+        console.error('[AuthProvider] Init error:', error);
         clearSafetyTimeout();
         if (mounted) {
           setIsLoading(false);
-          setAuth(null, null);
         }
       }
     };
 
-    getInitialSession();
+    initializeAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, s) => {
       console.log('[AuthProvider] Auth state change:', event);
 
+      // Solo procesar si ya estamos inicializados y es un cambio real
       if (event === 'SIGNED_IN' && s?.user && mounted) {
+        // Si ya tenemos el mismo usuario, no re-fetch
+        if (user?.id === s.user.id && profile) {
+          console.log('[AuthProvider] Same user, skipping re-fetch');
+          return;
+        }
+
         setUser(s.user);
         setSession(s);
-
-        // Reducido de 500ms a 100ms para evitar delays
-        await new Promise(resolve => setTimeout(resolve, 100));
 
         const { profile: p, agent: a } = await fetchProfile(s.user.id);
 
@@ -262,7 +263,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setProfile(p);
           setAgent(a);
           setAuth(p as never, a as never);
-          console.log('[AuthProvider] onAuthStateChange SIGNED_IN complete, setting isLoading=false, profile:', !!p);
+          console.log('[AuthProvider] SIGNED_IN complete, profile:', !!p);
           clearSafetyTimeout();
           setIsLoading(false);
         }
@@ -271,11 +272,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(null);
         setProfile(null);
         setAgent(null);
-        // Sync with store
         setAuth(null, null);
         setIsLoading(false);
       } else if (event === 'TOKEN_REFRESHED' && s?.user && mounted) {
-        // Actualizar sesión sin re-fetch de profile
         setSession(s);
       }
     });
@@ -285,7 +284,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearSafetyTimeout();
       subscription.unsubscribe();
     };
-  }, [supabase, fetchProfile, setAuth, setSafetyTimeout, clearSafetyTimeout]);
+  }, [supabase, fetchProfile, setAuth, setSafetyTimeout, clearSafetyTimeout, user, profile]);
 
   const signUp = useCallback(async (
     email: string,
@@ -305,12 +304,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       },
     });
 
-    // If signup successful, update the profiles table with the username
     if (!error && data.user) {
-      // Wait a bit for the profile to be created by the trigger
       await new Promise(resolve => setTimeout(resolve, 1000));
 
-      // Update the profile with the username via API to bypass RLS
       try {
         const res = await fetch('/api/profile/update', {
           method: 'POST',
@@ -329,9 +325,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase]);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    // Reset loading state y flag de inicialización para nuevo login
+    // Reset para nuevo login
     isInitialized.current = false;
-    isFetchingProfile.current = false;
     setIsLoading(true);
 
     const { error } = await supabase.auth.signInWithPassword({
@@ -349,9 +344,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
     setAuth(null, null);
-    // Reset flags
     isInitialized.current = false;
-    isFetchingProfile.current = false;
     window.location.href = '/';
   }, [supabase, setAuth]);
 
