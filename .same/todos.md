@@ -1,39 +1,54 @@
 # Tareas - Agent Portal ATS
 
-## Problema Resuelto Ahora
+## Feature: Flexible Application Stages
 
-### Error: `onboarding_completed` column not found ✅
-- La columna `onboarding_completed` no existe en la tabla `agents` de Supabase
-- Se eliminaron las referencias a esta columna en:
-  - `OnboardingModal.tsx`
-  - `OnboardingWidget.tsx`
-- El onboarding ahora se completa correctamente sin errores
+### Objetivo:
+Crear un sistema de stages/etapas completamente flexible para las aplicaciones de jobs.
 
-## Tarea Actual: Mejorar Constructor de Aplicaciones
+### Cambios Solicitados:
+1. ✅ **Stage 1 = Job Description** (reemplazar "Your Journey Starts Now")
+   - Mostrar descripción completa del job
+   - Info del cliente, compensación, requisitos
 
-### Solicitado por el usuario:
-1. ✅ Corregir error en admin cuando va a opportunities (variables no definidas)
-2. ✅ Eliminar el diálogo de "application link" que se abría al aplicar
-3. ✅ Corregir error de columna `onboarding_completed` que no existe
-4. 🔄 Crear constructor de aplicaciones tipo Fountain (step by step)
-5. 🔄 Sin mostrar URL en el proceso de aplicación
+2. 🔄 **Sistema de Stages Customizables:**
+   - Stage 1: Job Description / Career Page
+   - Stage 2: Assessment (skill verification)
+   - Stage 3: Background Check
+   - Stage 4+: Customizable
+   - Sin orden fijo - admin puede reorganizar
+   - Cada stage tiene mini-pasos/preguntas dentro
 
-### Progreso:
-- [x] Eliminado diálogo de éxito con `applicationId` que causaba errores
-- [x] Limpiado importaciones no utilizadas
-- [x] El flujo ahora redirige a `/apply/[opportunityId]` para aplicaciones
-- [x] Eliminada referencia a columna inexistente `onboarding_completed`
-- [ ] Mejorar la página de aplicación para que sea más tipo Fountain
+3. 🔄 **Preguntas Ilimitadas por Stage:**
+   - Bug actual: Solo permite crear 1 pregunta
+   - Solución: Arreglar el QuestionBuilder
+   - Ver/editar preguntas existentes por job
 
-## Estructura de Rutas
+4. 🔄 **Constructor de Jobs Flexible:**
+   - Admin/Recruiter puede crear stages personalizados
+   - Cada cliente contrata diferente
+   - Agregar contenido/preguntas a cada stage
 
-| Ruta | Acceso | Descripción |
-|------|--------|-------------|
-| `/dashboard` | Todos | Dashboard según rol |
-| `/agents` | Admin/Recruiter | Gestión de agentes |
-| `/opportunities` | Todos | Ver/aplicar oportunidades |
-| `/apply/[opportunityId]` | Agent | Aplicación paso a paso |
-| `/applications` | Agent | Mis aplicaciones |
-| `/profile` | Todos | Perfil de usuario |
-| `/onboarding` | Agent | Completar onboarding |
-| `/settings` | Todos | Configuración |
+### Archivos a Modificar:
+- [ ] `src/types/index.ts` - Agregar tipos ApplicationStage
+- [ ] `src/components/admin/StageBuilder.tsx` - Nuevo componente
+- [ ] `src/app/apply/[opportunityId]/page.tsx` - Usar stages
+- [ ] `src/components/admin/QuestionBuilder.tsx` - Arreglar bugs
+- [ ] `src/app/admin/opportunities/[id]/stages/page.tsx` - Nueva página
+
+### Estructura de Stages:
+```
+Opportunity
+├── stages[]
+│   ├── Stage 1: "Job Description"
+│   │   ├── type: "info"
+│   │   └── content: job description, requirements
+│   ├── Stage 2: "Application Questions"
+│   │   ├── type: "questions"
+│   │   └── questions: [q1, q2, q3, ...]
+│   ├── Stage 3: "Assessment"
+│   │   ├── type: "assessment"
+│   │   └── assessmentConfig: {...}
+│   └── Stage 4: "Background Check"
+│       ├── type: "verification"
+│       └── verificationConfig: {...}
+```

@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { getSupabaseClient } from '@/lib/supabase/client';
-import type { Language, ApplicationAnswer, ApplicationQuestion } from '@/types';
+import type { Language, ApplicationAnswer, ApplicationQuestion, ApplicationStage } from '@/types';
 
 // =====================================================
 // TYPES
@@ -188,6 +188,7 @@ interface OpportunityWithQuestions {
   created_at: string;
   updated_at: string;
   applicationQuestions: ApplicationQuestion[];
+  applicationStages?: ApplicationStage[];
   capacity: {
     maxAgents: number;
     currentAgents: number;

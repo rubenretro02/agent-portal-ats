@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -27,17 +28,29 @@ import {
   DollarSign,
   Clock,
   Users,
-  Sparkles,
+  MapPin,
+  Globe,
   HelpCircle,
+  FileText,
+  ClipboardCheck,
+  ShieldCheck,
+  Upload,
+  Settings,
+  CheckSquare,
+  XCircle,
+  Star,
 } from 'lucide-react';
-import type { ApplicationAnswer, ApplicationQuestion } from '@/types';
+import type { ApplicationAnswer, ApplicationQuestion, ApplicationStage, StageType } from '@/types';
 
-interface ApplicationStep {
-  id: string;
-  title: string;
-  description: string;
-  questions: ApplicationQuestion[];
-}
+// Stage type icons
+const STAGE_ICONS: Record<StageType, React.ElementType> = {
+  info: FileText,
+  questions: HelpCircle,
+  assessment: ClipboardCheck,
+  verification: ShieldCheck,
+  documents: Upload,
+  custom: Settings,
+};
 
 export default function ApplyPage() {
   const params = useParams();
@@ -47,7 +60,7 @@ export default function ApplyPage() {
   const { profile, agent } = useAuthContext();
   const { opportunities, fetchOpportunities, applyToOpportunity } = useOpportunityStore();
 
-  const [currentStep, setCurrentStep] = useState(0);
+  const [currentStageIndex, setCurrentStageIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string | string[] | number | boolean>>({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -61,79 +74,79 @@ export default function ApplyPage() {
     fetchOpportunities().then(() => setLoading(false));
   }, [fetchOpportunities]);
 
-  // Group questions into steps (4-5 questions per step)
-  const steps: ApplicationStep[] = useMemo(() => {
+  // Build stages from opportunity data
+  const stages: ApplicationStage[] = useMemo(() => {
     if (!opportunity) return [];
 
-    const questions = opportunity.applicationQuestions || [];
-    const sortedQuestions = [...questions].sort((a, b) => a.order - b.order);
-
-    // Create default steps if no questions
-    if (sortedQuestions.length === 0) {
-      return [
-        {
-          id: 'welcome',
-          title: 'Welcome',
-          description: 'Start your application journey',
-          questions: [],
-        },
-        {
-          id: 'confirm',
-          title: 'Confirmation',
-          description: 'Review and submit',
-          questions: [],
-        },
-      ];
+    // Use new stages if available
+    if (opportunity.applicationStages && opportunity.applicationStages.length > 0) {
+      return [...opportunity.applicationStages].sort((a, b) => a.order - b.order);
     }
 
-    // Group questions into steps
-    const stepsArray: ApplicationStep[] = [
+    // Fallback: Create default stages from old questions format
+    const questions = opportunity.applicationQuestions || [];
+    const defaultStages: ApplicationStage[] = [
       {
-        id: 'welcome',
-        title: 'Welcome',
-        description: 'Start your application journey',
-        questions: [],
+        id: 'stage-info',
+        opportunityId: opportunity.id,
+        name: 'Job Information',
+        description: 'Review the position details',
+        type: 'info',
+        order: 1,
+        isRequired: true,
+        content: {
+          showJobDescription: true,
+          showRequirements: true,
+          showCompensation: true,
+          showSchedule: true,
+        },
       },
     ];
 
-    const questionsPerStep = 3;
-    for (let i = 0; i < sortedQuestions.length; i += questionsPerStep) {
-      const stepQuestions = sortedQuestions.slice(i, i + questionsPerStep);
-      stepsArray.push({
-        id: `step-${Math.floor(i / questionsPerStep) + 1}`,
-        title: `Questions ${i + 1}-${Math.min(i + questionsPerStep, sortedQuestions.length)}`,
-        description: 'Answer the following questions',
-        questions: stepQuestions,
+    if (questions.length > 0) {
+      defaultStages.push({
+        id: 'stage-questions',
+        opportunityId: opportunity.id,
+        name: 'Application Questions',
+        description: 'Answer a few questions',
+        type: 'questions',
+        order: 2,
+        isRequired: true,
+        questions: questions,
       });
     }
 
-    stepsArray.push({
-      id: 'confirm',
-      title: 'Confirmation',
+    defaultStages.push({
+      id: 'stage-review',
+      opportunityId: opportunity.id,
+      name: 'Review & Submit',
       description: 'Review and submit your application',
-      questions: [],
+      type: 'info',
+      order: defaultStages.length + 1,
+      isRequired: true,
+      content: {},
     });
 
-    return stepsArray;
+    return defaultStages;
   }, [opportunity]);
 
-  const totalSteps = steps.length;
-  const progress = totalSteps > 0 ? ((currentStep + 1) / totalSteps) * 100 : 0;
-  const currentStepData = steps[currentStep];
-  const isLastStep = currentStep === totalSteps - 1;
-  const isFirstStep = currentStep === 0;
+  const totalStages = stages.length;
+  const currentStage = stages[currentStageIndex];
+  const progress = totalStages > 0 ? ((currentStageIndex + 1) / totalStages) * 100 : 0;
+  const isLastStage = currentStageIndex === totalStages - 1;
+  const isFirstStage = currentStageIndex === 0;
 
   const handleNext = () => {
-    if (isLastStep) {
+    if (isLastStage) {
       handleSubmit();
     } else {
-      setCurrentStep(prev => prev + 1);
+      setCurrentStageIndex(prev => prev + 1);
     }
   };
 
   const handleBack = () => {
-    if (!isFirstStep) {
-      setCurrentStep(prev => prev - 1);
+    if (!isFirstStage) {
+      setCurrentStageIndex(prev => prev - 1);
     }
   };
 
@@ -161,17 +174,23 @@ export default function ApplyPage() {
   };
 
   const canProceed = () => {
-    if (!currentStepData) return false;
-    if (currentStepData.questions.length === 0) return true;
+    if (!currentStage) return false;
 
-    // Check if all required questions are answered
-    return currentStepData.questions.every(q => {
-      if (!q.required) return true;
-      const answer = answers[q.id];
-      if (answer === undefined || answer === '') return false;
-      if (Array.isArray(answer) && answer.length === 0) return false;
-      return true;
-    });
+    // Info stages can always proceed
+    if (currentStage.type === 'info') return true;
+
+    // Questions stages need required questions answered
+    if (currentStage.type === 'questions' && currentStage.questions) {
+      return currentStage.questions.every(q => {
+        if (!q.required) return true;
+        const answer = answers[q.id];
+        if (answer === undefined || answer === '') return false;
+        if (Array.isArray(answer) && answer.length === 0) return false;
+        return true;
+      });
+    }
+
+    return true;
   };
 
   const renderQuestion = (question: ApplicationQuestion) => {
@@ -306,6 +325,331 @@ export default function ApplyPage() {
     }
   };
 
+  // Render stage content based on type
+  const renderStageContent = (stage: ApplicationStage) => {
+    const compensation = opportunity?.compensation as Record<string, unknown> | null;
+    const training = opportunity?.training as Record<string, unknown> | null;
+    const requirements = opportunity?.requirements as Record<string, unknown> | null;
+
+    switch (stage.type) {
+      case 'info':
+        // Check if this is the review/submit stage (last stage)
+        if (stage.id.includes('review') || isLastStage) {
+          return (
+            <div className="text-center">
+              <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+                <CheckCircle2 className="h-10 w-10 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold text-zinc-900 mb-4">
+                Ready to Submit?
+              </h1>
+              <p className="text-lg text-zinc-600 mb-8 max-w-md mx-auto">
+                You've completed all the stages. Review your information and click submit when ready.
+              </p>
+
+              <Card className="bg-zinc-50 border-zinc-200 text-left mb-8">
+                <CardContent className="p-6">
+                  <h3 className="font-semibold text-zinc-900 mb-4">Application Summary</h3>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <p className="text-zinc-500">Position</p>
+                      <p className="font-medium text-zinc-900">{opportunity?.name}</p>
+                    </div>
+                    <div>
+                      <p className="text-zinc-500">Company</p>
+                      <p className="font-medium text-zinc-900">{opportunity?.client}</p>
+                    </div>
+                    <div>
+                      <p className="text-zinc-500">Applicant</p>
+                      <p className="font-medium text-zinc-900">{profile?.first_name} {profile?.last_name}</p>
+                    </div>
+                    <div>
+                      <p className="text-zinc-500">Email</p>
+                      <p className="font-medium text-zinc-900">{profile?.email}</p>
+                    </div>
+                  </div>
+
+                  {Object.keys(answers).length > 0 && (
+                    <div className="mt-6 pt-4 border-t border-zinc-200">
+                      <p className="text-zinc-500 text-sm mb-2">Questions Answered</p>
+                      <Badge variant="secondary">{Object.keys(answers).length} responses</Badge>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              <p className="text-sm text-zinc-500 mb-6">
+                By submitting, you confirm that all information provided is accurate.
+              </p>
+            </div>
+          );
+        }
+
+        // Job Information stage (first stage)
+        return (
+          <div className="space-y-8">
+            {/* Job Header */}
+            <div className="text-center pb-6 border-b border-zinc-200">
+              <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <Briefcase className="h-8 w-8 text-white" />
+              </div>
+              <h1 className="text-3xl font-bold text-zinc-900 mb-2">
+                {opportunity?.name}
+              </h1>
+              <p className="text-lg text-zinc-600">
+                {opportunity?.client}
+              </p>
+              {opportunity?.category && (
+                <Badge variant="secondary" className="mt-3">
+                  {opportunity.category}
+                </Badge>
+              )}
+            </div>
+
+            {/* Job Description */}
+            {stage.content?.showJobDescription && opportunity?.description && (
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-900 mb-3 flex items-center gap-2">
+                  <FileText className="h-5 w-5 text-teal-500" />
+                  About This Position
+                </h2>
+                <p className="text-zinc-600 leading-relaxed">
+                  {opportunity.description}
+                </p>
+              </div>
+            )}
+
+            {/* Compensation */}
+            {stage.content?.showCompensation && compensation && (
+              <Card className="bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
+                <CardContent className="p-6">
+                  <h2 className="text-lg font-semibold text-zinc-900 mb-4 flex items-center gap-2">
+                    <DollarSign className="h-5 w-5 text-emerald-600" />
+                    Compensation
+                  </h2>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-2xl font-bold text-emerald-700">
+                        ${String(compensation.baseRate || 0)}/hr
+                      </p>
+                      <p className="text-sm text-zinc-500">Base Rate</p>
+                    </div>
+                    {typeof compensation.bonusStructure === 'string' && compensation.bonusStructure && (
+                      <div>
+                        <p className="font-medium text-zinc-900">Bonus Available</p>
+                        <p className="text-sm text-zinc-500">{compensation.bonusStructure}</p>
+                      </div>
+                    )}
+                    <div>
+                      <p className="font-medium text-zinc-900 capitalize">
+                        {String(compensation.type || 'hourly')}
+                      </p>
+                      <p className="text-sm text-zinc-500">Payment Type</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Requirements */}
+            {stage.content?.showRequirements && requirements && (
+              <div>
+                <h2 className="text-lg font-semibold text-zinc-900 mb-4 flex items-center gap-2">
+                  <CheckSquare className="h-5 w-5 text-teal-500" />
+                  Requirements
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {(requirements.languages as string[])?.length > 0 && (
+                    <div className="flex items-start gap-3 p-4 bg-zinc-50 rounded-xl">
+                      <Globe className="h-5 w-5 text-cyan-600 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-zinc-900">Languages</p>
+                        <p className="text-sm text-zinc-500">
+                          {(requirements.languages as string[]).join(', ')}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {requirements.minExperience !== undefined && (
+                    <div className="flex items-start gap-3 p-4 bg-zinc-50 rounded-xl">
+                      <Star className="h-5 w-5 text-amber-600 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-zinc-900">Experience</p>
+                        <p className="text-sm text-zinc-500">
+                          {Number(requirements.minExperience) > 0
+                            ? `${requirements.minExperience} months minimum`
+                            : 'No experience required'}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                  {Boolean(requirements.backgroundCheckRequired) && (
+                    <div className="flex items-start gap-3 p-4 bg-zinc-50 rounded-xl">
+                      <ShieldCheck className="h-5 w-5 text-indigo-600 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-zinc-900">Background Check</p>
+                        <p className="text-sm text-zinc-500">Required for this position</p>
+                      </div>
+                    </div>
+                  )}
+                  {(requirements.skills as string[])?.length > 0 && (
+                    <div className="flex items-start gap-3 p-4 bg-zinc-50 rounded-xl">
+                      <ClipboardCheck className="h-5 w-5 text-teal-600 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-zinc-900">Skills</p>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {(requirements.skills as string[]).map((skill) => (
+                            <Badge key={skill} variant="secondary" className="text-xs">
+                              {skill}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* Training & Schedule */}
+            {stage.content?.showSchedule && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {training && (
+                  <div className="flex items-start gap-3 p-4 bg-cyan-50 rounded-xl border border-cyan-200">
+                    <Clock className="h-5 w-5 text-cyan-600 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-zinc-900">Training</p>
+                      <p className="text-sm text-zinc-600">
+                        {String(training.duration || 0)} hours{training.required ? ' (required)' : ''}
+                      </p>
+                    </div>
+                  </div>
+                )}
+                {opportunity?.capacity && (
+                  <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200">
+                    <Users className="h-5 w-5 text-amber-600 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-zinc-900">Open Positions</p>
+                      <p className="text-sm text-zinc-600">
+                        {opportunity.capacity.openPositions || 0} spots available
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* CTA Card */}
+            <Card className="bg-gradient-to-r from-teal-500 to-cyan-500 border-0 text-white">
+              <CardContent className="p-6 text-center">
+                <h3 className="text-xl font-semibold mb-2">Ready to apply?</h3>
+                <p className="text-teal-100 mb-4">
+                  Click "Next" to continue with your application
+                </p>
+                <div className="flex items-center justify-center gap-2 text-sm text-teal-100">
+                  <CheckCircle2 className="h-4 w-4" />
+                  Your profile information will be included automatically
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case 'questions':
+        return (
+          <div className="space-y-8">
+            <div className="text-center pb-6">
+              <h1 className="text-2xl font-bold text-zinc-900 mb-2">
+                {stage.name}
+              </h1>
+              {stage.description && (
+                <p className="text-zinc-600">{stage.description}</p>
+              )}
+            </div>
+
+            {stage.questions && stage.questions.length > 0 ? (
+              <div className="space-y-6">
+                {stage.questions.map((question, idx) => (
+                  <div key={question.id} className="space-y-3">
+                    <Label className="text-base font-medium text-zinc-900 flex items-start gap-2">
+                      <span className="text-zinc-400 text-sm">{idx + 1}.</span>
+                      {question.question}
+                      {question.required && <span className="text-red-500">*</span>}
+                    </Label>
+                    {renderQuestion(question)}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <HelpCircle className="h-12 w-12 text-zinc-300 mx-auto mb-4" />
+                <p className="text-zinc-500">No questions in this stage</p>
+              </div>
+            )}
+          </div>
+        );
+
+      case 'assessment':
+        return (
+          <div className="text-center py-12">
+            <div className="w-20 h-20 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <ClipboardCheck className="h-10 w-10 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-zinc-900 mb-4">{stage.name}</h1>
+            <p className="text-zinc-600 mb-8 max-w-md mx-auto">
+              {stage.description || 'Complete the assessment to continue with your application.'}
+            </p>
+            <Card className="bg-indigo-50 border-indigo-200 max-w-md mx-auto">
+              <CardContent className="p-6 text-left">
+                <p className="text-sm text-indigo-700">
+                  Assessment configuration will be displayed here.
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        );
+
+      case 'verification':
+        return (
+          <div className="text-center py-12">
+            <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <ShieldCheck className="h-10 w-10 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-zinc-900 mb-4">{stage.name}</h1>
+            <p className="text-zinc-600 mb-8 max-w-md mx-auto">
+              {stage.description || 'Complete the verification process to continue.'}
+            </p>
+            <Badge className="bg-emerald-100 text-emerald-700">
+              {stage.verificationConfig?.verificationType || 'Verification'} Required
+            </Badge>
+          </div>
+        );
+
+      case 'documents':
+        return (
+          <div className="text-center py-12">
+            <div className="w-20 h-20 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <Upload className="h-10 w-10 text-white" />
+            </div>
+            <h1 className="text-2xl font-bold text-zinc-900 mb-4">{stage.name}</h1>
+            <p className="text-zinc-600 mb-8 max-w-md mx-auto">
+              {stage.description || 'Upload the required documents to continue.'}
+            </p>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="text-center py-12">
+            <h1 className="text-2xl font-bold text-zinc-900 mb-4">{stage.name}</h1>
+            {stage.description && (
+              <p className="text-zinc-600">{stage.description}</p>
+            )}
+          </div>
+        );
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-50">
@@ -341,11 +685,11 @@ export default function ApplyPage() {
               Application Submitted!
             </h1>
             <p className="text-zinc-600 mb-6">
-              Congratulations! Your application for <strong>{opportunity.name}</strong> at {opportunity.client} has been submitted successfully. We'll review your application and get back to you soon.
+              Your application for <strong>{opportunity.name}</strong> at {opportunity.client} has been submitted successfully.
             </p>
             <div className="space-y-3">
               <Button
-                className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600"
+                className="w-full bg-gradient-to-r from-teal-500 to-cyan-500"
                 onClick={() => router.push('/applications')}
               >
                 View My Applications
@@ -366,6 +710,7 @@ export default function ApplyPage() {
 
   const compensation = opportunity.compensation as Record<string, unknown> | null;
   const training = opportunity.training as Record<string, unknown> | null;
+  const StageIcon = currentStage ? STAGE_ICONS[currentStage.type] : FileText;
 
   return (
     <div className="min-h-screen bg-zinc-50 flex">
@@ -394,9 +739,9 @@ export default function ApplyPage() {
           </div>
 
           {opportunity.category && (
-            <div className="inline-block px-3 py-1 bg-zinc-100 text-zinc-600 text-xs font-medium rounded-full mb-6">
+            <Badge variant="secondary" className="mb-6">
               {opportunity.category}
-            </div>
+            </Badge>
           )}
 
           <div className="space-y-4 mb-8">
@@ -429,39 +774,42 @@ export default function ApplyPage() {
             </div>
           </div>
 
-          {/* Progress Steps */}
+          {/* Stage Progress */}
           <div className="border-t border-zinc-100 pt-6">
             <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-4">
-              Your Progress
+              Application Stages
             </p>
             <div className="space-y-2">
-              {steps.map((step, index) => (
-                <div
-                  key={step.id}
-                  className={`flex items-center gap-3 p-2 rounded-lg transition-all ${
-                    index === currentStep
-                      ? 'bg-teal-50 text-teal-700'
-                      : index < currentStep
-                      ? 'text-emerald-600'
-                      : 'text-zinc-400'
-                  }`}
-                >
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
-                    index === currentStep
-                      ? 'bg-teal-500 text-white'
-                      : index < currentStep
-                      ? 'bg-emerald-500 text-white'
-                      : 'bg-zinc-200 text-zinc-500'
-                  }`}>
-                    {index < currentStep ? (
-                      <CheckCircle2 className="h-4 w-4" />
-                    ) : (
-                      index + 1
-                    )}
+              {stages.map((stage, index) => {
+                const Icon = STAGE_ICONS[stage.type];
+                return (
+                  <div
+                    key={stage.id}
+                    className={`flex items-center gap-3 p-2 rounded-lg transition-all ${
+                      index === currentStageIndex
+                        ? 'bg-teal-50 text-teal-700'
+                        : index < currentStageIndex
+                        ? 'text-emerald-600'
+                        : 'text-zinc-400'
+                    }`}
+                  >
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${
+                      index === currentStageIndex
+                        ? 'bg-teal-500 text-white'
+                        : index < currentStageIndex
+                        ? 'bg-emerald-500 text-white'
+                        : 'bg-zinc-200 text-zinc-500'
+                    }`}>
+                      {index < currentStageIndex ? (
+                        <CheckCircle2 className="h-4 w-4" />
+                      ) : (
+                        <Icon className="h-3 w-3" />
+                      )}
+                    </div>
+                    <span className="text-sm font-medium truncate">{stage.name}</span>
                   </div>
-                  <span className="text-sm font-medium">{step.title}</span>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         </div>
@@ -500,7 +848,10 @@ export default function ApplyPage() {
         <div className="bg-white border-b border-zinc-200 px-6 py-4">
           <div className="max-w-2xl mx-auto">
             <div className="flex items-center justify-between text-sm mb-2">
-              <span className="text-zinc-500">Step {currentStep + 1} of {totalSteps}</span>
+              <span className="text-zinc-500 flex items-center gap-2">
+                <StageIcon className="h-4 w-4" />
+                {currentStage?.name || `Stage ${currentStageIndex + 1}`}
+              </span>
               <span className="font-medium text-teal-600">{Math.round(progress)}% Complete</span>
             </div>
             <Progress value={progress} className="h-2" />
@@ -510,105 +861,7 @@ export default function ApplyPage() {
         {/* Form Content */}
         <div className="flex-1 overflow-auto">
           <div className="max-w-2xl mx-auto px-6 py-12">
-            {/* Welcome Step */}
-            {currentStep === 0 && (
-              <div className="text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <Sparkles className="h-10 w-10 text-white" />
-                </div>
-                <h1 className="text-3xl font-bold text-zinc-900 mb-4">
-                  Your Journey Starts Now!
-                </h1>
-                <p className="text-lg text-zinc-600 mb-8 max-w-md mx-auto">
-                  You're about to apply for <strong>{opportunity.name}</strong> at {opportunity.client}.
-                  This application will take approximately 5-10 minutes to complete.
-                </p>
-
-                <Card className="bg-gradient-to-r from-teal-50 to-cyan-50 border-teal-200 text-left mb-8">
-                  <CardContent className="p-6">
-                    <h3 className="font-semibold text-teal-800 mb-3">What to expect:</h3>
-                    <ul className="space-y-2 text-sm text-teal-700">
-                      <li className="flex items-start gap-2">
-                        <CheckCircle2 className="h-4 w-4 mt-0.5 text-teal-500" />
-                        Answer a few questions about your experience and availability
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle2 className="h-4 w-4 mt-0.5 text-teal-500" />
-                        Your profile information will be included automatically
-                      </li>
-                      <li className="flex items-start gap-2">
-                        <CheckCircle2 className="h-4 w-4 mt-0.5 text-teal-500" />
-                        You'll receive a confirmation once submitted
-                      </li>
-                    </ul>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-
-            {/* Question Steps */}
-            {currentStep > 0 && currentStep < totalSteps - 1 && currentStepData && (
-              <div className="space-y-8">
-                {currentStepData.questions.map((question, qIndex) => (
-                  <div key={question.id} className="space-y-3">
-                    <Label className="text-base font-medium text-zinc-900 flex items-start gap-1">
-                      {question.question}
-                      {question.required && <span className="text-red-500">*</span>}
-                    </Label>
-                    {renderQuestion(question)}
-                  </div>
-                ))}
-
-                {currentStepData.questions.length === 0 && (
-                  <div className="text-center py-8">
-                    <p className="text-zinc-500">No questions in this section. Continue to the next step.</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Confirmation Step */}
-            {isLastStep && (
-              <div className="text-center">
-                <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
-                  <CheckCircle2 className="h-10 w-10 text-white" />
-                </div>
-                <h1 className="text-3xl font-bold text-zinc-900 mb-4">
-                  Ready to Submit?
-                </h1>
-                <p className="text-lg text-zinc-600 mb-8 max-w-md mx-auto">
-                  You've completed all the questions. Review your answers and click submit when you're ready.
-                </p>
-
-                <Card className="bg-zinc-50 border-zinc-200 text-left mb-8">
-                  <CardContent className="p-6">
-                    <h3 className="font-semibold text-zinc-900 mb-4">Application Summary</h3>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                      <div>
-                        <p className="text-zinc-500">Position</p>
-                        <p className="font-medium text-zinc-900">{opportunity.name}</p>
-                      </div>
-                      <div>
-                        <p className="text-zinc-500">Company</p>
-                        <p className="font-medium text-zinc-900">{opportunity.client}</p>
-                      </div>
-                      <div>
-                        <p className="text-zinc-500">Applicant</p>
-                        <p className="font-medium text-zinc-900">{profile?.first_name} {profile?.last_name}</p>
-                      </div>
-                      <div>
-                        <p className="text-zinc-500">Email</p>
-                        <p className="font-medium text-zinc-900">{profile?.email}</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <p className="text-sm text-zinc-500 mb-6">
-                  By submitting, you confirm that all information provided is accurate and you agree to be contacted regarding this opportunity.
-                </p>
-              </div>
-            )}
+            {currentStage && renderStageContent(currentStage)}
           </div>
         </div>
 
@@ -618,7 +871,7 @@ export default function ApplyPage() {
             <Button
               variant="outline"
               onClick={handleBack}
-              disabled={isFirstStep}
+              disabled={isFirstStage}
               className="gap-2"
             >
               <ArrowLeft className="h-4 w-4" />
@@ -635,7 +888,7 @@ export default function ApplyPage() {
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Submitting...
                 </>
-              ) : isLastStep ? (
+              ) : isLastStage ? (
                 <>
                   Submit Application
                   <CheckCircle2 className="h-4 w-4" />

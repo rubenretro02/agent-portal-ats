@@ -163,6 +163,7 @@ export type QuestionType = 'text' | 'textarea' | 'select' | 'multiselect' | 'che
 
 export interface ApplicationQuestion {
   id: string;
+  stageId?: string; // Reference to parent stage
   question: string;
   questionEs?: string; // Spanish translation
   type: QuestionType;
@@ -177,6 +178,61 @@ export interface ApplicationQuestion {
     pattern?: string;
     message?: string;
   };
+}
+
+// Application Stage Types
+export type StageType = 'info' | 'questions' | 'assessment' | 'verification' | 'documents' | 'custom';
+
+export interface ApplicationStage {
+  id: string;
+  opportunityId: string;
+  name: string;
+  nameEs?: string;
+  description?: string;
+  descriptionEs?: string;
+  type: StageType;
+  order: number;
+  isRequired: boolean;
+
+  // For 'info' type - displays job description, requirements, etc.
+  content?: {
+    showJobDescription?: boolean;
+    showRequirements?: boolean;
+    showCompensation?: boolean;
+    showSchedule?: boolean;
+    customHtml?: string;
+    customHtmlEs?: string;
+  };
+
+  // For 'questions' type
+  questions?: ApplicationQuestion[];
+
+  // For 'assessment' type
+  assessmentConfig?: {
+    assessmentId?: string;
+    timeLimit?: number; // minutes
+    passingScore?: number;
+    allowRetake?: boolean;
+  };
+
+  // For 'verification' type (background check, identity, etc.)
+  verificationConfig?: {
+    verificationType: 'background' | 'identity' | 'employment' | 'education' | 'custom';
+    provider?: string;
+    requiredDocuments?: string[];
+  };
+
+  // For 'documents' type
+  documentsConfig?: {
+    requiredDocuments: { type: DocumentType; label: string; labelEs?: string }[];
+  };
+
+  // Styling
+  icon?: string;
+  color?: string;
+
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface ApplicationAnswer {
@@ -237,8 +293,11 @@ export interface Opportunity {
     modules: TrainingModule[];
   };
 
-  // Custom Application Questions
-  applicationQuestions: ApplicationQuestion[];
+  // Application Stages (new flexible system)
+  applicationStages?: ApplicationStage[];
+
+  // Legacy: Custom Application Questions (deprecated, use stages)
+  applicationQuestions?: ApplicationQuestion[];
 
   // Tags & Categories
   tags: string[];

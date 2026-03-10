@@ -47,6 +47,7 @@ import {
   MoreVertical,
   Eye,
   EyeOff,
+  Settings,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -453,7 +454,11 @@ export default function OpportunitiesPage() {
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => openEditDialog(opp)}><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openEditDialog(opp)}><Edit className="h-4 w-4 mr-2" />Edit Details</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => router.push(`/admin/opportunities/${opp.id}/stages`)}>
+                                  <Settings className="h-4 w-4 mr-2" />Configure Stages
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={async () => { await updateOpportunity(opp.id, { status: opp.status === 'active' ? 'draft' : 'active' }); }}>
                                   {opp.status === 'active' ? <><EyeOff className="h-4 w-4 mr-2" />Deactivate</> : <><Eye className="h-4 w-4 mr-2" />Activate</>}
                                 </DropdownMenuItem>
