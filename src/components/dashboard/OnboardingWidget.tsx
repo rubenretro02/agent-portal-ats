@@ -238,7 +238,6 @@ export function OnboardingWidget({ onComplete, onSkip }: OnboardingWidgetProps) 
               hoursPerWeek: formData.hoursPerWeek,
               preferredShift: formData.preferredShift,
             },
-            onboarding_completed: true,
           },
           match: { id: agent.id },
         });

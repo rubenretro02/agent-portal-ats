@@ -247,7 +247,6 @@ export function OnboardingModal({ open, onOpenChange, onComplete }: OnboardingMo
             hoursPerWeek: formData.hoursPerWeek,
             preferredShift: formData.preferredShift,
           },
-          onboarding_completed: true,
         };
 
         console.log('[Onboarding] Agent update data:', agentUpdateData);
