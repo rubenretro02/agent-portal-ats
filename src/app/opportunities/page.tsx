@@ -219,7 +219,7 @@ export default function OpportunitiesPage() {
       category: opp.category || '',
       baseRate: (opp.compensation as Record<string, number>)?.baseRate || 15,
       trainingHours: (opp.training as Record<string, number>)?.duration || 8,
-      maxAgents: opp.capacity.maxAgents,
+      maxAgents: opp.capacity?.maxAgents || 10,
       languages: (opp.requirements as Record<string, string[]>)?.languages || ['English'],
       minScore: (opp.requirements as Record<string, number>)?.minScore || 0,
       status: opp.status,
@@ -483,7 +483,7 @@ export default function OpportunitiesPage() {
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       <div className="flex items-center gap-2 text-sm"><DollarSign className="h-4 w-4 text-emerald-500" /><span className="font-medium">${String(comp?.baseRate || 0)}/hr</span></div>
                       <div className="flex items-center gap-2 text-sm text-zinc-500"><Clock className="h-4 w-4" /><span>{String(train?.duration || 0)}h</span></div>
-                      <div className="flex items-center gap-2 text-sm text-zinc-500"><Users className="h-4 w-4" /><span>{opp.capacity.openPositions} open</span></div>
+                      <div className="flex items-center gap-2 text-sm text-zinc-500"><Users className="h-4 w-4" /><span>{opp.capacity?.openPositions || 0} open</span></div>
                       <div className="flex items-center gap-2 text-sm text-zinc-500"><Globe className="h-4 w-4" /><span>{((req?.languages as string[]) || ['EN']).slice(0, 2).join(', ')}</span></div>
                     </div>
                     {isAdmin ? (

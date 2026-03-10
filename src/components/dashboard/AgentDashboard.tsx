@@ -303,7 +303,7 @@ export function AgentDashboard() {
                       </div>
                       <div className="flex items-center gap-1">
                         <Users className="h-4 w-4" />
-                        <span>{opp.capacity.openPositions} spots</span>
+                        <span>{opp.capacity?.openPositions || 0} spots</span>
                       </div>
                     </div>
 
@@ -399,7 +399,7 @@ export function AgentDashboard() {
                 <div className="bg-cyan-50 rounded-xl p-4 text-center">
                   <Users className="h-6 w-6 text-cyan-500 mx-auto mb-2" />
                   <p className="text-2xl font-bold text-cyan-700">
-                    {selectedOpp.capacity.openPositions}
+                    {selectedOpp.capacity?.openPositions || 0}
                   </p>
                   <p className="text-sm text-cyan-600">open spots</p>
                 </div>

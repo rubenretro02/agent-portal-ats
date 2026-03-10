@@ -423,7 +423,7 @@ export default function ApplyPage() {
                 <Users className="h-4 w-4 text-amber-600" />
               </div>
               <div>
-                <p className="font-semibold text-zinc-900">{opportunity.capacity.openPositions} spots</p>
+                <p className="font-semibold text-zinc-900">{opportunity.capacity?.openPositions || 0} spots</p>
                 <p className="text-xs text-zinc-500">Available</p>
               </div>
             </div>
