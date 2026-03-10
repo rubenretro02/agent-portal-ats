@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/components/providers/AuthProvider';
 import { useOpportunityStore } from '@/store/supabaseStore';
-import { OnboardingWidget } from './OnboardingWidget';
+import { OnboardingModal } from './OnboardingModal';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,7 +41,7 @@ export function AgentDashboard() {
 
   const [selectedOpportunity, setSelectedOpportunity] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(true);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
 
   // Calculate onboarding progress
   const onboardingProgress = useMemo(() => {
@@ -205,16 +205,36 @@ export function AgentDashboard() {
         </Card>
       </div>
 
-      {/* Onboarding Widget - only if not complete */}
-      {!onboardingProgress.complete && showOnboarding && (
-        <OnboardingWidget
-          onComplete={() => {
-            setShowOnboarding(false);
-            refreshProfile();
-          }}
-          onSkip={() => setShowOnboarding(false)}
-        />
+      {/* Onboarding Banner - only if not complete */}
+      {!onboardingProgress.complete && (
+        <Card className="border-2 border-amber-200 bg-gradient-to-r from-amber-50 to-orange-50">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0">
+                <Zap className="h-6 w-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="font-semibold text-zinc-900">Complete Your Profile</h3>
+                <p className="text-sm text-zinc-600">Required to apply for opportunities</p>
+              </div>
+              <Button
+                onClick={() => setShowOnboardingModal(true)}
+                className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
+              >
+                Complete Now
+                <ChevronRight className="h-4 w-4 ml-1" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
+
+      {/* Onboarding Modal */}
+      <OnboardingModal
+        open={showOnboardingModal}
+        onOpenChange={setShowOnboardingModal}
+        onComplete={() => refreshProfile()}
+      />
 
       {/* Top Opportunities Section */}
       <div>
