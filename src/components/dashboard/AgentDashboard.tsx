@@ -2,12 +2,13 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/components/providers/AuthProvider';
 import { useOpportunityStore } from '@/store/supabaseStore';
+import { OnboardingWidget } from './OnboardingWidget';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import {
   Dialog,
   DialogContent,
@@ -34,11 +35,13 @@ import {
 import type { ApplicationAnswer } from '@/types';
 
 export function AgentDashboard() {
-  const { profile, agent } = useAuthContext();
+  const router = useRouter();
+  const { profile, agent, refreshProfile } = useAuthContext();
   const { opportunities, fetchOpportunities, appliedOpportunityIds, fetchAppliedOpportunities, applyToOpportunity } = useOpportunityStore();
 
   const [selectedOpportunity, setSelectedOpportunity] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(true);
 
   // Calculate onboarding progress
   const onboardingProgress = useMemo(() => {
@@ -202,29 +205,15 @@ export function AgentDashboard() {
         </Card>
       </div>
 
-      {/* Onboarding Alert - only if not complete */}
-      {!onboardingProgress.complete && (
-        <Card className="border-2 border-dashed border-amber-300 bg-gradient-to-r from-amber-50 to-orange-50">
-          <CardContent className="p-6">
-            <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0">
-                <Zap className="h-7 w-7 text-white" />
-              </div>
-              <div className="flex-1">
-                <h3 className="font-semibold text-zinc-900 mb-1">Complete Your Profile</h3>
-                <p className="text-sm text-zinc-600">
-                  Missing: {onboardingProgress.missing.join(', ')}
-                </p>
-              </div>
-              <Link href="/onboarding">
-                <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg shadow-amber-500/25">
-                  Continue
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Onboarding Widget - only if not complete */}
+      {!onboardingProgress.complete && showOnboarding && (
+        <OnboardingWidget
+          onComplete={() => {
+            setShowOnboarding(false);
+            refreshProfile();
+          }}
+          onSkip={() => setShowOnboarding(false)}
+        />
       )}
 
       {/* Top Opportunities Section */}

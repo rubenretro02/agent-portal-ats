@@ -84,7 +84,6 @@ export function UnifiedLayout({ children, title }: UnifiedLayoutProps) {
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/opportunities', label: 'Opportunities', icon: Briefcase },
     { href: '/applications', label: 'My Applications', icon: ClipboardList },
-    { href: '/onboarding', label: 'Onboarding', icon: FileText },
     { href: '/profile', label: 'Profile', icon: User },
   ];
 
