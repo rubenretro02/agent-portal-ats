@@ -492,7 +492,7 @@ export default function ApplyPage() {
             {Number(requirements?.minExperience || 0) > 0 ? (
               <li className="flex items-start gap-3">
                 <CheckSquare className="h-5 w-5 text-teal-500 mt-0.5 flex-shrink-0" />
-                <span>{requirements?.minExperience} months of call center experience</span>
+                <span>{String(requirements?.minExperience)} months of call center experience</span>
               </li>
             ) : (
               <li className="flex items-start gap-3">
