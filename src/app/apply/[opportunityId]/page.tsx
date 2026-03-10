@@ -28,7 +28,6 @@ import {
   DollarSign,
   Clock,
   Users,
-  MapPin,
   Globe,
   HelpCircle,
   FileText,
@@ -37,8 +36,15 @@ import {
   Upload,
   Settings,
   CheckSquare,
-  XCircle,
   Star,
+  X,
+  Building2,
+  ListChecks,
+  Award,
+  GraduationCap,
+  MapPin,
+  Calendar,
+  Headphones,
 } from 'lucide-react';
 import type { ApplicationAnswer, ApplicationQuestion, ApplicationStage, StageType } from '@/types';
 
@@ -89,7 +95,7 @@ export default function ApplyPage() {
       {
         id: 'stage-info',
         opportunityId: opportunity.id,
-        name: 'Job Information',
+        name: 'Job Details',
         description: 'Review the position details',
         type: 'info',
         order: 1,
@@ -135,6 +141,10 @@ export default function ApplyPage() {
   const progress = totalStages > 0 ? ((currentStageIndex + 1) / totalStages) * 100 : 0;
   const isLastStage = currentStageIndex === totalStages - 1;
   const isFirstStage = currentStageIndex === 0;
+
+  const handleExit = () => {
+    router.push('/opportunities');
+  };
 
   const handleNext = () => {
     if (isLastStage) {
@@ -203,7 +213,7 @@ export default function ApplyPage() {
             placeholder={question.placeholder || 'Enter your answer...'}
             value={(value as string) || ''}
             onChange={(e) => updateAnswer(question.id, e.target.value)}
-            className="h-12"
+            className="h-12 border-zinc-300 focus:border-teal-500"
           />
         );
 
@@ -214,6 +224,7 @@ export default function ApplyPage() {
             value={(value as string) || ''}
             onChange={(e) => updateAnswer(question.id, e.target.value)}
             rows={4}
+            className="border-zinc-300 focus:border-teal-500"
           />
         );
 
@@ -226,7 +237,7 @@ export default function ApplyPage() {
             onChange={(e) => updateAnswer(question.id, Number(e.target.value))}
             min={question.validation?.min}
             max={question.validation?.max}
-            className="h-12"
+            className="h-12 border-zinc-300 focus:border-teal-500"
           />
         );
 
@@ -236,7 +247,7 @@ export default function ApplyPage() {
             value={(value as string) || ''}
             onValueChange={(v) => updateAnswer(question.id, v)}
           >
-            <SelectTrigger className="h-12">
+            <SelectTrigger className="h-12 border-zinc-300">
               <SelectValue placeholder="Select an option..." />
             </SelectTrigger>
             <SelectContent>
@@ -325,12 +336,198 @@ export default function ApplyPage() {
     }
   };
 
-  // Render stage content based on type
-  const renderStageContent = (stage: ApplicationStage) => {
+  // Render Job Description Template (Professional Style)
+  const renderJobDescriptionTemplate = () => {
     const compensation = opportunity?.compensation as Record<string, unknown> | null;
     const training = opportunity?.training as Record<string, unknown> | null;
     const requirements = opportunity?.requirements as Record<string, unknown> | null;
+    const languages = (requirements?.languages as string[]) || [];
+    const skills = (requirements?.skills as string[]) || [];
 
+    return (
+      <div className="space-y-8">
+        {/* Job Header */}
+        <div className="border-b border-zinc-200 pb-6">
+          <div className="flex items-start gap-4 mb-4">
+            <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0">
+              <Briefcase className="h-8 w-8 text-white" />
+            </div>
+            <div className="flex-1">
+              <h1 className="text-2xl font-bold text-zinc-900 mb-1">
+                {opportunity?.name}
+              </h1>
+              <p className="text-lg text-zinc-600 flex items-center gap-2">
+                <Building2 className="h-4 w-4" />
+                {opportunity?.client}
+              </p>
+              <div className="flex flex-wrap gap-2 mt-3">
+                {opportunity?.category && (
+                  <Badge variant="secondary">{opportunity.category}</Badge>
+                )}
+                <Badge className="bg-emerald-100 text-emerald-700">
+                  ${String(compensation?.baseRate || 0)}/hr
+                </Badge>
+                <Badge variant="outline" className="flex items-center gap-1">
+                  <MapPin className="h-3 w-3" /> Remote
+                </Badge>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Job Details Section */}
+        <section>
+          <h2 className="text-lg font-semibold text-zinc-900 mb-4 flex items-center gap-2">
+            <FileText className="h-5 w-5 text-teal-600" />
+            Job Details
+          </h2>
+          <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
+            <p className="text-zinc-700 leading-relaxed whitespace-pre-wrap">
+              {opportunity?.description || 'No description provided.'}
+            </p>
+          </div>
+        </section>
+
+        {/* About the Company */}
+        <section>
+          <h2 className="text-lg font-semibold text-zinc-900 mb-4 flex items-center gap-2">
+            <Building2 className="h-5 w-5 text-teal-600" />
+            About the Company
+          </h2>
+          <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
+            <p className="text-zinc-700 leading-relaxed">
+              <strong>{opportunity?.client}</strong> is looking for talented individuals to join their team.
+              This is a remote opportunity that offers flexibility and competitive compensation.
+            </p>
+          </div>
+        </section>
+
+        {/* Role & Responsibilities */}
+        <section>
+          <h2 className="text-lg font-semibold text-zinc-900 mb-4 flex items-center gap-2">
+            <ListChecks className="h-5 w-5 text-teal-600" />
+            Role & Responsibilities
+          </h2>
+          <ul className="space-y-2 text-zinc-700">
+            <li className="flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 text-teal-500 mt-0.5 flex-shrink-0" />
+              <span>Handle inbound/outbound calls professionally</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 text-teal-500 mt-0.5 flex-shrink-0" />
+              <span>Provide excellent customer service and support</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 text-teal-500 mt-0.5 flex-shrink-0" />
+              <span>Meet performance metrics and quality standards</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <CheckCircle2 className="h-5 w-5 text-teal-500 mt-0.5 flex-shrink-0" />
+              <span>Document interactions accurately in the system</span>
+            </li>
+            {skills.length > 0 && skills.map((skill, idx) => (
+              <li key={idx} className="flex items-start gap-3">
+                <CheckCircle2 className="h-5 w-5 text-teal-500 mt-0.5 flex-shrink-0" />
+                <span>{skill}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {/* Benefits */}
+        <section>
+          <h2 className="text-lg font-semibold text-zinc-900 mb-4 flex items-center gap-2">
+            <Award className="h-5 w-5 text-teal-600" />
+            Benefits
+          </h2>
+          <ul className="space-y-2 text-zinc-700">
+            <li className="flex items-start gap-3">
+              <DollarSign className="h-5 w-5 text-emerald-500 mt-0.5 flex-shrink-0" />
+              <span><strong>${String(compensation?.baseRate || 0)}/hr</strong> base rate {compensation?.bonusStructure ? `+ ${compensation.bonusStructure}` : ''}</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Clock className="h-5 w-5 text-cyan-500 mt-0.5 flex-shrink-0" />
+              <span>Flexible schedule - work from home</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Headphones className="h-5 w-5 text-indigo-500 mt-0.5 flex-shrink-0" />
+              <span>Paid training ({String(training?.duration || 0)} hours)</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Calendar className="h-5 w-5 text-amber-500 mt-0.5 flex-shrink-0" />
+              <span>Weekly payments via direct deposit</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <Star className="h-5 w-5 text-yellow-500 mt-0.5 flex-shrink-0" />
+              <span>Performance bonuses available</span>
+            </li>
+          </ul>
+        </section>
+
+        {/* Qualifications */}
+        <section>
+          <h2 className="text-lg font-semibold text-zinc-900 mb-4 flex items-center gap-2">
+            <GraduationCap className="h-5 w-5 text-teal-600" />
+            Qualifications
+          </h2>
+          <ul className="space-y-2 text-zinc-700">
+            {languages.length > 0 && (
+              <li className="flex items-start gap-3">
+                <Globe className="h-5 w-5 text-cyan-500 mt-0.5 flex-shrink-0" />
+                <span>Fluent in {languages.join(' and ')}</span>
+              </li>
+            )}
+            <li className="flex items-start gap-3">
+              <CheckSquare className="h-5 w-5 text-teal-500 mt-0.5 flex-shrink-0" />
+              <span>Reliable high-speed internet connection</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <CheckSquare className="h-5 w-5 text-teal-500 mt-0.5 flex-shrink-0" />
+              <span>Quiet workspace for calls</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <CheckSquare className="h-5 w-5 text-teal-500 mt-0.5 flex-shrink-0" />
+              <span>Computer with headset</span>
+            </li>
+            {Number(requirements?.minExperience || 0) > 0 ? (
+              <li className="flex items-start gap-3">
+                <CheckSquare className="h-5 w-5 text-teal-500 mt-0.5 flex-shrink-0" />
+                <span>{requirements?.minExperience} months of call center experience</span>
+              </li>
+            ) : (
+              <li className="flex items-start gap-3">
+                <CheckSquare className="h-5 w-5 text-teal-500 mt-0.5 flex-shrink-0" />
+                <span>No prior experience required - we provide training!</span>
+              </li>
+            )}
+            {Boolean(requirements?.backgroundCheckRequired) && (
+              <li className="flex items-start gap-3">
+                <ShieldCheck className="h-5 w-5 text-indigo-500 mt-0.5 flex-shrink-0" />
+                <span>Must pass background check</span>
+              </li>
+            )}
+          </ul>
+        </section>
+
+        {/* Positions Available */}
+        <section className="bg-gradient-to-r from-teal-500 to-cyan-500 rounded-xl p-6 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-teal-100 text-sm mb-1">Positions Available</p>
+              <p className="text-3xl font-bold">{opportunity?.capacity?.openPositions || 0} spots</p>
+            </div>
+            <div className="text-right">
+              <p className="text-teal-100 text-sm mb-1">Apply Now</p>
+              <p className="text-lg font-medium">Click "Next" to continue</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    );
+  };
+
+  // Render stage content based on type
+  const renderStageContent = (stage: ApplicationStage) => {
     switch (stage.type) {
       case 'info':
         // Check if this is the review/submit stage (last stage)
@@ -385,180 +582,13 @@ export default function ApplyPage() {
           );
         }
 
-        // Job Information stage (first stage)
-        return (
-          <div className="space-y-8">
-            {/* Job Header */}
-            <div className="text-center pb-6 border-b border-zinc-200">
-              <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Briefcase className="h-8 w-8 text-white" />
-              </div>
-              <h1 className="text-3xl font-bold text-zinc-900 mb-2">
-                {opportunity?.name}
-              </h1>
-              <p className="text-lg text-zinc-600">
-                {opportunity?.client}
-              </p>
-              {opportunity?.category && (
-                <Badge variant="secondary" className="mt-3">
-                  {opportunity.category}
-                </Badge>
-              )}
-            </div>
-
-            {/* Job Description */}
-            {stage.content?.showJobDescription && opportunity?.description && (
-              <div>
-                <h2 className="text-lg font-semibold text-zinc-900 mb-3 flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-teal-500" />
-                  About This Position
-                </h2>
-                <p className="text-zinc-600 leading-relaxed">
-                  {opportunity.description}
-                </p>
-              </div>
-            )}
-
-            {/* Compensation */}
-            {stage.content?.showCompensation && compensation && (
-              <Card className="bg-gradient-to-r from-emerald-50 to-teal-50 border-emerald-200">
-                <CardContent className="p-6">
-                  <h2 className="text-lg font-semibold text-zinc-900 mb-4 flex items-center gap-2">
-                    <DollarSign className="h-5 w-5 text-emerald-600" />
-                    Compensation
-                  </h2>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-2xl font-bold text-emerald-700">
-                        ${String(compensation.baseRate || 0)}/hr
-                      </p>
-                      <p className="text-sm text-zinc-500">Base Rate</p>
-                    </div>
-                    {typeof compensation.bonusStructure === 'string' && compensation.bonusStructure && (
-                      <div>
-                        <p className="font-medium text-zinc-900">Bonus Available</p>
-                        <p className="text-sm text-zinc-500">{compensation.bonusStructure}</p>
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-medium text-zinc-900 capitalize">
-                        {String(compensation.type || 'hourly')}
-                      </p>
-                      <p className="text-sm text-zinc-500">Payment Type</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Requirements */}
-            {stage.content?.showRequirements && requirements && (
-              <div>
-                <h2 className="text-lg font-semibold text-zinc-900 mb-4 flex items-center gap-2">
-                  <CheckSquare className="h-5 w-5 text-teal-500" />
-                  Requirements
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {(requirements.languages as string[])?.length > 0 && (
-                    <div className="flex items-start gap-3 p-4 bg-zinc-50 rounded-xl">
-                      <Globe className="h-5 w-5 text-cyan-600 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-zinc-900">Languages</p>
-                        <p className="text-sm text-zinc-500">
-                          {(requirements.languages as string[]).join(', ')}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {requirements.minExperience !== undefined && (
-                    <div className="flex items-start gap-3 p-4 bg-zinc-50 rounded-xl">
-                      <Star className="h-5 w-5 text-amber-600 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-zinc-900">Experience</p>
-                        <p className="text-sm text-zinc-500">
-                          {Number(requirements.minExperience) > 0
-                            ? `${requirements.minExperience} months minimum`
-                            : 'No experience required'}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  {Boolean(requirements.backgroundCheckRequired) && (
-                    <div className="flex items-start gap-3 p-4 bg-zinc-50 rounded-xl">
-                      <ShieldCheck className="h-5 w-5 text-indigo-600 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-zinc-900">Background Check</p>
-                        <p className="text-sm text-zinc-500">Required for this position</p>
-                      </div>
-                    </div>
-                  )}
-                  {(requirements.skills as string[])?.length > 0 && (
-                    <div className="flex items-start gap-3 p-4 bg-zinc-50 rounded-xl">
-                      <ClipboardCheck className="h-5 w-5 text-teal-600 mt-0.5" />
-                      <div>
-                        <p className="font-medium text-zinc-900">Skills</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {(requirements.skills as string[]).map((skill) => (
-                            <Badge key={skill} variant="secondary" className="text-xs">
-                              {skill}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Training & Schedule */}
-            {stage.content?.showSchedule && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {training && (
-                  <div className="flex items-start gap-3 p-4 bg-cyan-50 rounded-xl border border-cyan-200">
-                    <Clock className="h-5 w-5 text-cyan-600 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-zinc-900">Training</p>
-                      <p className="text-sm text-zinc-600">
-                        {String(training.duration || 0)} hours{training.required ? ' (required)' : ''}
-                      </p>
-                    </div>
-                  </div>
-                )}
-                {opportunity?.capacity && (
-                  <div className="flex items-start gap-3 p-4 bg-amber-50 rounded-xl border border-amber-200">
-                    <Users className="h-5 w-5 text-amber-600 mt-0.5" />
-                    <div>
-                      <p className="font-medium text-zinc-900">Open Positions</p>
-                      <p className="text-sm text-zinc-600">
-                        {opportunity.capacity.openPositions || 0} spots available
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* CTA Card */}
-            <Card className="bg-gradient-to-r from-teal-500 to-cyan-500 border-0 text-white">
-              <CardContent className="p-6 text-center">
-                <h3 className="text-xl font-semibold mb-2">Ready to apply?</h3>
-                <p className="text-teal-100 mb-4">
-                  Click "Next" to continue with your application
-                </p>
-                <div className="flex items-center justify-center gap-2 text-sm text-teal-100">
-                  <CheckCircle2 className="h-4 w-4" />
-                  Your profile information will be included automatically
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        );
+        // Job Information stage (first stage) - Use professional template
+        return renderJobDescriptionTemplate();
 
       case 'questions':
         return (
           <div className="space-y-8">
-            <div className="text-center pb-6">
+            <div className="text-center pb-6 border-b border-zinc-200">
               <h1 className="text-2xl font-bold text-zinc-900 mb-2">
                 {stage.name}
               </h1>
@@ -572,9 +602,13 @@ export default function ApplyPage() {
                 {stage.questions.map((question, idx) => (
                   <div key={question.id} className="space-y-3">
                     <Label className="text-base font-medium text-zinc-900 flex items-start gap-2">
-                      <span className="text-zinc-400 text-sm">{idx + 1}.</span>
-                      {question.question}
-                      {question.required && <span className="text-red-500">*</span>}
+                      <span className="bg-teal-100 text-teal-700 rounded-full w-6 h-6 flex items-center justify-center text-sm flex-shrink-0">
+                        {idx + 1}
+                      </span>
+                      <span className="flex-1">
+                        {question.question}
+                        {question.required && <span className="text-red-500 ml-1">*</span>}
+                      </span>
                     </Label>
                     {renderQuestion(question)}
                   </div>
@@ -599,13 +633,6 @@ export default function ApplyPage() {
             <p className="text-zinc-600 mb-8 max-w-md mx-auto">
               {stage.description || 'Complete the assessment to continue with your application.'}
             </p>
-            <Card className="bg-indigo-50 border-indigo-200 max-w-md mx-auto">
-              <CardContent className="p-6 text-left">
-                <p className="text-sm text-indigo-700">
-                  Assessment configuration will be displayed here.
-                </p>
-              </CardContent>
-            </Card>
           </div>
         );
 
@@ -619,9 +646,6 @@ export default function ApplyPage() {
             <p className="text-zinc-600 mb-8 max-w-md mx-auto">
               {stage.description || 'Complete the verification process to continue.'}
             </p>
-            <Badge className="bg-emerald-100 text-emerald-700">
-              {stage.verificationConfig?.verificationType || 'Verification'} Required
-            </Badge>
           </div>
         );
 
@@ -825,34 +849,34 @@ export default function ApplyPage() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col">
-        {/* Mobile Header */}
-        <div className="lg:hidden bg-white border-b border-zinc-200 p-4">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-lg flex items-center justify-center font-bold text-white text-sm">
-                AP
-              </div>
-              <span className="font-bold text-zinc-900">AgentHub</span>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => router.push('/opportunities')}>
-              Exit
-            </Button>
-          </div>
-          <div>
-            <p className="text-xs text-teal-600 font-medium">Applying for</p>
-            <p className="font-semibold text-zinc-900 truncate">{opportunity.name}</p>
-          </div>
-        </div>
-
-        {/* Progress Bar */}
+        {/* Top Bar with Progress and Exit Button */}
         <div className="bg-white border-b border-zinc-200 px-6 py-4">
-          <div className="max-w-2xl mx-auto">
-            <div className="flex items-center justify-between text-sm mb-2">
-              <span className="text-zinc-500 flex items-center gap-2">
+          <div className="max-w-3xl mx-auto">
+            <div className="flex items-center justify-between mb-3">
+              {/* Mobile: Job Title */}
+              <div className="lg:hidden">
+                <p className="text-xs text-teal-600 font-medium">Applying for</p>
+                <p className="font-semibold text-zinc-900 truncate">{opportunity.name}</p>
+              </div>
+
+              {/* Desktop: Stage info */}
+              <div className="hidden lg:flex items-center gap-2 text-sm text-zinc-500">
                 <StageIcon className="h-4 w-4" />
                 {currentStage?.name || `Stage ${currentStageIndex + 1}`}
-              </span>
-              <span className="font-medium text-teal-600">{Math.round(progress)}% Complete</span>
+              </div>
+
+              {/* Progress indicator */}
+              <span className="font-medium text-teal-600 text-sm">{Math.round(progress)}% Complete</span>
+
+              {/* Exit Button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleExit}
+                className="text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100"
+              >
+                <X className="h-5 w-5" />
+              </Button>
             </div>
             <Progress value={progress} className="h-2" />
           </div>
@@ -860,14 +884,14 @@ export default function ApplyPage() {
 
         {/* Form Content */}
         <div className="flex-1 overflow-auto">
-          <div className="max-w-2xl mx-auto px-6 py-12">
+          <div className="max-w-3xl mx-auto px-6 py-8">
             {currentStage && renderStageContent(currentStage)}
           </div>
         </div>
 
         {/* Footer Navigation */}
         <div className="bg-white border-t border-zinc-200 px-6 py-4">
-          <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <div className="max-w-3xl mx-auto flex items-center justify-between">
             <Button
               variant="outline"
               onClick={handleBack}
