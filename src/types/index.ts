@@ -526,3 +526,15 @@ export function generateUUID(): string {
     return v.toString(16);
   });
 }
+
+// Job Description Section
+export interface JobSection {
+  id: string;
+  title: string;
+  titleEs?: string;
+  content: string;
+  contentEs?: string;
+  icon: string;
+  order: number;
+  type: 'about' | 'hours' | 'compensation' | 'role' | 'requirements' | 'benefits' | 'custom';
+}

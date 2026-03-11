@@ -1,54 +1,47 @@
-# Tareas - Agent Portal ATS
+# Agent Portal ATS - Estado Actual
 
-## Feature: Flexible Application Stages
+## Cambios Realizados
 
-### Rama: `feature/flexible-stages`
+### ✅ Eliminado contenido hardcoded
+- Apply page ya NO tiene texto mock como "Handle inbound/outbound calls"
+- Solo muestra datos REALES de la oportunidad desde la base de datos
 
-### Completado:
-1. ✅ **Stage 1 = Job Description** (reemplazó "Your Journey Starts Now")
-   - Muestra descripción completa del job
-   - Info del cliente, compensación, requisitos
-   - Card con CTA "Ready to apply?"
+### ✅ Indicador de preguntas para Admin
+- Admin/recruiter ahora ve en cada tarjeta de oportunidad cuántas preguntas tiene configuradas
+- Muestra "X questions" o "No questions" según corresponda
 
-2. ✅ **Sistema de Stages Customizables:**
-   - Stage types: info, questions, assessment, verification, documents, custom
-   - Cada stage tiene nombre, descripción, orden
-   - Stages se muestran en sidebar con iconos
-   - Admin puede reorganizar stages (drag & drop)
+### ✅ Columna application_stages agregada
+- La tabla `opportunities` ahora tiene la columna `application_stages` (JSONB)
+- Permite guardar stages personalizados configurados por admin
 
-3. ✅ **StageBuilder Component:**
-   - Crear/editar/eliminar stages
-   - Agregar preguntas ilimitadas por stage
-   - Preview del flujo de aplicación
-   - Configuración de tipo de stage
+### ✅ Store actualizado
+- `applicationStages` se carga desde `opp.application_stages` en la DB
+- Las preguntas se cargan desde `applicationQuestions`
 
-4. ✅ **Tipos Actualizados:**
-   - `ApplicationStage` type definido
-   - `StageType` enum agregado
-   - `Opportunity` actualizado con `applicationStages`
+## Cómo funciona ahora:
 
-5. ✅ **Admin UI:**
-   - Link "Configure Stages" en dropdown de opportunities
-   - Página `/admin/opportunities/[id]/stages`
-   - Tabs: Stages, Preview, Settings
+### Para Admin/Recruiter:
+1. Ver `/opportunities` - muestra todas las oportunidades con contador de preguntas
+2. Click en "..." -> "Edit Details" - abre el formulario con ApplicationBuilder para agregar preguntas
+3. Click en "..." -> "Configure Stages" - abre StageBuilder para configurar stages avanzados
 
-### Pendiente:
-- [ ] Crear API endpoint para guardar stages (`PATCH /api/opportunities/[id]`)
-- [ ] Persistir stages en base de datos
-- [ ] Tests de la funcionalidad
+### Para Agent:
+1. Ver `/opportunities` - muestra solo oportunidades activas
+2. Click "Apply" - inicia el flujo de aplicación multi-step
+3. Cada stage muestra datos REALES de la oportunidad (descripción, compensación, etc.)
+4. Las preguntas configuradas aparecen en el stage de Questions
 
-### Estructura de Stages:
+## Estructura de datos:
 ```
-Opportunity
-├── stages[]
-│   ├── Stage 1: "Job Information" (info)
-│   │   └── content: job description, requirements, compensation
-│   ├── Stage 2: "Application Questions" (questions)
-│   │   └── questions: [q1, q2, q3, ...]
-│   ├── Stage 3: "Assessment" (assessment)
-│   │   └── assessmentConfig: {...}
-│   └── Stage 4: "Review & Submit" (info)
+opportunity.applicationQuestions = [
+  { id, question, type, required, options, ... }
+]
+
+opportunity.applicationStages = [
+  { id, name, type: 'info'|'questions'|..., order, questions: [...] }
+]
 ```
 
-### Acceso:
-- Admin puede configurar stages desde: Opportunities → (card) → ⋮ → Configure Stages
+## Pendiente:
+- Integrar stages configurados con el apply flow
+- Mostrar preview de stages en admin

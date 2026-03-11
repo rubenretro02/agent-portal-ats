@@ -2,7 +2,7 @@
 
 import { create } from 'zustand';
 import { getSupabaseClient } from '@/lib/supabase/client';
-import type { Language, ApplicationAnswer, ApplicationQuestion, ApplicationStage } from '@/types';
+import type { Language, ApplicationAnswer, ApplicationQuestion, ApplicationStage, JobSection } from '@/types';
 
 // =====================================================
 // TYPES
@@ -114,7 +114,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   profile: null,
   agent: null,
   isAuthenticated: false,
-  isLoading: false, // Cambiado a false - el AuthProvider maneja el loading real
+  isLoading: false,
   language: 'en',
 
   setAuth: (profile, agent) => {
@@ -189,6 +189,7 @@ interface OpportunityWithQuestions {
   updated_at: string;
   applicationQuestions: ApplicationQuestion[];
   applicationStages?: ApplicationStage[];
+  jobSections?: JobSection[];
   capacity: {
     maxAgents: number;
     currentAgents: number;
@@ -234,27 +235,6 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
   fetchOpportunities: async (includeAll = false) => {
     set({ isLoading: true });
 
-    // For admin (includeAll=true), use admin API to bypass RLS that references profiles
-    if (includeAll) {
-      try {
-        const { adminDb } = await import('@/lib/adminDb');
-        const result = await adminDb<OpportunityWithQuestions[]>({
-          action: 'select',
-          table: 'opportunities',
-          select: '*, application_questions (*)',
-          order: { column: 'created_at', ascending: false },
-        });
-
-        if (!result.error && result.data) {
-          set({ opportunities: result.data, isLoading: false });
-          return;
-        }
-      } catch (e) {
-        console.error('Admin fetch opportunities error:', e);
-      }
-    }
-
-    // Use admin API for all opportunity fetches to bypass RLS that references profiles
     const { adminDb } = await import('@/lib/adminDb');
     const filters: Record<string, unknown> = {};
     if (!includeAll) {
@@ -270,7 +250,7 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
     });
 
     if (!error && opportunities) {
-      const formattedOpportunities: OpportunityWithQuestions[] = (opportunities as unknown as Record<string, unknown>[]).map((opp) => ({
+      const formattedOpportunities: OpportunityWithQuestions[] = opportunities.map((opp) => ({
         id: opp.id as string,
         name: opp.name as string,
         description: opp.description as string,
@@ -293,8 +273,8 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
           openPositions: opp.open_positions as number,
         },
         applicationQuestions: ((opp.application_questions as Record<string, unknown>[]) || [])
-          .sort((a: Record<string, unknown>, b: Record<string, unknown>) => (a.order as number) - (b.order as number))
-          .map((q: Record<string, unknown>) => ({
+          .sort((a, b) => (a.order as number) - (b.order as number))
+          .map((q) => ({
             id: q.id as string,
             question: q.question as string,
             questionEs: q.question_es as string | undefined,
@@ -306,6 +286,8 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
             placeholderEs: q.placeholder_es as string | undefined,
             validation: q.validation as { min?: number; max?: number; pattern?: string; message?: string } | undefined,
           })),
+        applicationStages: (opp.application_stages as ApplicationStage[]) || [],
+        jobSections: (opp.job_sections as JobSection[]) || [],
       }));
 
       set({ opportunities: formattedOpportunities, isLoading: false });
@@ -326,7 +308,6 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
       return { success: false, applicationId: '' };
     }
 
-    // Create application using admin API to bypass RLS
     const { adminDb } = await import('@/lib/adminDb');
     const { data: appResult, error: appError } = await adminDb<{ id: string }[]>({
       action: 'insert',
@@ -345,7 +326,6 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
 
     const appId = appResult[0].id;
 
-    // Create answers
     if (answers.length > 0) {
       const answersToInsert = answers.map(answer => ({
         application_id: appId,
@@ -353,19 +333,14 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
         value: answer.value,
       }));
 
-      const { error: answersError } = await adminDb({
+      await adminDb({
         action: 'insert',
         table: 'application_answers',
         data: answersToInsert,
         select: false,
       });
-
-      if (answersError) {
-        console.error('Error creating answers:', answersError);
-      }
     }
 
-    // Update applied opportunities
     set(state => ({
       appliedOpportunityIds: [...state.appliedOpportunityIds, opportunityId],
     }));
@@ -375,7 +350,6 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
 
   fetchAppliedOpportunities: async () => {
     const { agent } = useAuthStore.getState();
-
     if (!agent) return;
 
     const { adminDb } = await import('@/lib/adminDb');
@@ -426,7 +400,6 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
         },
       };
 
-      // Use admin API to bypass RLS that references profiles table
       const { adminDb } = await import('@/lib/adminDb');
       const result = await adminDb<{ id: string }[]>({
         action: 'insert',
@@ -435,14 +408,12 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
       });
 
       if (result.error || !result.data) {
-        console.error('Error creating opportunity:', result.error);
-        return { success: false, error: result.error || 'Failed to create opportunity' };
+        return { success: false, error: result.error || 'Failed to create' };
       }
 
       const newOpp = Array.isArray(result.data) ? result.data[0] : result.data;
       const opportunityId = newOpp.id;
 
-      // Save application questions if provided
       if (data.applicationQuestions && data.applicationQuestions.length > 0) {
         const questionsToInsert = data.applicationQuestions.map((q, index) => ({
           opportunity_id: opportunityId,
@@ -457,21 +428,15 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
           validation: q.validation || null,
         }));
 
-        const { error: questionsError } = await adminDb({
+        await adminDb({
           action: 'insert',
           table: 'application_questions',
           data: questionsToInsert,
           select: false,
         });
-
-        if (questionsError) {
-          console.error('Error creating questions:', questionsError);
-        }
       }
 
-      // Refresh opportunities list
       await get().fetchOpportunities(true);
-
       return { success: true, id: opportunityId };
     } catch (error) {
       console.error('Create opportunity error:', error);
@@ -517,7 +482,6 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
 
       const { adminDb } = await import('@/lib/adminDb');
 
-      // Update opportunity data
       if (Object.keys(updateData).length > 0) {
         const result = await adminDb({
           action: 'update',
@@ -527,21 +491,17 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
         });
 
         if (result.error) {
-          console.error('Error updating opportunity:', result.error);
           return false;
         }
       }
 
-      // Update application questions if provided
       if (data.applicationQuestions !== undefined) {
-        // Delete existing questions
         await adminDb({
           action: 'delete',
           table: 'application_questions',
           match: { opportunity_id: id },
         });
 
-        // Insert new questions
         if (data.applicationQuestions.length > 0) {
           const questionsToInsert = data.applicationQuestions.map((q, index) => ({
             opportunity_id: id,
@@ -556,20 +516,15 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
             validation: q.validation || null,
           }));
 
-          const { error: questionsError } = await adminDb({
+          await adminDb({
             action: 'insert',
             table: 'application_questions',
             data: questionsToInsert,
             select: false,
           });
-
-          if (questionsError) {
-            console.error('Error updating questions:', questionsError);
-          }
         }
       }
 
-      // Refresh opportunities list
       await get().fetchOpportunities(true);
       return true;
     } catch (error) {
@@ -580,7 +535,6 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
 
   deleteOpportunity: async (id) => {
     try {
-      // Soft delete - just set status to 'closed'
       const { adminDb } = await import('@/lib/adminDb');
       const result = await adminDb({
         action: 'update',
@@ -590,11 +544,9 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
       });
 
       if (result.error) {
-        console.error('Error deleting opportunity:', result.error);
         return false;
       }
 
-      // Refresh opportunities list
       await get().fetchOpportunities(true);
       return true;
     } catch (error) {
@@ -689,7 +641,7 @@ interface NotificationState {
   markAsRead: (id: string, type: 'message' | 'notification') => Promise<void>;
 }
 
-export const useNotificationStore = create<NotificationState>((set, get) => ({
+export const useNotificationStore = create<NotificationState>((set) => ({
   messages: [],
   notifications: [],
   unreadCount: 0,
@@ -805,7 +757,6 @@ export const useDocumentStore = create<DocumentState>((set) => ({
 
     if (!agent) return false;
 
-    // Upload to storage (storage operations don't have RLS recursion issue)
     const filePath = `${agent.id}/${type}/${Date.now()}_${file.name}`;
     const { error: uploadError } = await supabase.storage
       .from('documents')
@@ -816,12 +767,10 @@ export const useDocumentStore = create<DocumentState>((set) => ({
       return false;
     }
 
-    // Get public URL
     const { data: urlData } = supabase.storage
       .from('documents')
       .getPublicUrl(filePath);
 
-    // Create document record via admin API to bypass RLS
     const { adminDb } = await import('@/lib/adminDb');
     const { error: dbError } = await adminDb({
       action: 'insert',
