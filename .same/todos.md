@@ -1,39 +1,47 @@
-# Tareas - Agent Portal ATS
+# Agent Portal ATS - Estado Actual
 
-## Problema Resuelto Ahora
+## Cambios Realizados
 
-### Error: `onboarding_completed` column not found ✅
-- La columna `onboarding_completed` no existe en la tabla `agents` de Supabase
-- Se eliminaron las referencias a esta columna en:
-  - `OnboardingModal.tsx`
-  - `OnboardingWidget.tsx`
-- El onboarding ahora se completa correctamente sin errores
+### ✅ Eliminado contenido hardcoded
+- Apply page ya NO tiene texto mock como "Handle inbound/outbound calls"
+- Solo muestra datos REALES de la oportunidad desde la base de datos
 
-## Tarea Actual: Mejorar Constructor de Aplicaciones
+### ✅ Indicador de preguntas para Admin
+- Admin/recruiter ahora ve en cada tarjeta de oportunidad cuántas preguntas tiene configuradas
+- Muestra "X questions" o "No questions" según corresponda
 
-### Solicitado por el usuario:
-1. ✅ Corregir error en admin cuando va a opportunities (variables no definidas)
-2. ✅ Eliminar el diálogo de "application link" que se abría al aplicar
-3. ✅ Corregir error de columna `onboarding_completed` que no existe
-4. 🔄 Crear constructor de aplicaciones tipo Fountain (step by step)
-5. 🔄 Sin mostrar URL en el proceso de aplicación
+### ✅ Columna application_stages agregada
+- La tabla `opportunities` ahora tiene la columna `application_stages` (JSONB)
+- Permite guardar stages personalizados configurados por admin
 
-### Progreso:
-- [x] Eliminado diálogo de éxito con `applicationId` que causaba errores
-- [x] Limpiado importaciones no utilizadas
-- [x] El flujo ahora redirige a `/apply/[opportunityId]` para aplicaciones
-- [x] Eliminada referencia a columna inexistente `onboarding_completed`
-- [ ] Mejorar la página de aplicación para que sea más tipo Fountain
+### ✅ Store actualizado
+- `applicationStages` se carga desde `opp.application_stages` en la DB
+- Las preguntas se cargan desde `applicationQuestions`
 
-## Estructura de Rutas
+## Cómo funciona ahora:
 
-| Ruta | Acceso | Descripción |
-|------|--------|-------------|
-| `/dashboard` | Todos | Dashboard según rol |
-| `/agents` | Admin/Recruiter | Gestión de agentes |
-| `/opportunities` | Todos | Ver/aplicar oportunidades |
-| `/apply/[opportunityId]` | Agent | Aplicación paso a paso |
-| `/applications` | Agent | Mis aplicaciones |
-| `/profile` | Todos | Perfil de usuario |
-| `/onboarding` | Agent | Completar onboarding |
-| `/settings` | Todos | Configuración |
+### Para Admin/Recruiter:
+1. Ver `/opportunities` - muestra todas las oportunidades con contador de preguntas
+2. Click en "..." -> "Edit Details" - abre el formulario con ApplicationBuilder para agregar preguntas
+3. Click en "..." -> "Configure Stages" - abre StageBuilder para configurar stages avanzados
+
+### Para Agent:
+1. Ver `/opportunities` - muestra solo oportunidades activas
+2. Click "Apply" - inicia el flujo de aplicación multi-step
+3. Cada stage muestra datos REALES de la oportunidad (descripción, compensación, etc.)
+4. Las preguntas configuradas aparecen en el stage de Questions
+
+## Estructura de datos:
+```
+opportunity.applicationQuestions = [
+  { id, question, type, required, options, ... }
+]
+
+opportunity.applicationStages = [
+  { id, name, type: 'info'|'questions'|..., order, questions: [...] }
+]
+```
+
+## Pendiente:
+- Integrar stages configurados con el apply flow
+- Mostrar preview de stages en admin

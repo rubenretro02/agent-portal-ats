@@ -47,6 +47,8 @@ import {
   MoreVertical,
   Eye,
   EyeOff,
+  Settings,
+  HelpCircle,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -57,7 +59,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ApplicationBuilder } from '@/components/admin/ApplicationBuilder';
 import type { ApplicationQuestion } from '@/types';
-
 
 interface OpportunityFormData {
   name: string;
@@ -113,10 +114,7 @@ export default function OpportunitiesPage() {
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [selectedOpportunity, setSelectedOpportunity] = useState<typeof opportunities[0] | null>(null);
 
-  // Agent states
   const [showOnboardingWarning, setShowOnboardingWarning] = useState(false);
-
-  // Admin states
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -176,7 +174,6 @@ export default function OpportunitiesPage() {
     return matchesSearch && matchesCategory;
   });
 
-  // Admin handlers
   const handleCreateOpportunity = async () => {
     if (!formData.name || !formData.description || !formData.client) return;
     setSaving(true);
@@ -244,47 +241,34 @@ export default function OpportunitiesPage() {
     }
   };
 
-  // Agent handlers - redirect to apply page
   const handleApplyClick = (opp: typeof opportunities[0]) => {
     if (!isOnboardingComplete) {
       setSelectedOpportunity(opp);
       setShowOnboardingWarning(true);
       return;
     }
-    // Redirect to the multi-step apply page
     router.push(`/apply/${opp.id}`);
   };
 
-  // Form component
   const OpportunityForm = () => (
     <div className="space-y-5">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Name *</Label>
-          <Input
-            placeholder="e.g., Customer Support Agent"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          />
+          <Input placeholder="e.g., Customer Support Agent" value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
         </div>
         <div className="space-y-2">
           <Label>Client *</Label>
-          <Input
-            placeholder="e.g., TechCorp Inc."
-            value={formData.client}
-            onChange={(e) => setFormData({ ...formData, client: e.target.value })}
-          />
+          <Input placeholder="e.g., TechCorp Inc." value={formData.client}
+            onChange={(e) => setFormData({ ...formData, client: e.target.value })} />
         </div>
       </div>
 
       <div className="space-y-2">
         <Label>Description *</Label>
-        <Textarea
-          placeholder="Describe the opportunity..."
-          value={formData.description}
-          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-          rows={3}
-        />
+        <Textarea placeholder="Describe the opportunity..." value={formData.description}
+          onChange={(e) => setFormData({ ...formData, description: e.target.value })} rows={3} />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -326,12 +310,9 @@ export default function OpportunitiesPage() {
         <Label>Required Languages</Label>
         <div className="flex flex-wrap gap-2">
           {LANGUAGES.map(lang => (
-            <Badge key={lang}
-              variant={formData.languages.includes(lang) ? 'default' : 'outline'}
+            <Badge key={lang} variant={formData.languages.includes(lang) ? 'default' : 'outline'}
               className={`cursor-pointer ${formData.languages.includes(lang) ? 'bg-cyan-500' : ''}`}
-              onClick={() => toggleLanguage(lang)}>
-              {lang}
-            </Badge>
+              onClick={() => toggleLanguage(lang)}>{lang}</Badge>
           ))}
         </div>
       </div>
@@ -368,7 +349,6 @@ export default function OpportunitiesPage() {
         </div>
       </div>
 
-      {/* Application Builder */}
       <div className="border-t border-zinc-200 pt-5">
         <ApplicationBuilder
           questions={formData.applicationQuestions}
@@ -383,7 +363,6 @@ export default function OpportunitiesPage() {
   const content = (
     <UnifiedLayout title={pageTitle}>
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="flex flex-col sm:flex-row gap-4 flex-1 w-full">
             <div className="relative flex-1">
@@ -407,7 +386,6 @@ export default function OpportunitiesPage() {
           )}
         </div>
 
-        {/* Admin Stats */}
         {isAdmin && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <Card><CardContent className="p-4"><p className="text-sm text-zinc-500">Total</p><p className="text-2xl font-bold">{opportunities.length}</p></CardContent></Card>
@@ -417,7 +395,6 @@ export default function OpportunitiesPage() {
           </div>
         )}
 
-        {/* Grid */}
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
@@ -435,6 +412,7 @@ export default function OpportunitiesPage() {
               const comp = opp.compensation as Record<string, unknown> | null;
               const train = opp.training as Record<string, unknown> | null;
               const req = opp.requirements as Record<string, unknown> | null;
+              const questionCount = opp.applicationQuestions?.length || 0;
 
               return (
                 <Card key={opp.id} className={`border-zinc-200 hover:border-teal-300 hover:shadow-lg transition-all overflow-hidden ${opp.status !== 'active' ? 'opacity-75' : ''}`}>
@@ -453,7 +431,11 @@ export default function OpportunitiesPage() {
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => openEditDialog(opp)}><Edit className="h-4 w-4 mr-2" />Edit</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => openEditDialog(opp)}><Edit className="h-4 w-4 mr-2" />Edit Details</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => router.push(`/admin/opportunities/${opp.id}/stages`)}>
+                                  <Settings className="h-4 w-4 mr-2" />Configure Stages
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={async () => { await updateOpportunity(opp.id, { status: opp.status === 'active' ? 'draft' : 'active' }); }}>
                                   {opp.status === 'active' ? <><EyeOff className="h-4 w-4 mr-2" />Deactivate</> : <><Eye className="h-4 w-4 mr-2" />Activate</>}
                                 </DropdownMenuItem>
@@ -482,10 +464,19 @@ export default function OpportunitiesPage() {
                     )}
                     <div className="grid grid-cols-2 gap-3 mb-4">
                       <div className="flex items-center gap-2 text-sm"><DollarSign className="h-4 w-4 text-emerald-500" /><span className="font-medium">${String(comp?.baseRate || 0)}/hr</span></div>
-                      <div className="flex items-center gap-2 text-sm text-zinc-500"><Clock className="h-4 w-4" /><span>{String(train?.duration || 0)}h</span></div>
-                      <div className="flex items-center gap-2 text-sm text-zinc-500"><Users className="h-4 w-4" /><span>{opp.capacity?.openPositions || 0} open</span></div>
+                      <div className="flex items-center gap-2 text-sm text-zinc-500"><Clock className="h-4 w-4" /><span>{String(train?.duration || 0)}h training</span></div>
+                      <div className="flex items-center gap-2 text-sm text-zinc-500"><Users className="h-4 w-4" /><span>{opp.capacity?.openPositions || 0} positions</span></div>
                       <div className="flex items-center gap-2 text-sm text-zinc-500"><Globe className="h-4 w-4" /><span>{((req?.languages as string[]) || ['EN']).slice(0, 2).join(', ')}</span></div>
                     </div>
+
+                    {/* Show question count for admins */}
+                    {isAdmin && (
+                      <div className={`flex items-center gap-2 text-sm mb-4 ${questionCount > 0 ? 'text-teal-600' : 'text-zinc-400'}`}>
+                        <HelpCircle className="h-4 w-4" />
+                        <span>{questionCount > 0 ? `${questionCount} questions` : 'No questions'}</span>
+                      </div>
+                    )}
+
                     {isAdmin ? (
                       <Button variant="outline" className="w-full" onClick={() => openEditDialog(opp)}><Edit className="h-4 w-4 mr-2" />Edit</Button>
                     ) : !isApplied ? (
@@ -552,8 +543,6 @@ export default function OpportunitiesPage() {
           </div>
         </DialogContent>
       </Dialog>
-
-
     </UnifiedLayout>
   );
 
