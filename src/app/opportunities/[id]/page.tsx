@@ -554,8 +554,30 @@ export default function OpportunityDetailPage() {
                 <Users className="h-5 w-5 text-cyan-600" />
               </div>
               <div>
-                <p className="text-xs text-zinc-500">Total</p>
+                <p className="text-xs text-zinc-500">Total Candidates</p>
                 <p className="text-2xl font-bold text-zinc-900">{applications.length}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-zinc-200">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+                <Clock className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-xs text-zinc-500">Pending</p>
+                <p className="text-2xl font-bold text-zinc-900">{applications.filter(a => a.status === 'pending').length}</p>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className="border-zinc-200">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-yellow-50 flex items-center justify-center flex-shrink-0">
+                <Search className="h-5 w-5 text-yellow-600" />
+              </div>
+              <div>
+                <p className="text-xs text-zinc-500">In Review</p>
+                <p className="text-2xl font-bold text-zinc-900">{applications.filter(a => a.status === 'in_review').length}</p>
               </div>
             </CardContent>
           </Card>
@@ -570,32 +592,6 @@ export default function OpportunityDetailPage() {
               </div>
             </CardContent>
           </Card>
-          {baseRate && (
-            <Card className="border-zinc-200">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0">
-                  <DollarSign className="h-5 w-5 text-amber-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-zinc-500">Base Rate</p>
-                  <p className="text-2xl font-bold text-zinc-900">${baseRate}/hr</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-          {trainingHours && (
-            <Card className="border-zinc-200">
-              <CardContent className="p-4 flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-purple-50 flex items-center justify-center flex-shrink-0">
-                  <Clock className="h-5 w-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="text-xs text-zinc-500">Training</p>
-                  <p className="text-2xl font-bold text-zinc-900">{trainingHours}h</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
         </div>
 
         {/* Kanban board with DnD */}
