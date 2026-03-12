@@ -358,7 +358,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
   const fullName = `${agent.profiles?.first_name || ''} ${agent.profiles?.last_name || ''}`.trim() || 'Unknown';
   const initials = fullName.split(' ').filter(n => n.length > 0).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'UN';
   const age = null; // date_of_birth not in schema
-  const currentStageIndex = PIPELINE_STAGES.findIndex(s => s.status === agent.pipeline_status);
+  // Pipeline tracking is now handled in Opportunities page
   const overallScore = calculateOverallScore();
 const location = agent.address ?
   `${agent.address.city || ''}${agent.address.city && agent.address.country ? ', ' : ''}${agent.address.country || ''}` :
@@ -835,49 +835,7 @@ const location = agent.address ?
               </CardContent>
             </Card>
 
-            {/* Pipeline Progress */}
-            <Card className="border-zinc-200">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-semibold text-zinc-900">Pipeline Progress</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between gap-2 overflow-x-auto pb-2">
-                  {PIPELINE_STAGES.slice(0, 7).map((stage, idx) => {
-                    const isCompleted = idx < currentStageIndex;
-                    const isCurrent = idx === currentStageIndex;
-                    return (
-                      <div key={stage.status} className="flex items-center flex-1 min-w-0">
-                        <div className="flex flex-col items-center flex-1">
-                          <div
-                            className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
-                              isCompleted
-                                ? 'bg-emerald-500 text-white'
-                                : isCurrent
-                                  ? 'ring-2 ring-offset-2 ring-cyan-500'
-                                  : 'bg-zinc-100 text-zinc-400'
-                            }`}
-                            style={isCurrent ? { backgroundColor: stage.color, color: 'white' } : {}}
-                          >
-                            {isCompleted ? <CheckCircle2 className="h-5 w-5" /> : idx + 1}
-                          </div>
-                          <span className={`text-xs mt-2 text-center truncate max-w-[80px] ${isCurrent ? 'font-medium text-zinc-900' : 'text-zinc-500'}`}>
-                            {stage.label.en}
-                          </span>
-                        </div>
-                        {idx < 6 && (
-                          <ChevronRight className={`h-4 w-4 flex-shrink-0 mx-1 ${idx < currentStageIndex ? 'text-emerald-500' : 'text-zinc-300'}`} />
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="flex justify-end mt-4">
-                  <Button size="sm" className="bg-cyan-600 hover:bg-cyan-700 text-white">
-                    Move to Next Stage
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+
           </div>
         </div>
       </div>
