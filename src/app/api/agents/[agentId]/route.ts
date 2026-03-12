@@ -22,32 +22,38 @@ export async function GET(
       },
     });
 
-    // Fetch agent with profile using a join
-    const { data: agent, error: agentError } = await supabase
+    // First fetch the agent
+    const { data: agentData, error: agentError } = await supabase
       .from('agents')
-      .select(`
-        *,
-        profiles:user_id (
-          id,
-          first_name,
-          last_name,
-          email,
-          phone,
-          address,
-          date_of_birth
-        )
-      `)
+      .select('*')
       .eq('id', agentId)
       .single();
 
     if (agentError) {
       console.error('[API] Error fetching agent:', agentError);
+      // If not found, return 404
+      if (agentError.code === 'PGRST116') {
+        return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
+      }
       return NextResponse.json({ error: agentError.message }, { status: 500 });
     }
 
-    if (!agent) {
+    if (!agentData) {
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
     }
+
+    // Then fetch the profile using the agent's user_id
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name, email, phone, address, date_of_birth')
+      .eq('id', agentData.user_id)
+      .single();
+
+    // Combine agent and profile
+    const agent = {
+      ...agentData,
+      profiles: profileData || null,
+    };
 
     // Fetch documents
     const { data: documents, error: docsError } = await supabase
