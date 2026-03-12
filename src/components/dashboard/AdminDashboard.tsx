@@ -166,6 +166,7 @@ export function AdminDashboard() {
     trend,
     trendUp,
     subtitle,
+    href,
   }: {
     title: string;
     value: string | number;
@@ -175,12 +176,13 @@ export function AdminDashboard() {
     trend?: string;
     trendUp?: boolean;
     subtitle?: string;
+    href?: string;
   }) => {
     const circumference = 2 * Math.PI * 20;
     const strokeDashoffset = circumference - (ringValue / 100) * circumference;
 
-    return (
-      <Card className="border-zinc-100 hover:shadow-lg transition-shadow">
+    const cardContent = (
+      <Card className={`border-zinc-100 hover:shadow-lg transition-all ${href ? 'cursor-pointer hover:border-cyan-200 hover:scale-[1.02]' : ''}`}>
         <CardContent className="p-5">
           <div className="flex items-start justify-between">
             <p className="text-sm font-medium text-zinc-500">{title}</p>
@@ -224,6 +226,11 @@ export function AdminDashboard() {
         </CardContent>
       </Card>
     );
+
+    if (href) {
+      return <Link href={href}>{cardContent}</Link>;
+    }
+    return cardContent;
   };
 
   return (
@@ -239,6 +246,7 @@ export function AdminDashboard() {
           trend="12%"
           trendUp={true}
           subtitle="Since last month"
+          href="/agents"
         />
         <StatCard
           title="Pending Review"
@@ -247,6 +255,7 @@ export function AdminDashboard() {
           ringColor="#f59e0b"
           ringValue={metrics.totalAgents > 0 ? (metrics.pendingApplications / metrics.totalAgents) * 100 : 0}
           subtitle="Awaiting action"
+          href="/applications"
         />
         <StatCard
           title="Approval Rate"
@@ -257,6 +266,7 @@ export function AdminDashboard() {
           trend="5.7%"
           trendUp={true}
           subtitle="Since last month"
+          href="/analytics"
         />
         <StatCard
           title="Active Opportunities"
@@ -265,6 +275,7 @@ export function AdminDashboard() {
           ringColor="#6366f1"
           ringValue={60}
           subtitle="Open positions"
+          href="/opportunities"
         />
       </div>
 
