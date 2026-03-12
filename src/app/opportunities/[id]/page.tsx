@@ -22,12 +22,12 @@ import { Button } from '@/components/ui/button';
 import {
   ChevronLeft,
   Users,
-  DollarSign,
   Clock,
   CheckCircle2,
   Loader2,
   AlertCircle,
   GripVertical,
+  Search,
   ChevronRight,
   XCircle,
   Square,
