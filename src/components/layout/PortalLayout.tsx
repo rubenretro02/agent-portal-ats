@@ -188,7 +188,7 @@ export function PortalLayout({ children, title }: PortalLayoutProps) {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-zinc-900">{profile.first_name} {profile.last_name}</p>
                       {agent && (
-                        <p className="text-xs text-zinc-500">Agent ID: {agent.agent_id?.replace('AGT', '') || '00000000'}</p>
+                        <p className="text-xs text-zinc-500">Agent ID: {agent.agent_id?.replace('AGENT ', '') || '00000000'}</p>
                       )}
                     </div>
                   </div>

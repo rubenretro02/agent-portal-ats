@@ -705,7 +705,7 @@ const location = agent.address ?
                     </div>
                     <div>
                       <p className="text-xs text-zinc-500">Agent ID</p>
-                      <p className="text-sm font-medium text-zinc-900">{agent.agent_id?.replace('AGT', '')}</p>
+                      <p className="text-sm font-medium text-zinc-900">{agent.agent_id?.replace('AGENT ', '')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">

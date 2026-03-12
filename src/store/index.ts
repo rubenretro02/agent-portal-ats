@@ -66,7 +66,7 @@ const mockAgent: Agent = {
     zipCode: '33101',
     country: 'USA',
   },
-  agent_id: 'AGT0024001',
+  agentId: 'AGENT 0024001',
   pipelineStatus: 'training',
   pipelineStage: 4,
   applicationDate: new Date('2024-01-15'),

@@ -144,7 +144,7 @@ export function Header({ title, onMenuClick }: HeaderProps) {
                 {agent.firstName} {agent.lastName}
               </span>
               <span className="text-xs text-zinc-500">
-                Agent ID: {agent.agent_id?.replace('AGT', '')}
+                Agent ID: {agent.agentId?.replace('AGENT ', '')}
               </span>
             </div>
           </div>

@@ -248,7 +248,7 @@ function DraggableCard({
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-xs text-zinc-900 truncate">{fullName(app)}</p>
             <p className="text-[10px] text-zinc-500 truncate">{app.agent?.profiles?.email || 'No email'}</p>
-            <p className="text-[10px] text-cyan-600 font-mono mt-0.5">{app.agent?.agent_id?.replace('AGT', '')}</p>
+            <p className="text-[10px] text-cyan-600 font-mono mt-0.5">{app.agent?.agent_id?.replace('AGENT ', '')}</p>
           </div>
 
           {/* Drag handle */}
@@ -308,7 +308,7 @@ function OverlayCard({ app }: { app: Application }) {
         </div>
         <div className="min-w-0">
           <p className="font-semibold text-xs text-zinc-900 truncate">{fullName(app)}</p>
-          <p className="text-[10px] text-cyan-600 font-mono">{app.agent?.agent_id?.replace('AGT', '')}</p>
+          <p className="text-[10px] text-cyan-600 font-mono">{app.agent?.agent_id?.replace('AGENT ', '')}</p>
         </div>
       </div>
     </div>

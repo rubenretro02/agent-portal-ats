@@ -49,7 +49,7 @@ create policy "Admins can update any profile"
 create table public.agents (
   id uuid default uuid_generate_v4() primary key,
   user_id uuid references public.profiles on delete cascade unique not null,
-  agent_id text unique default ('AGT00' || lpad(floor(random() * 100000)::text, 5, '0')),
+  agent_id text unique default ('AGENT 00' || lpad(floor(random() * 100000)::text, 5, '0')),
   pipeline_status text default 'applied' check (pipeline_status in ('applied', 'screening', 'background_check', 'training', 'approved', 'hired', 'active', 'inactive', 'rejected')),
   pipeline_stage integer default 1,
   application_date timestamp with time zone default timezone('utc'::text, now()) not null,

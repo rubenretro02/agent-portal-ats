@@ -112,7 +112,7 @@ export default function ProfilePage() {
               </div>
               {agent && (
                 <span className="text-sm text-zinc-500">
-                  Agent ID: {agent.agent_id?.replace('AGT', '') || '00000000'}
+                  Agent ID: {agent.agent_id?.replace('AGENT ', '') || '00000000'}
                 </span>
               )}
             </div>
