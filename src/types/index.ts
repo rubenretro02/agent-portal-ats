@@ -38,8 +38,8 @@ export interface Agent {
   ssn?: string; // Encrypted, for W9
   dateOfBirth?: Date;
 
-  // ATS Sync Fields
-  atsId: string; // ID in the ATS system
+  // Agent ID
+  agentId: string; // Unique agent identifier (AGT + 8 digits)
   pipelineStatus: PipelineStatus;
   pipelineStage: number;
   applicationDate: Date;

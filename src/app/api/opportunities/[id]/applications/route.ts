@@ -21,7 +21,7 @@ export async function GET(
         agent_id,
         agents (
           id,
-          ats_id,
+          agent_id,
           profiles (
             first_name,
             last_name,
@@ -45,7 +45,7 @@ export async function GET(
       submitted_at: app.submitted_at,
       agent: app.agents ? {
         id: app.agents.id,
-        ats_id: app.agents.ats_id,
+        agent_id: app.agents.agent_id,
         profiles: app.agents.profiles
       } : null
     }));

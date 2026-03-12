@@ -51,7 +51,7 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
-          ats_id: string;
+          agent_id: string;
           pipeline_status: string;
           pipeline_stage: number;
           application_date: string;
@@ -71,7 +71,7 @@ export interface Database {
         Insert: {
           id?: string;
           user_id: string;
-          ats_id?: string;
+          agent_id?: string;
           pipeline_status?: string;
           pipeline_stage?: number;
           application_date?: string;

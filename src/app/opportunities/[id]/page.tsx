@@ -42,7 +42,7 @@ type AppStatus = 'pending' | 'in_review' | 'approved' | 'rejected' | 'withdrawn'
 
 interface Agent {
   id: string;
-  ats_id: string;
+  agent_id: string;
   profiles: { first_name: string; last_name: string; email: string } | null;
 }
 
@@ -248,7 +248,7 @@ function DraggableCard({
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-xs text-zinc-900 truncate">{fullName(app)}</p>
             <p className="text-[10px] text-zinc-500 truncate">{app.agent?.profiles?.email || 'No email'}</p>
-            <p className="text-[10px] text-cyan-600 font-mono mt-0.5">{app.agent?.ats_id}</p>
+            <p className="text-[10px] text-cyan-600 font-mono mt-0.5">{app.agent?.agent_id?.replace('AGT', '')}</p>
           </div>
 
           {/* Drag handle */}
@@ -308,7 +308,7 @@ function OverlayCard({ app }: { app: Application }) {
         </div>
         <div className="min-w-0">
           <p className="font-semibold text-xs text-zinc-900 truncate">{fullName(app)}</p>
-          <p className="text-[10px] text-cyan-600 font-mono">{app.agent?.ats_id}</p>
+          <p className="text-[10px] text-cyan-600 font-mono">{app.agent?.agent_id?.replace('AGT', '')}</p>
         </div>
       </div>
     </div>
@@ -446,8 +446,8 @@ export default function OpportunityDetailPage() {
       const query = searchQuery.toLowerCase();
       const name = fullName(app).toLowerCase();
       const email = app.agent?.profiles?.email?.toLowerCase() || '';
-      const atsId = app.agent?.ats_id?.toLowerCase() || '';
-      return name.includes(query) || email.includes(query) || atsId.includes(query);
+      const agentId = app.agent?.agent_id?.toLowerCase() || '';
+      return name.includes(query) || email.includes(query) || agentId.includes(query);
     }
     return true;
   });
@@ -510,7 +510,7 @@ export default function OpportunityDetailPage() {
                 <label className="text-xs font-medium text-zinc-600">Search</label>
                 <input
                   type="text"
-                  placeholder="Search by name, email or ATS ID..."
+                  placeholder="Search by name, email or Agent ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full mt-1.5 px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none"

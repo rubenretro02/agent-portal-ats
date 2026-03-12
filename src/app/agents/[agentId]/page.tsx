@@ -44,7 +44,7 @@ import type { PipelineStatus, DocumentStatus } from '@/types';
 interface AgentProfile {
   id: string;
   user_id: string;
-  ats_id: string;
+  agent_id: string;
   pipeline_status: PipelineStatus;
   pipeline_stage: number;
   created_at: string;
@@ -237,7 +237,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
   const combinedAgent: AgentProfile = {
   id: agentData.id,
   user_id: agentData.user_id,
-  ats_id: agentData.ats_id,
+  agent_id: agentData.agent_id,
   pipeline_status: agentData.pipeline_status as PipelineStatus,
   pipeline_stage: agentData.pipeline_stage,
   created_at: agentData.created_at,
@@ -704,8 +704,8 @@ const location = agent.address ?
                       <Hash className="h-5 w-5 text-cyan-600" />
                     </div>
                     <div>
-                      <p className="text-xs text-zinc-500">ATS ID</p>
-                      <p className="text-sm font-medium text-zinc-900">{agent.ats_id}</p>
+                      <p className="text-xs text-zinc-500">Agent ID</p>
+                      <p className="text-sm font-medium text-zinc-900">{agent.agent_id?.replace('AGT', '')}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">

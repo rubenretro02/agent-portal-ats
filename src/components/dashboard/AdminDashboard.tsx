@@ -33,7 +33,7 @@ import { PIPELINE_STAGES } from '@/lib/constants';
 
 interface AgentWithProfile {
   id: string;
-  ats_id: string;
+  agent_id: string;
   pipeline_status: string;
   pipeline_stage: number;
   created_at: string;
