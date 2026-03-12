@@ -55,15 +55,16 @@ interface AgentProfile {
   experience: WorkExperience[] | null;
   equipment: EquipmentInfo | null;
   availability: AvailabilityInfo | null;
+  address: AddressInfo | null; // address is on agents table, not profiles
   preferred_language: 'en' | 'es';
+  timezone?: string;
+  application_date?: string;
   profiles: {
     id: string;
     first_name: string;
     last_name: string;
     email: string;
     phone: string | null;
-    address: AddressInfo | null;
-    date_of_birth: string | null;
   } | null;
 }
 
@@ -229,25 +230,30 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
           return;
         }
 
-        // Map API response to AgentProfile type
-        const agentData = result.agent;
-        const combinedAgent: AgentProfile = {
-          id: agentData.id,
-          user_id: agentData.user_id,
-          ats_id: agentData.ats_id,
-          pipeline_status: agentData.pipeline_status as PipelineStatus,
-          pipeline_stage: agentData.pipeline_stage,
-          created_at: agentData.created_at,
-          last_status_change: agentData.last_status_change,
-          scores: agentData.scores,
-          languages: agentData.languages,
-          skills: agentData.skills,
-          experience: agentData.experience,
-          equipment: agentData.equipment,
-          availability: agentData.availability,
-          preferred_language: agentData.preferred_language || 'en',
-          profiles: agentData.profiles || null,
-        };
+// Map API response to AgentProfile type
+  const agentData = result.agent;
+  console.log('[v0] Agent data from API:', agentData);
+  console.log('[v0] Profile data:', agentData.profiles);
+  const combinedAgent: AgentProfile = {
+  id: agentData.id,
+  user_id: agentData.user_id,
+  ats_id: agentData.ats_id,
+  pipeline_status: agentData.pipeline_status as PipelineStatus,
+  pipeline_stage: agentData.pipeline_stage,
+  created_at: agentData.created_at,
+  last_status_change: agentData.last_status_change,
+  scores: agentData.scores,
+  languages: agentData.languages,
+  skills: agentData.skills,
+  experience: agentData.experience,
+  equipment: agentData.equipment,
+  availability: agentData.availability,
+  address: agentData.address || null,
+  timezone: agentData.timezone || 'America/New_York',
+  application_date: agentData.application_date,
+  preferred_language: agentData.preferred_language || 'en',
+  profiles: agentData.profiles || null,
+  };
 
         setAgent(combinedAgent);
         setDocuments(result.documents || []);
@@ -351,12 +357,12 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
   const stageInfo = getStageInfo(agent.pipeline_status);
   const fullName = `${agent.profiles?.first_name || ''} ${agent.profiles?.last_name || ''}`.trim() || 'Unknown';
   const initials = fullName.split(' ').filter(n => n.length > 0).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'UN';
-  const age = calculateAge(agent.profiles?.date_of_birth);
+  const age = null; // date_of_birth not in schema
   const currentStageIndex = PIPELINE_STAGES.findIndex(s => s.status === agent.pipeline_status);
   const overallScore = calculateOverallScore();
-  const location = agent.profiles?.address ? 
-    `${agent.profiles.address.city || ''}${agent.profiles.address.city && agent.profiles.address.country ? ', ' : ''}${agent.profiles.address.country || ''}` : 
-    'N/A';
+const location = agent.address ?
+  `${agent.address.city || ''}${agent.address.city && agent.address.country ? ', ' : ''}${agent.address.country || ''}` :
+  'N/A';
 
   return (
     <UnifiedLayout title="Agent Profile">
@@ -653,11 +659,10 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
                       <Calendar className="h-5 w-5 text-cyan-600" />
                     </div>
                     <div>
-                      <p className="text-xs text-zinc-500">Date of Birth</p>
-                      <p className="text-sm font-medium text-zinc-900">
-                        {formatDate(agent.profiles?.date_of_birth)}
-                        {age && <span className="text-zinc-500 ml-1">({age} yrs)</span>}
-                      </p>
+<p className="text-xs text-zinc-500">Applied On</p>
+  <p className="text-sm font-medium text-zinc-900">
+  {formatDate(agent.application_date || agent.created_at)}
+  </p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">

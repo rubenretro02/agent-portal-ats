@@ -23,11 +23,15 @@ export async function GET(
     });
 
     // First fetch the agent
+    console.log('[v0 API] Fetching agent with id:', agentId);
     const { data: agentData, error: agentError } = await supabase
       .from('agents')
       .select('*')
       .eq('id', agentId)
       .single();
+
+    console.log('[v0 API] Agent data:', JSON.stringify(agentData, null, 2));
+    console.log('[v0 API] Agent error:', agentError);
 
     if (agentError) {
       console.error('[API] Error fetching agent:', agentError);
@@ -43,11 +47,15 @@ export async function GET(
     }
 
     // Then fetch the profile using the agent's user_id
-    const { data: profileData } = await supabase
+    console.log('[v0 API] Fetching profile with user_id:', agentData.user_id);
+    const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, email, phone, address, date_of_birth')
+      .select('id, first_name, last_name, email, phone')
       .eq('id', agentData.user_id)
       .single();
+
+    console.log('[v0 API] Profile data:', JSON.stringify(profileData, null, 2));
+    console.log('[v0 API] Profile error:', profileError);
 
     // Combine agent and profile
     const agent = {
