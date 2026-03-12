@@ -255,7 +255,7 @@ export function AdminDashboard() {
           ringColor="#f59e0b"
           ringValue={metrics.totalAgents > 0 ? (metrics.pendingApplications / metrics.totalAgents) * 100 : 0}
           subtitle="Awaiting action"
-          href="/applications"
+          href="/opportunities"
         />
         <StatCard
           title="Approval Rate"
@@ -266,7 +266,7 @@ export function AdminDashboard() {
           trend="5.7%"
           trendUp={true}
           subtitle="Since last month"
-          href="/analytics"
+          href="/agents"
         />
         <StatCard
           title="Active Opportunities"
