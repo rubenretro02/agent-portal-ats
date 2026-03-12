@@ -189,7 +189,8 @@ export default function AgentsPage() {
                   return (
                     <div
                       key={agent.id}
-                      className="flex items-center gap-4 p-4 hover:bg-zinc-50 transition-colors"
+                      onClick={() => router.push(`/agents/${agent.id}`)}
+                      className="flex items-center gap-4 p-4 hover:bg-zinc-50 transition-colors cursor-pointer"
                     >
                       <div className="w-10 h-10 rounded-full bg-gradient-to-br from-zinc-200 to-zinc-300 flex items-center justify-center text-zinc-600 font-medium">
                         {initials}
@@ -214,7 +215,7 @@ export default function AgentsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>View Profile</DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => router.push(`/agents/${agent.id}`)}>View Profile</DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleMoveAgent(agent.id, 'screening')}>
                             Move to Screening
                           </DropdownMenuItem>
