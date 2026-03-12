@@ -5,30 +5,18 @@ import Link from 'next/link';
 import { useAuthContext } from '@/components/providers/AuthProvider';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
 import {
   Users,
   Briefcase,
+  TrendingUp,
   Clock,
   CheckCircle2,
-  AlertCircle,
-  Search,
-  Filter,
-  MoreVertical,
-  Activity,
   ChevronRight,
-  RefreshCw,
-  Shield,
-  UserPlus,
+  ArrowUpRight,
+  Calendar,
+  Target,
+  Zap,
 } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
 import { PIPELINE_STAGES } from '@/lib/constants';
 
 interface AgentWithProfile {
@@ -37,7 +25,6 @@ interface AgentWithProfile {
   pipeline_status: string;
   pipeline_stage: number;
   created_at: string;
-  scores: Record<string, number> | null;
   profiles: {
     first_name: string;
     last_name: string;
@@ -52,21 +39,14 @@ interface Metrics {
   activeOpportunities: number;
 }
 
-interface PipelineData {
-  status: string;
-  count: number;
-}
-
 export function AdminDashboard() {
   const { profile } = useAuthContext();
-  const [searchQuery, setSearchQuery] = useState('');
   const [metrics, setMetrics] = useState<Metrics>({
     totalAgents: 0,
     pendingApplications: 0,
     approvalRate: 0,
     activeOpportunities: 0,
   });
-  const [pipelineData, setPipelineData] = useState<PipelineData[]>([]);
   const [recentAgents, setRecentAgents] = useState<AgentWithProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -77,67 +57,38 @@ export function AdminDashboard() {
       try {
         const { adminDb } = await import('@/lib/adminDb');
 
-        // Fetch agents with profiles
-        const { data: agents, error: agentsError } = await adminDb<AgentWithProfile[]>({
+        const { data: agents } = await adminDb<AgentWithProfile[]>({
           action: 'select',
           table: 'agents',
           select: '*, profiles (first_name, last_name, email)',
           order: { column: 'created_at', ascending: false },
-          limit: 10,
+          limit: 5,
         });
 
-        if (!agentsError && agents) {
+        if (agents) {
           setRecentAgents(agents);
         }
 
-        // Fetch total agent count
         const { data: allAgents } = await adminDb<Record<string, unknown>[]>({
           action: 'select', table: 'agents', select: 'id, pipeline_status',
         });
         const totalAgents = allAgents?.length || 0;
-
-        // Fetch pending applications count
         const pendingApps = allAgents?.filter(a => a.pipeline_status === 'applied').length || 0;
-
-        // Fetch approved/hired count for approval rate
         const approvedCount = allAgents?.filter((a: Record<string, unknown>) =>
           ['approved', 'hired', 'active'].includes(a.pipeline_status as string)
         ).length || 0;
 
-        // Fetch active opportunities count
         const { data: activeOppData } = await adminDb<Record<string, unknown>[]>({
           action: 'select', table: 'opportunities', select: 'id',
           filters: { status: 'active' },
         });
-        const activeOpps = activeOppData?.length || 0;
-
-        // Calculate approval rate
-        const approvalRate = totalAgents > 0
-          ? Math.round((approvedCount / totalAgents) * 100)
-          : 0;
 
         setMetrics({
           totalAgents,
           pendingApplications: pendingApps,
-          approvalRate,
-          activeOpportunities: activeOpps,
+          approvalRate: totalAgents > 0 ? Math.round((approvedCount / totalAgents) * 100) : 0,
+          activeOpportunities: activeOppData?.length || 0,
         });
-
-        // Build pipeline data from allAgents
-        const pipelineCounts: Record<string, number> = {};
-        if (allAgents) {
-          for (const a of allAgents) {
-            const status = a.pipeline_status as string;
-            pipelineCounts[status] = (pipelineCounts[status] || 0) + 1;
-          }
-        }
-
-        setPipelineData(
-          PIPELINE_STAGES.map(stage => ({
-            status: stage.status,
-            count: pipelineCounts[stage.status] || 0,
-          }))
-        );
 
       } catch (err) {
         console.error('Error fetching dashboard data:', err);
@@ -149,42 +100,6 @@ export function AdminDashboard() {
     fetchDashboardData();
   }, []);
 
-  const getStageInfo = (status: string) => {
-    return PIPELINE_STAGES.find(s => s.status === status);
-  };
-
-  const handleMoveAgent = async (agentId: string, newStatus: string) => {
-    const stageIndex = PIPELINE_STAGES.findIndex(s => s.status === newStatus);
-
-    const { adminDb } = await import('@/lib/adminDb');
-    const { error } = await adminDb({
-      action: 'update', table: 'agents',
-      data: {
-        pipeline_status: newStatus,
-        pipeline_stage: stageIndex + 1,
-        last_status_change: new Date().toISOString(),
-      },
-      match: { id: agentId },
-    });
-
-    if (!error) {
-      setRecentAgents(prev =>
-        prev.map(a =>
-          a.id === agentId
-            ? { ...a, pipeline_status: newStatus, pipeline_stage: stageIndex + 1 }
-            : a
-        )
-      );
-    }
-  };
-
-  const filteredAgents = recentAgents.filter(agent => {
-    if (!searchQuery) return true;
-    const name = `${agent.profiles?.first_name || ''} ${agent.profiles?.last_name || ''}`.toLowerCase();
-    const email = (agent.profiles?.email || '').toLowerCase();
-    return name.includes(searchQuery.toLowerCase()) || email.includes(searchQuery.toLowerCase());
-  });
-
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -193,213 +108,142 @@ export function AdminDashboard() {
     );
   }
 
+  const today = new Date().toLocaleDateString('en-US', { 
+    weekday: 'long',
+    month: 'long', 
+    day: 'numeric'
+  });
+
   return (
     <div className="space-y-8">
       {/* Welcome Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900">
-            Welcome back, {profile?.first_name || 'Admin'}!
+          <p className="text-zinc-500 text-sm">{today}</p>
+          <h1 className="text-3xl font-bold text-zinc-900 mt-1">
+            Welcome back, {profile?.first_name || 'Admin'}
           </h1>
-          <p className="text-zinc-500 text-sm mt-1">
-            Here's what's happening with your agents today.
+          <p className="text-zinc-500 mt-2">
+            Here's an overview of your recruitment pipeline
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge
-            variant="secondary"
-            className={profile?.role === 'admin' ? 'bg-cyan-100 text-cyan-700' : 'bg-teal-100 text-teal-700'}
-          >
-            {profile?.role === 'admin' ? (
-              <><Shield className="h-3 w-3 mr-1" />Administrator</>
-            ) : (
-              <><UserPlus className="h-3 w-3 mr-1" />Recruiter</>
-            )}
-          </Badge>
+        <div className="flex gap-3">
+          <Link href="/opportunities">
+            <Button className="bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-500/25">
+              <Briefcase className="h-4 w-4 mr-2" />
+              View Opportunities
+            </Button>
+          </Link>
         </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-zinc-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-zinc-500">Total Agents</p>
-                <p className="text-2xl font-bold text-zinc-900">{metrics.totalAgents.toLocaleString()}</p>
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <Card className="border-0 bg-gradient-to-br from-cyan-500 to-cyan-600 text-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <CardContent className="p-6 relative">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                <Users className="h-5 w-5" />
               </div>
-              <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center">
-                <Users className="h-6 w-6 text-teal-600" />
-              </div>
+              <span className="text-sm font-medium text-cyan-100">Total Agents</span>
             </div>
+            <p className="text-4xl font-bold">{metrics.totalAgents}</p>
           </CardContent>
         </Card>
 
-        <Card className="border-zinc-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-zinc-500">Pending Apps</p>
-                <p className="text-2xl font-bold text-zinc-900">{metrics.pendingApplications}</p>
+        <Card className="border-0 bg-gradient-to-br from-amber-500 to-orange-500 text-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <CardContent className="p-6 relative">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                <Clock className="h-5 w-5" />
               </div>
-              <div className="w-12 h-12 rounded-xl bg-amber-100 flex items-center justify-center">
-                <Clock className="h-6 w-6 text-amber-600" />
-              </div>
+              <span className="text-sm font-medium text-amber-100">Pending Review</span>
             </div>
-            {metrics.pendingApplications > 0 && (
-              <div className="flex items-center gap-1 mt-2 text-sm text-amber-600">
-                <AlertCircle className="h-4 w-4" />
-                <span>Review pending</span>
-              </div>
-            )}
+            <p className="text-4xl font-bold">{metrics.pendingApplications}</p>
           </CardContent>
         </Card>
 
-        <Card className="border-zinc-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-zinc-500">Approval Rate</p>
-                <p className="text-2xl font-bold text-zinc-900">{metrics.approvalRate}%</p>
+        <Card className="border-0 bg-gradient-to-br from-emerald-500 to-teal-500 text-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <CardContent className="p-6 relative">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                <TrendingUp className="h-5 w-5" />
               </div>
-              <div className="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
-                <CheckCircle2 className="h-6 w-6 text-emerald-600" />
-              </div>
+              <span className="text-sm font-medium text-emerald-100">Approval Rate</span>
             </div>
-            <Progress value={metrics.approvalRate} className="h-2 mt-3" />
+            <p className="text-4xl font-bold">{metrics.approvalRate}%</p>
           </CardContent>
         </Card>
 
-        <Card className="border-zinc-200">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-zinc-500">Active Opportunities</p>
-                <p className="text-2xl font-bold text-zinc-900">{metrics.activeOpportunities}</p>
+        <Card className="border-0 bg-gradient-to-br from-violet-500 to-purple-600 text-white overflow-hidden relative">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2" />
+          <CardContent className="p-6 relative">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                <Briefcase className="h-5 w-5" />
               </div>
-              <div className="w-12 h-12 rounded-xl bg-cyan-100 flex items-center justify-center">
-                <Briefcase className="h-6 w-6 text-cyan-600" />
-              </div>
+              <span className="text-sm font-medium text-violet-100">Opportunities</span>
             </div>
+            <p className="text-4xl font-bold">{metrics.activeOpportunities}</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Pipeline Overview */}
-      <Card className="border-zinc-200">
-        <CardHeader className="flex flex-row items-center justify-between pb-2">
-          <CardTitle className="text-lg font-semibold">Pipeline Overview</CardTitle>
-          <Button variant="ghost" size="sm" onClick={() => window.location.reload()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Refresh
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-            {pipelineData.map((item) => {
-              const stageInfo = getStageInfo(item.status);
-              return (
-                <div
-                  key={item.status}
-                  className="p-3 rounded-lg border border-zinc-200 hover:border-zinc-300 hover:shadow-sm transition-all cursor-pointer"
-                >
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: stageInfo?.color }} />
-                    <span className="text-xs font-medium text-zinc-600 truncate">
-                      {stageInfo?.label.en}
-                    </span>
-                  </div>
-                  <p className="text-2xl font-bold text-zinc-900">{item.count}</p>
-                </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Applications */}
+        {/* Recent Agents */}
         <Card className="lg:col-span-2 border-zinc-200">
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-lg font-semibold">Recent Applicants</CardTitle>
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-400" />
-                <Input
-                  placeholder="Search..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 w-48"
-                />
-              </div>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {filteredAgents.length === 0 ? (
-                <p className="text-center text-zinc-500 py-8">No agents found</p>
-              ) : (
-                filteredAgents.map((agent) => {
-                  const stageInfo = getStageInfo(agent.pipeline_status);
-                  const name = `${agent.profiles?.first_name || ''} ${agent.profiles?.last_name || ''}`.trim() || 'Unknown';
-                  const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2);
-                  const score = agent.scores?.overall || 0;
-
-                  return (
-                    <div
-                      key={agent.id}
-                      className="flex items-center gap-4 p-3 rounded-lg border border-zinc-100 hover:border-zinc-200 hover:bg-zinc-50 transition-all"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-zinc-200 to-zinc-300 flex items-center justify-center text-zinc-600 font-medium">
-                        {initials}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-zinc-900">{name}</p>
-                        <p className="text-sm text-zinc-500 truncate">{agent.profiles?.email}</p>
-                      </div>
-                      <Badge style={{ backgroundColor: `${stageInfo?.color}20`, color: stageInfo?.color }}>
-                        {stageInfo?.label.en}
-                      </Badge>
-                      {score > 0 && (
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-zinc-900">{score}</p>
-                          <p className="text-xs text-zinc-500">Score</p>
-                        </div>
-                      )}
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem>View Profile</DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleMoveAgent(agent.id, 'screening')}>
-                            Move to Screening
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleMoveAgent(agent.id, 'training')}>
-                            Move to Training
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleMoveAgent(agent.id, 'approved')}>
-                            Approve
-                          </DropdownMenuItem>
-                          <DropdownMenuItem className="text-red-600">Reject</DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  );
-                })
-              )}
-            </div>
+            <CardTitle className="text-lg font-semibold">Recent Agents</CardTitle>
             <Link href="/agents">
-              <Button variant="ghost" className="w-full mt-4 text-cyan-600">
-                View All Applicants
+              <Button variant="ghost" size="sm" className="text-cyan-600">
+                View All
                 <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </Link>
+          </CardHeader>
+          <CardContent>
+            {recentAgents.length === 0 ? (
+              <div className="text-center py-12">
+                <Users className="h-12 w-12 text-zinc-300 mx-auto mb-4" />
+                <p className="text-zinc-500">No agents yet</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {recentAgents.map((agent) => {
+                  const name = `${agent.profiles?.first_name || ''} ${agent.profiles?.last_name || ''}`.trim() || 'Unknown';
+                  const initials = name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                  const agentId = agent.agent_id?.replace('AGENT ', '') || '00000000';
+                  const joinDate = new Date(agent.created_at).toLocaleDateString('en-US', { 
+                    month: 'short', 
+                    day: 'numeric'
+                  });
+
+                  return (
+                    <Link key={agent.id} href={`/agents/${agent.id}`}>
+                      <div className="flex items-center gap-4 p-4 rounded-xl hover:bg-zinc-50 transition-colors group">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-400 to-teal-500 flex items-center justify-center text-white font-semibold shadow-lg shadow-cyan-500/20">
+                          {initials}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-medium text-zinc-900">{name}</p>
+                            <ArrowUpRight className="h-4 w-4 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                          </div>
+                          <p className="text-sm text-zinc-500 truncate">{agent.profiles?.email}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-mono text-cyan-600">{agentId}</p>
+                          <p className="text-xs text-zinc-400">{joinDate}</p>
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -407,31 +251,70 @@ export function AdminDashboard() {
         <Card className="border-zinc-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <Activity className="h-5 w-5 text-zinc-400" />
+              <Zap className="h-5 w-5 text-amber-500" />
               Quick Actions
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <Link href="/opportunities">
-                <Button variant="outline" className="w-full justify-start">
-                  <Briefcase className="h-4 w-4 mr-2" />
-                  Manage Opportunities
-                </Button>
-              </Link>
-              <Link href="/agents">
-                <Button variant="outline" className="w-full justify-start">
-                  <Users className="h-4 w-4 mr-2" />
-                  View All Agents
-                </Button>
-              </Link>
-              <Link href="/recruiters">
-                <Button variant="outline" className="w-full justify-start">
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Manage Recruiters
-                </Button>
-              </Link>
-            </div>
+          <CardContent className="space-y-3">
+            <Link href="/opportunities">
+              <div className="p-4 rounded-xl border border-zinc-200 hover:border-cyan-300 hover:bg-cyan-50/50 transition-all cursor-pointer group">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center">
+                    <Briefcase className="h-5 w-5 text-cyan-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-zinc-900">Opportunities</p>
+                    <p className="text-sm text-zinc-500">Manage job listings</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-zinc-400 group-hover:text-cyan-600 transition-colors" />
+                </div>
+              </div>
+            </Link>
+
+            <Link href="/agents">
+              <div className="p-4 rounded-xl border border-zinc-200 hover:border-emerald-300 hover:bg-emerald-50/50 transition-all cursor-pointer group">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
+                    <Users className="h-5 w-5 text-emerald-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-zinc-900">All Agents</p>
+                    <p className="text-sm text-zinc-500">View agent directory</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-zinc-400 group-hover:text-emerald-600 transition-colors" />
+                </div>
+              </div>
+            </Link>
+
+            <Link href="/recruiters">
+              <div className="p-4 rounded-xl border border-zinc-200 hover:border-violet-300 hover:bg-violet-50/50 transition-all cursor-pointer group">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-violet-100 flex items-center justify-center">
+                    <Target className="h-5 w-5 text-violet-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-zinc-900">Recruiters</p>
+                    <p className="text-sm text-zinc-500">Manage team members</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-zinc-400 group-hover:text-violet-600 transition-colors" />
+                </div>
+              </div>
+            </Link>
+
+            <Link href="/analytics">
+              <div className="p-4 rounded-xl border border-zinc-200 hover:border-amber-300 hover:bg-amber-50/50 transition-all cursor-pointer group">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-amber-600" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium text-zinc-900">Analytics</p>
+                    <p className="text-sm text-zinc-500">View reports</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-zinc-400 group-hover:text-amber-600 transition-colors" />
+                </div>
+              </div>
+            </Link>
           </CardContent>
         </Card>
       </div>
