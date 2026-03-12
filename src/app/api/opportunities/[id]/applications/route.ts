@@ -8,9 +8,10 @@ const supabase = createClient(
 
 export async function GET(
   request: Request,
-  { params }: { params: { opportunityId: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params;
     const { data: applications, error } = await supabase
       .from('applications')
       .select(`
@@ -28,7 +29,7 @@ export async function GET(
           )
         )
       `)
-      .eq('opportunity_id', params.opportunityId)
+      .eq('opportunity_id', id)
       .order('submitted_at', { ascending: false });
 
     if (error) {

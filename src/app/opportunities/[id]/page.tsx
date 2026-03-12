@@ -72,7 +72,7 @@ interface Opportunity {
 export default function OpportunityDetailPage() {
   const router = useRouter();
   const params = useParams();
-  const opportunityId = params.opportunityId as string;
+  const opportunityId = params.id as string;
   const { profile } = useAuthContext();
 
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null);
