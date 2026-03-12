@@ -329,6 +329,8 @@ export default function OpportunityDetailPage() {
   const [movingId, setMovingId] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [activeApp, setActiveApp] = useState<Application | null>(null);
+  const [filterStatus, setFilterStatus] = useState<'all' | AppStatus>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'recruiter';
 
@@ -438,13 +440,26 @@ export default function OpportunityDetailPage() {
   );
 
   const grouped = STAGES.reduce((acc, s) => {
-    acc[s.status] = applications.filter(a => a.status === s.status);
+    acc[s.status] = filteredApps.filter(a => a.status === s.status);
     return acc;
   }, {} as Record<string, Application[]>);
 
   const baseRate = opportunity.compensation?.baseRate;
   const trainingHours = opportunity.training?.duration;
   const totalSelected = selectedIds.size;
+
+  // Filter applications based on status and search
+  const filteredApps = applications.filter(app => {
+    if (filterStatus !== 'all' && app.status !== filterStatus) return false;
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      const name = fullName(app).toLowerCase();
+      const email = app.agent?.profiles?.email?.toLowerCase() || '';
+      const atsId = app.agent?.ats_id?.toLowerCase() || '';
+      return name.includes(query) || email.includes(query) || atsId.includes(query);
+    }
+    return true;
+  });
 
   return (
     <UnifiedLayout title={`${opportunity.name} - Application Tracking`}>
@@ -486,6 +501,50 @@ export default function OpportunityDetailPage() {
             </div>
           )}
         </div>
+
+        {/* Filters */}
+        <Card className="border-zinc-200 bg-gradient-to-r from-zinc-50 to-white">
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row gap-3 items-end">
+              <div className="flex-1">
+                <label className="text-xs font-medium text-zinc-600">Search</label>
+                <input
+                  type="text"
+                  placeholder="Search by name, email or ATS ID..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full mt-1.5 px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none"
+                />
+              </div>
+              <div className="flex-1">
+                <label className="text-xs font-medium text-zinc-600">Status</label>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value as 'all' | AppStatus)}
+                  className="w-full mt-1.5 px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none bg-white"
+                >
+                  <option value="all">All Statuses</option>
+                  {STAGES.map(s => (
+                    <option key={s.status} value={s.status}>{s.label}</option>
+                  ))}
+                </select>
+              </div>
+              {(searchQuery || filterStatus !== 'all') && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setFilterStatus('all');
+                  }}
+                  className="border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+                >
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Metrics */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
