@@ -410,7 +410,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
                 </div>
 
                 {/* Skills */}
-                {agent.skills && agent.skills.length > 0 && (
+                {Array.isArray(agent.skills) && agent.skills.length > 0 && (
                   <div className="mt-5">
                     <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">Skills</p>
                     <div className="flex flex-wrap gap-1.5">
@@ -514,7 +514,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
                 <CardTitle className="text-sm font-semibold text-zinc-900">Experience</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {agent.experience && agent.experience.length > 0 ? (
+                {Array.isArray(agent.experience) && agent.experience.length > 0 ? (
                   agent.experience.slice(0, 3).map((exp, idx) => (
                     <div key={exp.id || idx} className="flex gap-3">
                       <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-zinc-100 to-zinc-200 flex items-center justify-center flex-shrink-0">
@@ -613,7 +613,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
                     </div>
                     <div>
                       <p className="text-sm font-medium text-zinc-900">Call center experience</p>
-                      <p className="text-xs text-zinc-500">{agent.experience?.filter(e => e.isCallCenter).length || 0} previous call center roles</p>
+                      <p className="text-xs text-zinc-500">{Array.isArray(agent.experience) ? agent.experience.filter(e => e.isCallCenter).length : 0} previous call center roles</p>
                     </div>
                   </div>
                 </CardContent>
@@ -727,8 +727,8 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
               </CardContent>
             </Card>
 
-            {/* Languages */}
-            {agent.languages && agent.languages.length > 0 && (
+{/* Languages */}
+                {Array.isArray(agent.languages) && agent.languages.length > 0 && (
               <Card className="border-zinc-200">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">

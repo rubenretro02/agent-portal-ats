@@ -1,44 +1,47 @@
 import { createClient } from '@supabase/supabase-js';
-import { createClient as createServerSupabaseClient } from '@/lib/supabase/server';
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 
-const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: Promise<{ agentId: string }> }
 ) {
   try {
     const { agentId } = await params;
-
-    // Verify the user is authenticated
-    const serverSupabase = await createServerSupabaseClient();
-    if (!serverSupabase) {
-      return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
+    
+    if (!agentId) {
+      return NextResponse.json({ error: 'Agent ID is required' }, { status: 400 });
     }
 
-    const { data: { user }, error: authError } = await serverSupabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
 
-    // Use service role client to bypass RLS
-    if (!SUPABASE_SERVICE_ROLE_KEY) {
-      return NextResponse.json({ error: 'Service role key not configured' }, { status: 500 });
-    }
-
-    const adminSupabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-
-    // Fetch the agent
-    const { data: agent, error: agentError } = await adminSupabase
+    // Fetch agent with profile using a join
+    const { data: agent, error: agentError } = await supabase
       .from('agents')
-      .select('*')
+      .select(`
+        *,
+        profiles:user_id (
+          id,
+          first_name,
+          last_name,
+          email,
+          phone,
+          address,
+          date_of_birth
+        )
+      `)
       .eq('id', agentId)
       .single();
 
     if (agentError) {
-      console.error('Error fetching agent:', agentError);
+      console.error('[API] Error fetching agent:', agentError);
       return NextResponse.json({ error: agentError.message }, { status: 500 });
     }
 
@@ -46,27 +49,19 @@ export async function GET(
       return NextResponse.json({ error: 'Agent not found' }, { status: 404 });
     }
 
-    // Fetch the profile using user_id
-    const { data: profile, error: profileError } = await adminSupabase
-      .from('profiles')
-      .select('id, first_name, last_name, email, phone, address, date_of_birth')
-      .eq('id', agent.user_id)
-      .single();
-
-    if (profileError) {
-      console.error('Error fetching profile:', profileError);
-      // Continue without profile data
-    }
-
     // Fetch documents
-    const { data: documents } = await adminSupabase
+    const { data: documents, error: docsError } = await supabase
       .from('documents')
       .select('*')
       .eq('agent_id', agentId)
       .order('uploaded_at', { ascending: false });
 
+    if (docsError) {
+      console.error('[API] Error fetching documents:', docsError);
+    }
+
     // Fetch applications with opportunities
-    const { data: applications } = await adminSupabase
+    const { data: applications, error: appsError } = await supabase
       .from('applications')
       .select(`
         id,
@@ -81,16 +76,17 @@ export async function GET(
       .eq('agent_id', agentId)
       .order('submitted_at', { ascending: false });
 
+    if (appsError) {
+      console.error('[API] Error fetching applications:', appsError);
+    }
+
     return NextResponse.json({
-      agent: {
-        ...agent,
-        profiles: profile || null,
-      },
+      agent,
       documents: documents || [],
       applications: applications || [],
     });
   } catch (error) {
-    console.error('Error in agent API:', error);
+    console.error('[API] Unexpected error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
