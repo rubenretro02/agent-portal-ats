@@ -25,7 +25,7 @@ interface Profile {
 interface Agent {
   id: string;
   user_id: string;
-  ats_id: string;
+  agent_id: string;
   pipeline_status: string;
   pipeline_stage: number;
   scores?: Record<string, number> | null;
