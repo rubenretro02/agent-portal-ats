@@ -439,15 +439,6 @@ export default function OpportunityDetailPage() {
     </UnifiedLayout>
   );
 
-  const grouped = STAGES.reduce((acc, s) => {
-    acc[s.status] = filteredApps.filter(a => a.status === s.status);
-    return acc;
-  }, {} as Record<string, Application[]>);
-
-  const baseRate = opportunity.compensation?.baseRate;
-  const trainingHours = opportunity.training?.duration;
-  const totalSelected = selectedIds.size;
-
   // Filter applications based on status and search
   const filteredApps = applications.filter(app => {
     if (filterStatus !== 'all' && app.status !== filterStatus) return false;
@@ -460,6 +451,15 @@ export default function OpportunityDetailPage() {
     }
     return true;
   });
+
+  const grouped = STAGES.reduce((acc, s) => {
+    acc[s.status] = filteredApps.filter(a => a.status === s.status);
+    return acc;
+  }, {} as Record<string, Application[]>);
+
+  const baseRate = opportunity.compensation?.baseRate;
+  const trainingHours = opportunity.training?.duration;
+  const totalSelected = selectedIds.size;
 
   return (
     <UnifiedLayout title={`${opportunity.name} - Application Tracking`}>
