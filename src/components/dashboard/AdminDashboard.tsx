@@ -280,8 +280,8 @@ export function AdminDashboard() {
             </Button>
           </CardHeader>
           <CardContent className="pt-4">
-            <div className="h-[200px] relative">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-[200px] w-full relative">
+              <ResponsiveContainer width="100%" height={200} minWidth={200}>
                 <PieChart>
                   <Pie
                     data={pipelineData}
@@ -338,8 +338,8 @@ export function AdminDashboard() {
             </Button>
           </CardHeader>
           <CardContent className="pt-4">
-            <div className="h-[260px]">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-[260px] w-full">
+              <ResponsiveContainer width="100%" height={260} minWidth={200}>
                 <BarChart data={monthlyData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f4f4f5" />
                   <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: '#a1a1aa' }} />
@@ -368,8 +368,8 @@ export function AdminDashboard() {
             </Button>
           </CardHeader>
           <CardContent className="pt-4">
-            <div className="h-[260px]">
-              <ResponsiveContainer width="100%" height="100%">
+            <div className="h-[260px] w-full">
+              <ResponsiveContainer width="100%" height={260} minWidth={200}>
                 <AreaChart data={monthlyData} margin={{ top: 5, right: 5, left: -25, bottom: 5 }}>
                   <defs>
                     <linearGradient id="colorApproved" x1="0" y1="0" x2="0" y2="1">
