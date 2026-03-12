@@ -216,33 +216,66 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
       try {
         const { adminDb } = await import('@/lib/adminDb');
 
-        // Fetch agent with profile - use select instead of select_single to handle edge cases
-        const { data: agentData, error: agentError } = await adminDb<AgentProfile[]>({
+        // First fetch the agent record
+        const { data: agentResult, error: agentError } = await adminDb<Record<string, unknown>[]>({
           action: 'select',
           table: 'agents',
-          select: `
-            *,
-            profiles (
-              id,
-              first_name,
-              last_name,
-              email,
-              phone,
-              address,
-              date_of_birth
-            )
-          `,
+          select: '*',
           filters: { id: agentId },
           limit: 1,
         });
 
         if (agentError) {
           console.error('[v0] Error fetching agent:', agentError);
+          setLoading(false);
+          return;
         }
 
-        if (agentData && agentData.length > 0) {
-          setAgent(agentData[0]);
+        if (!agentResult || agentResult.length === 0) {
+          console.error('[v0] Agent not found with id:', agentId);
+          setLoading(false);
+          return;
         }
+
+        const agentRecord = agentResult[0];
+
+        // Then fetch the profile using the agent's user_id
+        const { data: profileResult } = await adminDb<Record<string, unknown>[]>({
+          action: 'select',
+          table: 'profiles',
+          select: 'id, first_name, last_name, email, phone, address, date_of_birth',
+          filters: { id: agentRecord.user_id as string },
+          limit: 1,
+        });
+
+        // Combine agent and profile data
+        const combinedAgent: AgentProfile = {
+          id: agentRecord.id as string,
+          user_id: agentRecord.user_id as string,
+          ats_id: agentRecord.ats_id as string,
+          pipeline_status: agentRecord.pipeline_status as PipelineStatus,
+          pipeline_stage: agentRecord.pipeline_stage as number,
+          created_at: agentRecord.created_at as string,
+          last_status_change: agentRecord.last_status_change as string,
+          scores: agentRecord.scores as Record<string, number> | null,
+          languages: agentRecord.languages as string[] | null,
+          skills: agentRecord.skills as string[] | null,
+          experience: agentRecord.experience as WorkExperience[] | null,
+          equipment: agentRecord.equipment as EquipmentInfo | null,
+          availability: agentRecord.availability as AvailabilityInfo | null,
+          preferred_language: (agentRecord.preferred_language as 'en' | 'es') || 'en',
+          profiles: profileResult && profileResult.length > 0 ? {
+            id: profileResult[0].id as string,
+            first_name: profileResult[0].first_name as string,
+            last_name: profileResult[0].last_name as string,
+            email: profileResult[0].email as string,
+            phone: profileResult[0].phone as string | null,
+            address: profileResult[0].address as AddressInfo | null,
+            date_of_birth: profileResult[0].date_of_birth as string | null,
+          } : null,
+        };
+
+        setAgent(combinedAgent);
 
         // Fetch documents
         const { data: docsData } = await adminDb<AgentDocument[]>({
