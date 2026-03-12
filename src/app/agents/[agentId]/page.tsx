@@ -143,7 +143,8 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
         const { adminDb } = await import('@/lib/adminDb');
 
         // Fetch agent with profile
-        const { data: agentData } = await adminDb<AgentProfile>({
+        console.log('[v0] Fetching agent with ID:', agentId);
+        const { data: agentData, error: agentError } = await adminDb<AgentProfile>({
           action: 'select_single',
           table: 'agents',
           select: `
@@ -158,8 +159,9 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
               date_of_birth
             )
           `,
-          match: { id: agentId },
+          filters: { id: agentId },
         });
+        console.log('[v0] Agent data result:', agentData, 'Error:', agentError);
 
         if (agentData) {
           setAgent(agentData);
@@ -170,7 +172,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
           action: 'select',
           table: 'documents',
           select: '*',
-          match: { agent_id: agentId },
+          filters: { agent_id: agentId },
           order: { column: 'uploaded_at', ascending: false },
         });
 
@@ -192,7 +194,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
               client
             )
           `,
-          match: { agent_id: agentId },
+          filters: { agent_id: agentId },
           order: { column: 'submitted_at', ascending: false },
         });
 
