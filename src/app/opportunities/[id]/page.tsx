@@ -19,27 +19,25 @@ import {
 } from 'lucide-react';
 
 interface ApplicationStage {
-  status: 'applied' | 'screening' | 'interview' | 'offer' | 'hired' | 'rejected';
+  status: 'pending' | 'in_review' | 'approved' | 'rejected' | 'withdrawn';
   label: string;
   description: string;
 }
 
 const APPLICATION_STAGES: ApplicationStage[] = [
-  { status: 'applied', label: 'Applied', description: 'Initial application' },
-  { status: 'screening', label: 'Screening', description: 'Phone/video screening' },
-  { status: 'interview', label: 'Interview', description: 'Technical interview' },
-  { status: 'offer', label: 'Offer', description: 'Job offer' },
-  { status: 'hired', label: 'Hired', description: 'Hired' },
+  { status: 'pending', label: 'Pending', description: 'Awaiting review' },
+  { status: 'in_review', label: 'In Review', description: 'Being reviewed' },
+  { status: 'approved', label: 'Approved', description: 'Application approved' },
   { status: 'rejected', label: 'Rejected', description: 'Not selected' },
+  { status: 'withdrawn', label: 'Withdrawn', description: 'Candidate withdrew' },
 ];
 
-const STAGE_COLORS = {
-  applied: 'from-blue-100 to-blue-50 border-blue-200',
-  screening: 'from-yellow-100 to-yellow-50 border-yellow-200',
-  interview: 'from-purple-100 to-purple-50 border-purple-200',
-  offer: 'from-green-100 to-green-50 border-green-200',
-  hired: 'from-emerald-100 to-emerald-50 border-emerald-200',
+const STAGE_COLORS: Record<string, string> = {
+  pending: 'from-blue-100 to-blue-50 border-blue-200',
+  in_review: 'from-yellow-100 to-yellow-50 border-yellow-200',
+  approved: 'from-emerald-100 to-emerald-50 border-emerald-200',
   rejected: 'from-red-100 to-red-50 border-red-200',
+  withdrawn: 'from-zinc-100 to-zinc-50 border-zinc-200',
 };
 
 interface Agent {
@@ -93,6 +91,7 @@ export default function OpportunityDetailPage() {
   const fetchOpportunityData = async () => {
     try {
       setLoading(true);
+      console.log('[v0] Fetching opportunity:', opportunityId);
       const [oppResponse, appResponse] = await Promise.all([
         fetch(`/api/opportunities/${opportunityId}`),
         fetch(`/api/opportunities/${opportunityId}/applications`)
@@ -100,12 +99,19 @@ export default function OpportunityDetailPage() {
 
       if (oppResponse.ok) {
         const oppData = await oppResponse.json();
+        console.log('[v0] Opportunity data:', oppData);
         setOpportunity(oppData.opportunity);
+      } else {
+        console.log('[v0] Opportunity fetch failed:', oppResponse.status);
       }
 
       if (appResponse.ok) {
         const appData = await appResponse.json();
+        console.log('[v0] Applications data:', appData);
+        console.log('[v0] Applications statuses:', appData.applications?.map((a: Application) => a.status));
         setApplications(appData.applications || []);
+      } else {
+        console.log('[v0] Applications fetch failed:', appResponse.status);
       }
     } catch (err) {
       console.error('Error fetching data:', err);
@@ -230,10 +236,10 @@ export default function OpportunityDetailPage() {
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-2">
                 <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                <p className="text-xs text-zinc-500">Hired</p>
-              </div>
-              <p className="text-2xl font-bold text-zinc-900">
-                {applications.filter(a => a.status === 'hired').length}
+<p className="text-xs text-zinc-500">Approved</p>
+                </div>
+                <p className="text-2xl font-bold text-zinc-900">
+                  {applications.filter(a => a.status === 'approved').length}
               </p>
             </CardContent>
           </Card>
@@ -260,12 +266,13 @@ export default function OpportunityDetailPage() {
                       <p className="text-xs text-zinc-500 mt-1">{app.agent?.ats_id}</p>
                       <p className="text-xs text-zinc-400 mt-1">{app.agent?.profiles?.email}</p>
 
-                      {stage.status !== 'hired' && stage.status !== 'rejected' && (
+                      {stage.status !== 'approved' && stage.status !== 'rejected' && stage.status !== 'withdrawn' && (
                         <div className="flex gap-1 mt-3">
                           {APPLICATION_STAGES.filter(s => 
                             s.status !== stage.status && 
-                            s.status !== 'applied' &&
-                            APPLICATION_STAGES.indexOf(s) >= APPLICATION_STAGES.indexOf(stage)
+                            s.status !== 'pending' &&
+                            s.status !== 'withdrawn' &&
+                            APPLICATION_STAGES.indexOf(s) > APPLICATION_STAGES.indexOf(stage)
                           ).slice(0, 2).map((nextStage) => (
                             <Button
                               key={nextStage.status}
@@ -285,7 +292,7 @@ export default function OpportunityDetailPage() {
                         </div>
                       )}
 
-                      {stage.status !== 'rejected' && (
+                      {stage.status !== 'rejected' && stage.status !== 'withdrawn' && stage.status !== 'approved' && (
                         <Button
                           size="sm"
                           variant="ghost"
