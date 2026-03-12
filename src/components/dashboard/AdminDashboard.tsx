@@ -309,7 +309,7 @@ export function AdminDashboard() {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={(value: number, name: string) => [`${value} agents`, name]}
+                    formatter={(value) => [`${value} agents`]}
                     contentStyle={{
                       borderRadius: '8px',
                       border: '1px solid #e4e4e7',
