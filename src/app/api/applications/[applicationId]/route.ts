@@ -8,9 +8,10 @@ const supabase = createClient(
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { applicationId: string } }
+  { params }: { params: Promise<{ applicationId: string }> }
 ) {
   try {
+    const { applicationId } = await params;
     const body = await request.json();
     const { status } = body;
 
@@ -21,7 +22,7 @@ export async function PATCH(
     const { data, error } = await supabase
       .from('applications')
       .update({ status })
-      .eq('id', params.applicationId)
+      .eq('id', applicationId)
       .select()
       .single();
 

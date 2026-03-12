@@ -23,22 +23,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     if (error) {
       console.error('Error fetching opportunity:', error);
-      return NextResponse.json({ success: false, error: error.message }, { status: 404 });
+      return NextResponse.json({ opportunity: null }, { status: 404 });
     }
 
-    // Transform data
-    const opportunity = {
-      ...data,
-      applicationQuestions: data.application_questions || [],
-      applicationStages: data.application_stages || [],
-      capacity: {
-        maxAgents: data.max_agents || 0,
-        currentAgents: data.current_agents || 0,
-        openPositions: data.open_positions || 0,
-      },
-    };
-
-    return NextResponse.json({ success: true, data: opportunity });
+    return NextResponse.json({ opportunity: data });
   } catch (error) {
     console.error('Error:', error);
     return NextResponse.json({ success: false, error: 'Internal server error' }, { status: 500 });
