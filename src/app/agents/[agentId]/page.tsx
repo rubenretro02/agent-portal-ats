@@ -408,7 +408,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
               {/* Gradient Banner */}
               <div className="h-20 bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-500 relative">
                 {/* Verified Badge */}
-                {agent.pipeline_status === 'onboarding' || agent.pipeline_status === 'active' ? (
+                {agent.pipeline_status === 'approved' || agent.pipeline_status === 'hired' || agent.pipeline_status === 'active' ? (
                   <div className="absolute top-3 right-3">
                     <Badge className="bg-white/90 text-emerald-600 gap-1">
                       <BadgeCheck className="h-3.5 w-3.5" />
