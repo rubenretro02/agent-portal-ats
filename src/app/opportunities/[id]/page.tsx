@@ -269,7 +269,7 @@ export default function OpportunityDetailPage() {
                           ).slice(0, 2).map((nextStage) => (
                             <Button
                               key={nextStage.status}
-                              size="xs"
+                              size="sm"
                               variant="outline"
                               className="text-xs h-7 flex-1"
                               disabled={movingApplication === app.id}
@@ -287,7 +287,7 @@ export default function OpportunityDetailPage() {
 
                       {stage.status !== 'rejected' && (
                         <Button
-                          size="xs"
+                          size="sm"
                           variant="ghost"
                           className="text-xs h-7 w-full mt-2 text-red-600 hover:bg-red-50"
                           disabled={movingApplication === app.id}
