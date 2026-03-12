@@ -415,7 +415,11 @@ export default function OpportunitiesPage() {
               const questionCount = opp.applicationQuestions?.length || 0;
 
               return (
-                <Card key={opp.id} className={`border-zinc-200 hover:border-teal-300 hover:shadow-lg transition-all overflow-hidden ${opp.status !== 'active' ? 'opacity-75' : ''}`}>
+                <Card 
+                  key={opp.id} 
+                  className={`border-zinc-200 hover:border-teal-300 hover:shadow-lg transition-all overflow-hidden cursor-pointer ${opp.status !== 'active' ? 'opacity-75' : ''}`}
+                  onClick={() => isAdmin && router.push(`/opportunities/${opp.id}`)}
+                >
                   {isAdmin && <div className={`h-1 ${opp.status === 'active' ? 'bg-emerald-500' : opp.status === 'draft' ? 'bg-amber-500' : 'bg-zinc-300'}`} />}
 
                   <div className="p-5 border-b border-zinc-100">
