@@ -369,7 +369,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
                               ? 'ring-2 ring-offset-2'
                               : 'bg-zinc-100 text-zinc-400'
                         }`}
-                        style={isCurrent ? { backgroundColor: stage.color, color: 'white', ringColor: stage.color } : {}}
+                        style={isCurrent ? { backgroundColor: stage.color, color: 'white' } : {}}
                       >
                         {isCompleted ? <CheckCircle2 className="h-4 w-4" /> : idx + 1}
                       </div>
