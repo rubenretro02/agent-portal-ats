@@ -398,21 +398,33 @@ const location = agent.address ?
                 ) : null}
               </div>
               
-              <CardContent className="pt-0 pb-6 -mt-10">
-                {/* Avatar */}
-                <div className="w-20 h-20 rounded-xl bg-white shadow-lg border-4 border-white flex items-center justify-center text-xl font-bold text-zinc-700 bg-gradient-to-br from-zinc-100 to-zinc-200 mx-auto">
-                  {initials}
+              <CardContent className="pt-0 pb-6 -mt-12">
+                {/* Avatar with gradient ring */}
+                <div className="relative mx-auto w-24 h-24">
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-400 via-teal-400 to-emerald-400 p-[3px]">
+                    <div className="w-full h-full rounded-2xl bg-white flex items-center justify-center">
+                      <span className="text-2xl font-bold bg-gradient-to-br from-cyan-600 to-teal-600 bg-clip-text text-transparent">
+                        {initials}
+                      </span>
+                    </div>
+                  </div>
                 </div>
                 
                 {/* Name & Role */}
                 <div className="text-center mt-4">
-                  <h1 className="text-xl font-bold text-zinc-900">{fullName}</h1>
-                  <Badge 
-                    className="mt-2 text-xs"
-                    style={{ backgroundColor: `${stageInfo?.color}15`, color: stageInfo?.color }}
-                  >
-                    {stageInfo?.label.en}
-                  </Badge>
+                  <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">{fullName}</h1>
+                  <div className="flex items-center justify-center gap-2 mt-2">
+                    <div 
+                      className="w-2 h-2 rounded-full animate-pulse"
+                      style={{ backgroundColor: stageInfo?.color }}
+                    />
+                    <Badge 
+                      className="text-xs font-medium border-0"
+                      style={{ backgroundColor: `${stageInfo?.color}15`, color: stageInfo?.color }}
+                    >
+                      {stageInfo?.label.en}
+                    </Badge>
+                  </div>
                 </div>
 
                 {/* Skills */}
@@ -449,23 +461,45 @@ const location = agent.address ?
 
                 {/* Location & Timezone */}
                 <div className="mt-5 grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg border border-zinc-200 bg-zinc-50/50">
-                    <p className="text-xs text-zinc-500">Location</p>
-                    <p className="text-sm font-medium text-zinc-900 mt-0.5 truncate">{location}</p>
+                  <div className="p-3 rounded-xl border border-zinc-200 bg-gradient-to-br from-zinc-50 to-white">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <MapPin className="h-3 w-3 text-zinc-400" />
+                      <p className="text-xs text-zinc-500">Location</p>
+                    </div>
+                    <p className="text-sm font-semibold text-zinc-900">
+                      {agent.address?.city || 'N/A'}
+                      {agent.address?.state && <span className="text-zinc-500 font-normal">, {agent.address.state}</span>}
+                    </p>
                   </div>
-                  <div className="p-3 rounded-lg border border-zinc-200 bg-zinc-50/50">
-                    <p className="text-xs text-zinc-500">Timezone</p>
-                    <p className="text-sm font-medium text-zinc-900 mt-0.5">UTC-5 (EST)</p>
+                  <div className="p-3 rounded-xl border border-zinc-200 bg-gradient-to-br from-zinc-50 to-white">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Globe className="h-3 w-3 text-zinc-400" />
+                      <p className="text-xs text-zinc-500">Timezone</p>
+                    </div>
+                    <p className="text-sm font-semibold text-zinc-900">
+                      {agent.timezone || 'UTC-5'}
+                      <span className="text-zinc-500 font-normal ml-1">(EST)</span>
+                    </p>
                   </div>
                 </div>
 
                 {/* Contact Actions */}
                 <div className="mt-5 flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1 gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 gap-2 rounded-xl border-cyan-200 text-cyan-700 hover:bg-cyan-50 hover:border-cyan-300 transition-all"
+                    onClick={() => agent.profiles?.email && window.open(`mailto:${agent.profiles.email}`)}
+                  >
                     <Mail className="h-4 w-4" />
                     Email
                   </Button>
-                  <Button variant="outline" size="sm" className="flex-1 gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 gap-2 rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 transition-all"
+                    onClick={() => agent.profiles?.phone && window.open(`tel:${agent.profiles.phone}`)}
+                  >
                     <Phone className="h-4 w-4" />
                     Call
                   </Button>
@@ -685,13 +719,23 @@ const location = agent.address ?
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center">
+                  <div className="flex items-start gap-3 col-span-2">
+                    <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center flex-shrink-0">
                       <MapPin className="h-5 w-5 text-cyan-600" />
                     </div>
-                    <div>
-                      <p className="text-xs text-zinc-500">Address</p>
-                      <p className="text-sm font-medium text-zinc-900">{location}</p>
+                    <div className="min-w-0">
+                      <p className="text-xs text-zinc-500">Full Address</p>
+                      <p className="text-sm font-medium text-zinc-900">
+                        {agent.address ? (
+                          <>
+                            {agent.address.street && <span>{agent.address.street}<br /></span>}
+                            {agent.address.city && <span>{agent.address.city}</span>}
+                            {agent.address.state && <span>, {agent.address.state}</span>}
+                            {agent.address.zipCode && <span> {agent.address.zipCode}</span>}
+                            {agent.address.country && <span>, {agent.address.country}</span>}
+                          </>
+                        ) : 'N/A'}
+                      </p>
                     </div>
                   </div>
                 </div>
