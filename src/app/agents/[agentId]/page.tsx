@@ -209,108 +209,49 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
     }
   }, [authLoading, profile, router]);
 
-  // Fetch agent data
+  // Fetch agent data from dedicated API
   useEffect(() => {
     async function fetchAgentData() {
       setLoading(true);
       try {
-        const { adminDb } = await import('@/lib/adminDb');
+        const response = await fetch(`/api/agents/${agentId}`);
+        const result = await response.json();
 
-        // First fetch the agent record
-        const { data: agentResult, error: agentError } = await adminDb<Record<string, unknown>[]>({
-          action: 'select',
-          table: 'agents',
-          select: '*',
-          filters: { id: agentId },
-          limit: 1,
-        });
-
-        if (agentError) {
-          console.error('[v0] Error fetching agent:', agentError);
+        if (!response.ok) {
+          console.error('[v0] Error fetching agent:', result.error);
           setLoading(false);
           return;
         }
 
-        if (!agentResult || agentResult.length === 0) {
-          console.error('[v0] Agent not found with id:', agentId);
+        if (!result.agent) {
+          console.error('[v0] Agent not found');
           setLoading(false);
           return;
         }
 
-        const agentRecord = agentResult[0];
-
-        // Then fetch the profile using the agent's user_id
-        const { data: profileResult } = await adminDb<Record<string, unknown>[]>({
-          action: 'select',
-          table: 'profiles',
-          select: 'id, first_name, last_name, email, phone, address, date_of_birth',
-          filters: { id: agentRecord.user_id as string },
-          limit: 1,
-        });
-
-        // Combine agent and profile data
+        // Map API response to AgentProfile type
+        const agentData = result.agent;
         const combinedAgent: AgentProfile = {
-          id: agentRecord.id as string,
-          user_id: agentRecord.user_id as string,
-          ats_id: agentRecord.ats_id as string,
-          pipeline_status: agentRecord.pipeline_status as PipelineStatus,
-          pipeline_stage: agentRecord.pipeline_stage as number,
-          created_at: agentRecord.created_at as string,
-          last_status_change: agentRecord.last_status_change as string,
-          scores: agentRecord.scores as Record<string, number> | null,
-          languages: agentRecord.languages as string[] | null,
-          skills: agentRecord.skills as string[] | null,
-          experience: agentRecord.experience as WorkExperience[] | null,
-          equipment: agentRecord.equipment as EquipmentInfo | null,
-          availability: agentRecord.availability as AvailabilityInfo | null,
-          preferred_language: (agentRecord.preferred_language as 'en' | 'es') || 'en',
-          profiles: profileResult && profileResult.length > 0 ? {
-            id: profileResult[0].id as string,
-            first_name: profileResult[0].first_name as string,
-            last_name: profileResult[0].last_name as string,
-            email: profileResult[0].email as string,
-            phone: profileResult[0].phone as string | null,
-            address: profileResult[0].address as AddressInfo | null,
-            date_of_birth: profileResult[0].date_of_birth as string | null,
-          } : null,
+          id: agentData.id,
+          user_id: agentData.user_id,
+          ats_id: agentData.ats_id,
+          pipeline_status: agentData.pipeline_status as PipelineStatus,
+          pipeline_stage: agentData.pipeline_stage,
+          created_at: agentData.created_at,
+          last_status_change: agentData.last_status_change,
+          scores: agentData.scores,
+          languages: agentData.languages,
+          skills: agentData.skills,
+          experience: agentData.experience,
+          equipment: agentData.equipment,
+          availability: agentData.availability,
+          preferred_language: agentData.preferred_language || 'en',
+          profiles: agentData.profiles || null,
         };
 
         setAgent(combinedAgent);
-
-        // Fetch documents
-        const { data: docsData } = await adminDb<AgentDocument[]>({
-          action: 'select',
-          table: 'documents',
-          select: '*',
-          filters: { agent_id: agentId },
-          order: { column: 'uploaded_at', ascending: false },
-        });
-
-        if (docsData) {
-          setDocuments(docsData);
-        }
-
-        // Fetch applications
-        const { data: appsData } = await adminDb<AgentApplication[]>({
-          action: 'select',
-          table: 'applications',
-          select: `
-            id,
-            status,
-            submitted_at,
-            opportunities (
-              id,
-              name,
-              client
-            )
-          `,
-          filters: { agent_id: agentId },
-          order: { column: 'submitted_at', ascending: false },
-        });
-
-        if (appsData) {
-          setApplications(appsData);
-        }
+        setDocuments(result.documents || []);
+        setApplications(result.applications || []);
       } catch (err) {
         console.error('Error fetching agent data:', err);
       } finally {
@@ -409,7 +350,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
 
   const stageInfo = getStageInfo(agent.pipeline_status);
   const fullName = `${agent.profiles?.first_name || ''} ${agent.profiles?.last_name || ''}`.trim() || 'Unknown';
-  const initials = fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+  const initials = fullName.split(' ').filter(n => n.length > 0).map(n => n[0]).join('').substring(0, 2).toUpperCase() || 'UN';
   const age = calculateAge(agent.profiles?.date_of_birth);
   const currentStageIndex = PIPELINE_STAGES.findIndex(s => s.status === agent.pipeline_status);
   const overallScore = calculateOverallScore();
