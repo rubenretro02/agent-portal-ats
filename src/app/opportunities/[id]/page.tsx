@@ -265,7 +265,7 @@ function DraggableCard({
             <p className="text-[10px] text-zinc-500 truncate">{app.agent?.profiles?.email || 'No email'}</p>
             <button
               onClick={() => onViewProfile(app.agent?.id)}
-              className="text-[10px] text-cyan-600 font-mono mt-0.5 hover:text-cyan-800 hover:underline transition-colors cursor-pointer"
+              className="text-[10px] text-cyan-600 font-mono mt-0.5 hover:text-cyan-700 hover:underline underline-offset-2 transition-all cursor-pointer"
               title="View agent profile"
             >
               {app.agent?.agent_id?.replace('AGENT ', '')}
