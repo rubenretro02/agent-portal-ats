@@ -104,6 +104,7 @@ function DroppableColumn({
   onMove,
   onBatchMove,
   movingId,
+  onViewProfile,
 }: {
   stage: typeof STAGES[number];
   apps: Application[];
@@ -113,6 +114,7 @@ function DroppableColumn({
   onMove: (appId: string, toStatus: AppStatus) => void;
   onBatchMove: (toStatus: AppStatus) => void;
   movingId: string | null;
+  onViewProfile: (agentId: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.status });
   const colSelected = apps.filter(a => selectedIds.has(a.id));
@@ -180,6 +182,7 @@ function DroppableColumn({
             isMoving={movingId === app.id}
             onSelect={onSelect}
             onMove={onMove}
+            onViewProfile={onViewProfile}
           />
         ))}
 
@@ -203,6 +206,7 @@ function DraggableCard({
   isMoving,
   onSelect,
   onMove,
+  onViewProfile,
 }: {
   app: Application;
   stage: typeof STAGES[number];
@@ -210,6 +214,7 @@ function DraggableCard({
   isMoving: boolean;
   onSelect: (id: string, checked: boolean) => void;
   onMove: (appId: string, toStatus: AppStatus) => void;
+  onViewProfile: (agentId: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: app.id });
   const nextStatus = NEXT_STAGES[stage.status];
@@ -239,16 +244,32 @@ function DraggableCard({
               : <Square className="h-4 w-4" />}
           </button>
 
-          {/* Avatar */}
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center flex-shrink-0">
+          {/* Avatar - Clickable */}
+          <button
+            onClick={() => onViewProfile(app.agent?.id)}
+            className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center flex-shrink-0 hover:from-cyan-600 hover:to-teal-600 transition-all hover:scale-105 cursor-pointer"
+            title="View agent profile"
+          >
             <span className="text-white text-[10px] font-bold">{initials(app)}</span>
-          </div>
+          </button>
 
-          {/* Info */}
+          {/* Info - Clickable name and ID */}
           <div className="flex-1 min-w-0">
-            <p className="font-semibold text-xs text-zinc-900 truncate">{fullName(app)}</p>
+            <button
+              onClick={() => onViewProfile(app.agent?.id)}
+              className="font-semibold text-xs text-zinc-900 truncate hover:text-cyan-600 transition-colors cursor-pointer text-left block max-w-full"
+              title="View agent profile"
+            >
+              {fullName(app)}
+            </button>
             <p className="text-[10px] text-zinc-500 truncate">{app.agent?.profiles?.email || 'No email'}</p>
-            <p className="text-[10px] text-cyan-600 font-mono mt-0.5">{app.agent?.agent_id?.replace('AGENT ', '')}</p>
+            <button
+              onClick={() => onViewProfile(app.agent?.id)}
+              className="text-[10px] text-cyan-600 font-mono mt-0.5 hover:text-cyan-800 hover:underline transition-colors cursor-pointer"
+              title="View agent profile"
+            >
+              {app.agent?.agent_id?.replace('AGENT ', '')}
+            </button>
           </div>
 
           {/* Drag handle */}
@@ -613,6 +634,7 @@ export default function OpportunityDetailPage() {
                 onMove={moveApplication}
                 onBatchMove={batchMove}
                 movingId={movingId}
+                onViewProfile={(agentId) => router.push(`/agents/${agentId}`)}
               />
             ))}
           </div>
