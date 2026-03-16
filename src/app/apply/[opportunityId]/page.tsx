@@ -523,12 +523,15 @@ export default function ApplyPage() {
     <div className="min-h-screen bg-zinc-50 flex">
       {/* Sidebar - Fixed */}
       <div className="hidden lg:flex lg:w-80 bg-white border-r border-zinc-200 flex-col fixed left-0 top-0 bottom-0 z-20">
+        {/* Header */}
         <div className="p-6 border-b border-zinc-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-xl flex items-center justify-center font-bold text-white">AP</div>
             <span className="text-xl font-bold text-zinc-900">AgentHub</span>
           </div>
         </div>
+
+        {/* Scrollable Content */}
         <div className="p-6 flex-1 overflow-auto">
           <div className="mb-6">
             <p className="text-xs font-medium text-teal-600 uppercase tracking-wider mb-2">Applying for</p>
@@ -565,15 +568,15 @@ export default function ApplyPage() {
               })}
             </div>
           </div>
+        </div>
 
-          {/* Applicant Info - Bottom of sidebar */}
-          <div className="border-t border-zinc-100 pt-6 mt-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center">
-                <User className="h-5 w-5 text-white" />
-              </div>
-              <p className="font-semibold text-zinc-900">{applicantName}</p>
+        {/* Applicant Info - Fixed at Bottom */}
+        <div className="p-6 border-t border-zinc-100 bg-white">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center flex-shrink-0">
+              <User className="h-5 w-5 text-white" />
             </div>
+            <p className="font-semibold text-zinc-900">{applicantName}</p>
           </div>
         </div>
       </div>
