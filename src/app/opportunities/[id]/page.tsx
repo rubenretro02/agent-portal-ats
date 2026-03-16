@@ -16,6 +16,7 @@ import {
 } from '@dnd-kit/core';
 import { UnifiedLayout } from '@/components/layout/UnifiedLayout';
 import { useAuthContext } from '@/components/providers/AuthProvider';
+import { AgentProfileSheet } from '@/components/AgentProfileSheet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,7 +35,20 @@ import {
   CheckSquare,
   UserCheck,
   Layers,
+  Download,
+  FileSpreadsheet,
+  FileDown,
+  FileText,
+  FileJson,
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+} from '@/components/ui/dropdown-menu';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -114,7 +128,7 @@ function DroppableColumn({
   onMove: (appId: string, toStatus: AppStatus) => void;
   onBatchMove: (toStatus: AppStatus) => void;
   movingId: string | null;
-  onViewProfile: (agentId: string) => void;
+  onViewProfile: (applicationId: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.status });
   const colSelected = apps.filter(a => selectedIds.has(a.id));
@@ -214,7 +228,7 @@ function DraggableCard({
   isMoving: boolean;
   onSelect: (id: string, checked: boolean) => void;
   onMove: (appId: string, toStatus: AppStatus) => void;
-  onViewProfile: (agentId: string) => void;
+  onViewProfile: (applicationId: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: app.id });
   const nextStatus = NEXT_STAGES[stage.status];
@@ -246,9 +260,9 @@ function DraggableCard({
 
           {/* Avatar - Clickable */}
           <button
-            onClick={() => onViewProfile(app.agent?.id)}
+            onClick={() => onViewProfile(app.id)}
             className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center flex-shrink-0 hover:from-cyan-600 hover:to-teal-600 transition-all hover:scale-105 cursor-pointer"
-            title="View agent profile"
+            title="View application"
           >
             <span className="text-white text-[10px] font-bold">{initials(app)}</span>
           </button>
@@ -256,19 +270,20 @@ function DraggableCard({
           {/* Info - Clickable name and ID */}
           <div className="flex-1 min-w-0">
             <button
-              onClick={() => onViewProfile(app.agent?.id)}
+              onClick={() => onViewProfile(app.id)}
               className="font-semibold text-xs text-zinc-900 truncate hover:text-cyan-600 transition-colors cursor-pointer text-left block max-w-full"
-              title="View agent profile"
+              title="View application"
             >
               {fullName(app)}
             </button>
             <p className="text-[10px] text-zinc-500 truncate">{app.agent?.profiles?.email || 'No email'}</p>
             <button
-              onClick={() => onViewProfile(app.agent?.id)}
-              className="text-[10px] text-cyan-600 font-mono mt-0.5 hover:text-cyan-700 hover:underline underline-offset-2 transition-all cursor-pointer"
-              title="View agent profile"
+              onClick={() => onViewProfile(app.id)}
+              className="text-[10px] mt-0.5 hover:underline underline-offset-2 transition-all cursor-pointer"
+              title="View application"
             >
-              {app.agent?.agent_id?.replace('AGENT ', '')}
+              <span className="text-zinc-500">Agent ID:</span>{' '}
+              <span className="text-cyan-600 font-mono hover:text-cyan-700">{app.agent?.agent_id?.replace('AGENT ', '')}</span>
             </button>
           </div>
 
@@ -352,6 +367,8 @@ export default function OpportunityDetailPage() {
   const [activeApp, setActiveApp] = useState<Application | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | AppStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
+  const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'recruiter';
 
@@ -441,6 +458,166 @@ export default function OpportunityDetailPage() {
       moveApplication(app.id, newStatus);
     }
   };
+
+  // Get all application IDs from filtered applications for navigation
+  const filteredApplicationIds = applications
+    .filter(app => {
+      if (filterStatus !== 'all' && app.status !== filterStatus) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const name = `${app.agent?.profiles?.first_name || ''} ${app.agent?.profiles?.last_name || ''}`.toLowerCase();
+        const email = app.agent?.profiles?.email?.toLowerCase() || '';
+        const agentId = app.agent?.agent_id?.toLowerCase() || '';
+        if (!name.includes(q) && !email.includes(q) && !agentId.includes(q)) return false;
+      }
+      return true;
+    })
+    .map(app => app.id);
+
+  const handleViewProfile = (applicationId: string | undefined) => {
+    if (!applicationId) return;
+    setSelectedApplicationId(applicationId);
+    setIsProfileSheetOpen(true);
+  };
+
+  const handleNavigateProfile = (direction: 'prev' | 'next') => {
+    if (!selectedApplicationId) return;
+    const currentIndex = filteredApplicationIds.indexOf(selectedApplicationId);
+    if (currentIndex === -1) return;
+
+    const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex >= 0 && newIndex < filteredApplicationIds.length) {
+      setSelectedApplicationId(filteredApplicationIds[newIndex]);
+    }
+  };
+
+  const handleStatusChangeFromSheet = (appId: string, newStatus: AppStatus) => {
+    setApplications(prev => prev.map(a => a.id === appId ? { ...a, status: newStatus } : a));
+  };
+
+  // Export functionality
+  const exportCandidates = (format: 'pdf' | 'excel' | 'csv' | 'json', scope: 'all' | 'selected' | 'filtered') => {
+    let appsToExport: Application[] = [];
+
+    if (scope === 'selected') {
+      appsToExport = applications.filter(a => selectedIds.has(a.id));
+    } else if (scope === 'filtered') {
+      appsToExport = applications.filter(app => {
+        if (filterStatus !== 'all' && app.status !== filterStatus) return false;
+        if (searchQuery) {
+          const q = searchQuery.toLowerCase();
+          const name = `${app.agent?.profiles?.first_name || ''} ${app.agent?.profiles?.last_name || ''}`.toLowerCase();
+          const email = app.agent?.profiles?.email?.toLowerCase() || '';
+          const agentId = app.agent?.agent_id?.toLowerCase() || '';
+          return name.includes(q) || email.includes(q) || agentId.includes(q);
+        }
+        return true;
+      });
+    } else {
+      appsToExport = applications;
+    }
+
+    if (appsToExport.length === 0) {
+      alert('No candidates to export');
+      return;
+    }
+
+    const candidatesData = appsToExport.map(app => ({
+      name: `${app.agent?.profiles?.first_name || ''} ${app.agent?.profiles?.last_name || ''}`.trim(),
+      agentId: app.agent?.agent_id || '',
+      email: app.agent?.profiles?.email || '',
+      status: app.status,
+      submittedAt: app.submitted_at,
+    }));
+
+    const opportunityName = opportunity?.name || 'candidates';
+
+    if (format === 'json') {
+      const blob = new Blob([JSON.stringify(candidatesData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${opportunityName.replace(/\s+/g, '-')}-candidates.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (format === 'csv') {
+      const headers = ['Name', 'Agent ID', 'Email', 'Status', 'Submitted At'];
+      const rows = candidatesData.map(c => [c.name, c.agentId, c.email, c.status, c.submittedAt]);
+      const csv = [headers.join(','), ...rows.map(r => r.map(v => `"${v || ''}"`).join(','))].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${opportunityName.replace(/\s+/g, '-')}-candidates.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (format === 'excel') {
+      const headers = ['Name', 'Agent ID', 'Email', 'Status', 'Submitted At'];
+      const rows = candidatesData.map(c => [c.name, c.agentId, c.email, c.status, c.submittedAt]);
+      const tsv = '\ufeff' + [headers.join('\t'), ...rows.map(r => r.map(v => `"${v || ''}"`).join('\t'))].join('\n');
+      const blob = new Blob([tsv], { type: 'application/vnd.ms-excel' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${opportunityName.replace(/\s+/g, '-')}-candidates.xls`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (format === 'pdf') {
+      const printContent = `
+        <html>
+          <head>
+            <title>Candidates - ${opportunityName}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 40px; }
+              h1 { color: #0891b2; }
+              table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+              th { background: #f3f4f6; text-align: left; padding: 12px; border-bottom: 2px solid #e5e7eb; }
+              td { padding: 12px; border-bottom: 1px solid #e5e7eb; }
+              .status { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+              .status-pending { background: #fef3c7; color: #92400e; }
+              .status-in_review { background: #e0f2fe; color: #0369a1; }
+              .status-approved { background: #d1fae5; color: #065f46; }
+              .status-rejected { background: #fee2e2; color: #991b1b; }
+            </style>
+          </head>
+          <body>
+            <h1>${opportunityName}</h1>
+            <p>Total candidates: ${candidatesData.length}</p>
+            <table>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Agent ID</th>
+                  <th>Email</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${candidatesData.map(c => `
+                  <tr>
+                    <td>${c.name}</td>
+                    <td>${c.agentId?.replace('AGENT ', '')}</td>
+                    <td>${c.email}</td>
+                    <td><span class="status status-${c.status}">${c.status?.replace('_', ' ').toUpperCase()}</span></td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </body>
+        </html>
+      `;
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        printWindow.print();
+      }
+    }
+  };
+
+  const currentAppIndex = selectedApplicationId ? filteredApplicationIds.indexOf(selectedApplicationId) : -1;
+  const hasPrevApp = currentAppIndex > 0;
+  const hasNextApp = currentAppIndex >= 0 && currentAppIndex < filteredApplicationIds.length - 1;
 
   if (loading) return (
     <UnifiedLayout title="Loading...">
@@ -563,6 +740,68 @@ export default function OpportunityDetailPage() {
                   Clear Filters
                 </Button>
               )}
+
+              {/* Export Button */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-cyan-200 text-cyan-700 hover:bg-cyan-50 gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Export
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="text-xs text-zinc-500">Export Format</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+
+                  {/* Export All */}
+                  <DropdownMenuLabel className="text-xs text-zinc-400 font-normal">All Candidates ({applications.length})</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => exportCandidates('pdf', 'all')} className="gap-2">
+                    <FileDown className="h-4 w-4 text-red-500" /> PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportCandidates('excel', 'all')} className="gap-2">
+                    <FileSpreadsheet className="h-4 w-4 text-emerald-500" /> Excel
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportCandidates('csv', 'all')} className="gap-2">
+                    <FileText className="h-4 w-4 text-blue-500" /> CSV
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => exportCandidates('json', 'all')} className="gap-2">
+                    <FileJson className="h-4 w-4 text-amber-500" /> JSON
+                  </DropdownMenuItem>
+
+                  {totalSelected > 0 && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-xs text-zinc-400 font-normal">Selected ({totalSelected})</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => exportCandidates('pdf', 'selected')} className="gap-2">
+                        <FileDown className="h-4 w-4 text-red-500" /> PDF
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => exportCandidates('excel', 'selected')} className="gap-2">
+                        <FileSpreadsheet className="h-4 w-4 text-emerald-500" /> Excel
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => exportCandidates('csv', 'selected')} className="gap-2">
+                        <FileText className="h-4 w-4 text-blue-500" /> CSV
+                      </DropdownMenuItem>
+                    </>
+                  )}
+
+                  {(searchQuery || filterStatus !== 'all') && (
+                    <>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuLabel className="text-xs text-zinc-400 font-normal">Filtered Results</DropdownMenuLabel>
+                      <DropdownMenuItem onClick={() => exportCandidates('pdf', 'filtered')} className="gap-2">
+                        <FileDown className="h-4 w-4 text-red-500" /> PDF
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => exportCandidates('excel', 'filtered')} className="gap-2">
+                        <FileSpreadsheet className="h-4 w-4 text-emerald-500" /> Excel
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </CardContent>
         </Card>
@@ -634,7 +873,7 @@ export default function OpportunityDetailPage() {
                 onMove={moveApplication}
                 onBatchMove={batchMove}
                 movingId={movingId}
-                onViewProfile={(agentId) => router.push(`/agents/${agentId}`)}
+                onViewProfile={handleViewProfile}
               />
             ))}
           </div>
@@ -644,6 +883,17 @@ export default function OpportunityDetailPage() {
           </DragOverlay>
         </DndContext>
       </div>
+
+      {/* Agent Profile Sheet */}
+      <AgentProfileSheet
+        applicationId={selectedApplicationId}
+        open={isProfileSheetOpen}
+        onOpenChange={setIsProfileSheetOpen}
+        onNavigate={handleNavigateProfile}
+        onStatusChange={handleStatusChangeFromSheet}
+        hasPrev={hasPrevApp}
+        hasNext={hasNextApp}
+      />
     </UnifiedLayout>
   );
 }
