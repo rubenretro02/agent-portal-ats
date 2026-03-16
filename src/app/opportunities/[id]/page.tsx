@@ -115,7 +115,7 @@ function DroppableColumn({
   onMove: (appId: string, toStatus: AppStatus) => void;
   onBatchMove: (toStatus: AppStatus) => void;
   movingId: string | null;
-  onViewProfile: (agentId: string) => void;
+  onViewProfile: (applicationId: string) => void;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: stage.status });
   const colSelected = apps.filter(a => selectedIds.has(a.id));
@@ -215,7 +215,7 @@ function DraggableCard({
   isMoving: boolean;
   onSelect: (id: string, checked: boolean) => void;
   onMove: (appId: string, toStatus: AppStatus) => void;
-  onViewProfile: (agentId: string) => void;
+  onViewProfile: (applicationId: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: app.id });
   const nextStatus = NEXT_STAGES[stage.status];
@@ -247,9 +247,9 @@ function DraggableCard({
 
           {/* Avatar - Clickable */}
           <button
-            onClick={() => onViewProfile(app.agent?.id)}
+            onClick={() => onViewProfile(app.id)}
             className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center flex-shrink-0 hover:from-cyan-600 hover:to-teal-600 transition-all hover:scale-105 cursor-pointer"
-            title="View agent profile"
+            title="View application"
           >
             <span className="text-white text-[10px] font-bold">{initials(app)}</span>
           </button>
@@ -257,17 +257,17 @@ function DraggableCard({
           {/* Info - Clickable name and ID */}
           <div className="flex-1 min-w-0">
             <button
-              onClick={() => onViewProfile(app.agent?.id)}
+              onClick={() => onViewProfile(app.id)}
               className="font-semibold text-xs text-zinc-900 truncate hover:text-cyan-600 transition-colors cursor-pointer text-left block max-w-full"
-              title="View agent profile"
+              title="View application"
             >
               {fullName(app)}
             </button>
             <p className="text-[10px] text-zinc-500 truncate">{app.agent?.profiles?.email || 'No email'}</p>
             <button
-              onClick={() => onViewProfile(app.agent?.id)}
+              onClick={() => onViewProfile(app.id)}
               className="text-[10px] text-cyan-600 font-mono mt-0.5 hover:text-cyan-700 hover:underline underline-offset-2 transition-all cursor-pointer"
-              title="View agent profile"
+              title="View application"
             >
               {app.agent?.agent_id?.replace('AGENT ', '')}
             </button>
@@ -353,7 +353,7 @@ export default function OpportunityDetailPage() {
   const [activeApp, setActiveApp] = useState<Application | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | AppStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string | null>(null);
   const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'recruiter';
@@ -445,8 +445,8 @@ export default function OpportunityDetailPage() {
     }
   };
 
-  // Get all agent IDs from filtered applications for navigation
-  const filteredAgentIds = applications
+  // Get all application IDs from filtered applications for navigation
+  const filteredApplicationIds = applications
     .filter(app => {
       if (filterStatus !== 'all' && app.status !== filterStatus) return false;
       if (searchQuery) {
@@ -458,29 +458,32 @@ export default function OpportunityDetailPage() {
       }
       return true;
     })
-    .map(app => app.agent?.id)
-    .filter(Boolean) as string[];
+    .map(app => app.id);
 
-  const handleViewProfile = (agentId: string | undefined) => {
-    if (!agentId) return;
-    setSelectedAgentId(agentId);
+  const handleViewProfile = (applicationId: string | undefined) => {
+    if (!applicationId) return;
+    setSelectedApplicationId(applicationId);
     setIsProfileSheetOpen(true);
   };
 
   const handleNavigateProfile = (direction: 'prev' | 'next') => {
-    if (!selectedAgentId) return;
-    const currentIndex = filteredAgentIds.indexOf(selectedAgentId);
+    if (!selectedApplicationId) return;
+    const currentIndex = filteredApplicationIds.indexOf(selectedApplicationId);
     if (currentIndex === -1) return;
 
     const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
-    if (newIndex >= 0 && newIndex < filteredAgentIds.length) {
-      setSelectedAgentId(filteredAgentIds[newIndex]);
+    if (newIndex >= 0 && newIndex < filteredApplicationIds.length) {
+      setSelectedApplicationId(filteredApplicationIds[newIndex]);
     }
   };
 
-  const currentAgentIndex = selectedAgentId ? filteredAgentIds.indexOf(selectedAgentId) : -1;
-  const hasPrevAgent = currentAgentIndex > 0;
-  const hasNextAgent = currentAgentIndex >= 0 && currentAgentIndex < filteredAgentIds.length - 1;
+  const handleStatusChangeFromSheet = (appId: string, newStatus: AppStatus) => {
+    setApplications(prev => prev.map(a => a.id === appId ? { ...a, status: newStatus } : a));
+  };
+
+  const currentAppIndex = selectedApplicationId ? filteredApplicationIds.indexOf(selectedApplicationId) : -1;
+  const hasPrevApp = currentAppIndex > 0;
+  const hasNextApp = currentAppIndex >= 0 && currentAppIndex < filteredApplicationIds.length - 1;
 
   if (loading) return (
     <UnifiedLayout title="Loading...">
@@ -687,12 +690,13 @@ export default function OpportunityDetailPage() {
 
       {/* Agent Profile Sheet */}
       <AgentProfileSheet
-        agentId={selectedAgentId}
+        applicationId={selectedApplicationId}
         open={isProfileSheetOpen}
         onOpenChange={setIsProfileSheetOpen}
         onNavigate={handleNavigateProfile}
-        hasPrev={hasPrevAgent}
-        hasNext={hasNextAgent}
+        onStatusChange={handleStatusChangeFromSheet}
+        hasPrev={hasPrevApp}
+        hasNext={hasNextApp}
       />
     </UnifiedLayout>
   );
