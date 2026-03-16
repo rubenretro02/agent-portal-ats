@@ -565,27 +565,37 @@ export default function ApplyPage() {
               })}
             </div>
           </div>
+
+          {/* Applicant Info - Bottom of sidebar */}
+          <div className="border-t border-zinc-100 pt-6 mt-6">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center">
+                <User className="h-5 w-5 text-white" />
+              </div>
+              <p className="font-semibold text-zinc-900">{applicantName}</p>
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Main Content Area */}
       <div className="flex-1 lg:ml-80 flex flex-col min-h-screen">
         {/* Top Header - Fixed */}
-        <div className="bg-white border-b border-zinc-200 px-6 py-4 sticky top-0 z-10">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
+        <div className="bg-white border-b border-zinc-200 sticky top-0 z-10">
+          <div className="flex items-center justify-between px-6 py-4">
             {/* Mobile: Show job name */}
             <div className="lg:hidden">
               <p className="text-xs text-teal-600 font-medium">Applying for</p>
               <p className="font-semibold text-zinc-900 truncate">{opportunity.name}</p>
             </div>
-            {/* Desktop: Just spacing */}
-            <div className="hidden lg:block" />
+            {/* Desktop: Just spacing to push exit to far right */}
+            <div className="hidden lg:block flex-1" />
 
-            {/* Exit Button - Top Right with text */}
+            {/* Exit Button - Far Right Corner */}
             <Button
               variant="ghost"
               onClick={handleExit}
-              className="text-zinc-900 hover:text-red-600 hover:bg-red-50 rounded-lg gap-2 font-medium"
+              className="text-zinc-900 hover:text-red-600 hover:bg-red-50 rounded-lg gap-2 font-medium ml-auto"
             >
               Exit Application
               <X className="h-5 w-5" />
@@ -602,33 +612,19 @@ export default function ApplyPage() {
 
         {/* Bottom Footer - Fixed */}
         <div className="bg-white border-t border-zinc-200 px-6 py-4 sticky bottom-0 z-10">
-          <div className="max-w-4xl mx-auto flex items-center justify-between">
-            {/* Applicant Name - Left */}
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center">
-                <User className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="text-xs text-zinc-500">Applying as</p>
-                <p className="font-semibold text-zinc-900">{applicantName}</p>
-              </div>
-            </div>
-
-            {/* Navigation Buttons - Right */}
-            <div className="flex items-center gap-3">
-              <Button variant="outline" onClick={handleBack} disabled={isFirstStage} className="gap-2">
-                <ArrowLeft className="h-4 w-4" />Previous
-              </Button>
-              <Button onClick={handleNext} disabled={!canProceed() || submitting} className="gap-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 min-w-[140px]">
-                {submitting ? (
-                  <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Submitting...</>
-                ) : isLastStage ? (
-                  <>Submit Application<CheckCircle2 className="h-4 w-4" /></>
-                ) : (
-                  <>Next<ArrowRight className="h-4 w-4" /></>
-                )}
-              </Button>
-            </div>
+          <div className="max-w-3xl mx-auto flex items-center justify-end gap-3">
+            <Button variant="outline" onClick={handleBack} disabled={isFirstStage} className="gap-2">
+              <ArrowLeft className="h-4 w-4" />Previous
+            </Button>
+            <Button onClick={handleNext} disabled={!canProceed() || submitting} className="gap-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 min-w-[140px]">
+              {submitting ? (
+                <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Submitting...</>
+              ) : isLastStage ? (
+                <>Submit Application<CheckCircle2 className="h-4 w-4" /></>
+              ) : (
+                <>Next<ArrowRight className="h-4 w-4" /></>
+              )}
+            </Button>
           </div>
         </div>
       </div>
