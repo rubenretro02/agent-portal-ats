@@ -572,7 +572,7 @@ export default function ApplyPage() {
       <div className="flex-1 lg:ml-80 flex flex-col min-h-screen">
         {/* Top Header - Fixed */}
         <div className="bg-white border-b border-zinc-200 px-6 py-4 sticky top-0 z-10">
-          <div className="max-w-3xl mx-auto flex items-center justify-between">
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
             {/* Mobile: Show job name */}
             <div className="lg:hidden">
               <p className="text-xs text-teal-600 font-medium">Applying for</p>
@@ -581,13 +581,13 @@ export default function ApplyPage() {
             {/* Desktop: Just spacing */}
             <div className="hidden lg:block" />
 
-            {/* Exit Button - Top Right */}
+            {/* Exit Button - Top Right with text */}
             <Button
               variant="ghost"
-              size="icon"
               onClick={handleExit}
-              className="text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full"
+              className="text-zinc-900 hover:text-red-600 hover:bg-red-50 rounded-lg gap-2 font-medium"
             >
+              Exit Application
               <X className="h-5 w-5" />
             </Button>
           </div>
@@ -602,28 +602,33 @@ export default function ApplyPage() {
 
         {/* Bottom Footer - Fixed */}
         <div className="bg-white border-t border-zinc-200 px-6 py-4 sticky bottom-0 z-10">
-          <div className="max-w-3xl mx-auto flex items-center justify-between">
-            <Button variant="outline" onClick={handleBack} disabled={isFirstStage} className="gap-2">
-              <ArrowLeft className="h-4 w-4" />Previous
-            </Button>
-
-            {/* Applicant Name in Center */}
-            <div className="flex items-center gap-2 text-sm text-zinc-600">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center">
-                <User className="h-4 w-4 text-white" />
+          <div className="max-w-4xl mx-auto flex items-center justify-between">
+            {/* Applicant Name - Left */}
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center">
+                <User className="h-5 w-5 text-white" />
               </div>
-              <span className="font-medium text-zinc-900">{applicantName}</span>
+              <div>
+                <p className="text-xs text-zinc-500">Applying as</p>
+                <p className="font-semibold text-zinc-900">{applicantName}</p>
+              </div>
             </div>
 
-            <Button onClick={handleNext} disabled={!canProceed() || submitting} className="gap-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 min-w-[140px]">
-              {submitting ? (
-                <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Submitting...</>
-              ) : isLastStage ? (
-                <>Submit Application<CheckCircle2 className="h-4 w-4" /></>
-              ) : (
-                <>Next<ArrowRight className="h-4 w-4" /></>
-              )}
-            </Button>
+            {/* Navigation Buttons - Right */}
+            <div className="flex items-center gap-3">
+              <Button variant="outline" onClick={handleBack} disabled={isFirstStage} className="gap-2">
+                <ArrowLeft className="h-4 w-4" />Previous
+              </Button>
+              <Button onClick={handleNext} disabled={!canProceed() || submitting} className="gap-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 min-w-[140px]">
+                {submitting ? (
+                  <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Submitting...</>
+                ) : isLastStage ? (
+                  <>Submit Application<CheckCircle2 className="h-4 w-4" /></>
+                ) : (
+                  <>Next<ArrowRight className="h-4 w-4" /></>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
       </div>

@@ -433,9 +433,9 @@ export default function OpportunitiesPage() {
                           <>
                             <Badge className={opp.status === 'active' ? 'bg-emerald-500' : opp.status === 'draft' ? 'bg-amber-500' : ''}>{opp.status}</Badge>
                             <DropdownMenu>
-                              <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => router.push(`/opportunities/${opp.id}/edit`)}><Edit className="h-4 w-4 mr-2" />Edit Details</DropdownMenuItem>
+                              <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                                <DropdownMenuItem onClick={(e) => { e.stopPropagation(); router.push(`/opportunities/${opp.id}/edit`); }}><Edit className="h-4 w-4 mr-2" />Edit Details</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => router.push(`/admin/opportunities/${opp.id}/stages`)}>
                                   <Settings className="h-4 w-4 mr-2" />Configure Stages
                                 </DropdownMenuItem>
@@ -482,7 +482,7 @@ export default function OpportunitiesPage() {
                     )}
 
                     {isAdmin ? (
-                      <Button variant="outline" className="w-full" onClick={() => router.push(`/opportunities/${opp.id}/edit`)}><Edit className="h-4 w-4 mr-2" />Edit</Button>
+                      <Button variant="outline" className="w-full" onClick={(e) => { e.stopPropagation(); router.push(`/opportunities/${opp.id}/edit`); }}><Edit className="h-4 w-4 mr-2" />Edit</Button>
                     ) : !isApplied ? (
                       <Button className="w-full bg-teal-500 hover:bg-teal-600" onClick={() => handleApplyClick(opp)}>Apply<ArrowRight className="h-4 w-4 ml-2" /></Button>
                     ) : (

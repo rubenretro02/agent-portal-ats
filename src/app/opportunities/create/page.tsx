@@ -327,6 +327,8 @@ export default function CreateOpportunityPage() {
   const [showStageDialog, setShowStageDialog] = useState(false);
   const [newStageName, setNewStageName] = useState('');
   const [newStageType, setNewStageType] = useState<StageType>('custom');
+  const [newStageDescription, setNewStageDescription] = useState('');
+  const [editingStage, setEditingStage] = useState<ApplicationStage | null>(null);
 
   // UI state
   const [activeTab, setActiveTab] = useState<'details' | 'questions' | 'stages'>('details');
@@ -350,20 +352,20 @@ export default function CreateOpportunityPage() {
 
     const activeData = active.data.current;
 
-    // If dragging a question type to the form builder
+    // If dragging a question type to the form builder - add without opening dialog
     if (activeData?.type === 'question-type' && over.id === 'form-builder') {
       const questionType = activeData.questionType as QuestionType;
+      const typeInfo = QUESTION_TYPES.find(t => t.value === questionType);
       const newQuestion: ApplicationQuestion = {
         id: generateId(),
-        question: '',
+        question: `New ${typeInfo?.label || 'Question'}`,
         type: questionType,
         required: false,
         order: questions.length,
         options: ['select', 'radio', 'multiselect'].includes(questionType) ? [] : undefined,
       };
       setQuestions([...questions, newQuestion]);
-      setEditingQuestion(newQuestion);
-      setShowQuestionDialog(true);
+      // Don't auto-open dialog - user can click settings to configure
     }
   };
 
@@ -403,7 +405,7 @@ export default function CreateOpportunityPage() {
       id: generateId(),
       opportunityId: '',
       name: newStageName,
-      description: '',
+      description: newStageDescription,
       type: newStageType,
       order: stages.length,
       isRequired: false,
@@ -419,7 +421,22 @@ export default function CreateOpportunityPage() {
       setStages([...stages, newStage]);
     }
     setNewStageName('');
+    setNewStageDescription('');
     setShowStageDialog(false);
+  };
+
+  const updateStage = () => {
+    if (!editingStage) return;
+    setStages(stages.map(s => s.id === editingStage.id ? editingStage : s));
+    setEditingStage(null);
+  };
+
+  const moveStage = (index: number, direction: 'up' | 'down') => {
+    const newIndex = direction === 'up' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= stages.length) return;
+    const newStages = [...stages];
+    [newStages[index], newStages[newIndex]] = [newStages[newIndex], newStages[index]];
+    setStages(newStages.map((s, i) => ({ ...s, order: i })));
   };
 
   const removeStage = (id: string) => {
@@ -479,23 +496,17 @@ export default function CreateOpportunityPage() {
               <p className="text-sm text-zinc-500">Build your job posting with custom application forms</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" className="gap-2">
-              <Eye className="h-4 w-4" />
-              Preview
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={saving || !formData.name || !formData.description || !formData.client}
-              className="gap-2 bg-teal-600 hover:bg-teal-700"
-            >
-              {saving ? (
-                <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Saving...</>
-              ) : (
-                <><Save className="h-4 w-4" />Save Opportunity</>
-              )}
-            </Button>
-          </div>
+          <Button
+            onClick={handleSave}
+            disabled={saving || !formData.name || !formData.description || !formData.client}
+            className="gap-2 bg-teal-600 hover:bg-teal-700"
+          >
+            {saving ? (
+              <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Saving...</>
+            ) : (
+              <><Save className="h-4 w-4" />Save Opportunity</>
+            )}
+          </Button>
         </div>
 
         {/* Tabs */}
@@ -826,7 +837,7 @@ export default function CreateOpportunityPage() {
               <CardHeader className="flex flex-row items-center justify-between">
                 <div>
                   <CardTitle>Application Stages</CardTitle>
-                  <p className="text-sm text-zinc-500 mt-1">Configure the application flow</p>
+                  <p className="text-sm text-zinc-500 mt-1">Click a stage to customize it</p>
                 </div>
                 <Button onClick={() => setShowStageDialog(true)} size="sm" className="gap-2 bg-teal-600 hover:bg-teal-700">
                   <Plus className="h-4 w-4" />
@@ -834,19 +845,64 @@ export default function CreateOpportunityPage() {
                 </Button>
               </CardHeader>
               <CardContent className="space-y-3">
-                {stages.sort((a, b) => a.order - b.order).map((stage, index) => (
-                  <div key={stage.id} className="flex items-center gap-3">
-                    <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center text-xs font-medium text-zinc-500">
-                      {index + 1}
+                {stages.sort((a, b) => a.order - b.order).map((stage, index) => {
+                  const stageType = DEFAULT_STAGES.find(s => s.type === stage.type);
+                  const Icon = stageType?.icon || Settings;
+                  const isFirst = index === 0;
+                  const isLast = index === stages.length - 1;
+
+                  return (
+                    <div key={stage.id} className="flex items-center gap-2">
+                      {/* Order number */}
+                      <div className="w-6 h-6 rounded-full bg-zinc-100 flex items-center justify-center text-xs font-medium text-zinc-500 flex-shrink-0">
+                        {index + 1}
+                      </div>
+
+                      {/* Move buttons */}
+                      <div className="flex flex-col gap-0.5">
+                        <button
+                          onClick={() => moveStage(index, 'up')}
+                          disabled={isFirst}
+                          className={`p-0.5 rounded ${isFirst ? 'text-zinc-200' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100'}`}
+                        >
+                          <ChevronRight className="h-3 w-3 -rotate-90" />
+                        </button>
+                        <button
+                          onClick={() => moveStage(index, 'down')}
+                          disabled={isLast}
+                          className={`p-0.5 rounded ${isLast ? 'text-zinc-200' : 'text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100'}`}
+                        >
+                          <ChevronRight className="h-3 w-3 rotate-90" />
+                        </button>
+                      </div>
+
+                      {/* Stage Card - Clickable */}
+                      <div
+                        onClick={() => setEditingStage(stage)}
+                        className="flex-1 flex items-center gap-3 p-3 rounded-xl border border-zinc-200 hover:border-teal-300 hover:bg-teal-50/50 cursor-pointer transition-all group"
+                      >
+                        <div className="w-10 h-10 rounded-xl bg-zinc-100 group-hover:bg-teal-100 flex items-center justify-center transition-colors">
+                          <Icon className="h-5 w-5 text-zinc-500 group-hover:text-teal-600" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-zinc-900">{stage.name}</p>
+                          <p className="text-xs text-zinc-500 truncate">{stage.description || 'Click to configure'}</p>
+                        </div>
+                        <Settings className="h-4 w-4 text-zinc-300 group-hover:text-teal-500 transition-colors" />
+                      </div>
+
+                      {/* Delete button */}
+                      {!stage.isRequired && (
+                        <button
+                          onClick={() => removeStage(stage.id)}
+                          className="p-2 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      )}
                     </div>
-                    <StageCard
-                      stage={stage}
-                      isSelected={false}
-                      onSelect={() => {}}
-                      onRemove={() => removeStage(stage.id)}
-                    />
-                  </div>
-                ))}
+                  );
+                })}
               </CardContent>
             </Card>
 
@@ -910,26 +966,26 @@ export default function CreateOpportunityPage() {
                 />
               </div>
 
+              {/* Question Type - Read Only */}
               <div className="space-y-2">
                 <Label>Question Type</Label>
-                <Select
-                  value={editingQuestion.type}
-                  onValueChange={(v) => setEditingQuestion({ ...editingQuestion, type: v as QuestionType })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {QUESTION_TYPES.map(type => (
-                      <SelectItem key={type.value} value={type.value}>
-                        <div className="flex items-center gap-2">
-                          <type.icon className="h-4 w-4 text-zinc-500" />
-                          {type.label}
+                <div className="flex items-center gap-3 p-3 bg-zinc-50 rounded-lg border border-zinc-200">
+                  {(() => {
+                    const typeInfo = QUESTION_TYPES.find(t => t.value === editingQuestion.type);
+                    const Icon = typeInfo?.icon || Type;
+                    return (
+                      <>
+                        <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
+                          <Icon className="h-4 w-4 text-teal-600" />
                         </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                        <div>
+                          <p className="font-medium text-zinc-900">{typeInfo?.label || editingQuestion.type}</p>
+                          <p className="text-xs text-zinc-500">{typeInfo?.description}</p>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
               </div>
 
               {needsOptions(editingQuestion.type) && (
@@ -1028,6 +1084,14 @@ export default function CreateOpportunityPage() {
               />
             </div>
             <div className="space-y-2">
+              <Label>Description (optional)</Label>
+              <Input
+                placeholder="Brief description of this stage"
+                value={newStageDescription}
+                onChange={(e) => setNewStageDescription(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
               <Label>Stage Type</Label>
               <Select value={newStageType} onValueChange={(v) => setNewStageType(v as StageType)}>
                 <SelectTrigger>
@@ -1054,6 +1118,81 @@ export default function CreateOpportunityPage() {
               className="bg-teal-600 hover:bg-teal-700"
             >
               Add Stage
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Stage Dialog */}
+      <Dialog open={!!editingStage} onOpenChange={() => setEditingStage(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Stage</DialogTitle>
+            <DialogDescription>Customize this application stage</DialogDescription>
+          </DialogHeader>
+          {editingStage && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Stage Name *</Label>
+                <Input
+                  placeholder="e.g., Skills Assessment"
+                  value={editingStage.name}
+                  onChange={(e) => setEditingStage({ ...editingStage, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Description</Label>
+                <Textarea
+                  placeholder="Describe what happens in this stage..."
+                  value={editingStage.description || ''}
+                  onChange={(e) => setEditingStage({ ...editingStage, description: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              {/* Stage Type - Read Only */}
+              <div className="space-y-2">
+                <Label>Stage Type</Label>
+                <div className="flex items-center gap-3 p-3 bg-zinc-50 rounded-lg border border-zinc-200">
+                  {(() => {
+                    const stageType = DEFAULT_STAGES.find(s => s.type === editingStage.type);
+                    const Icon = stageType?.icon || Settings;
+                    return (
+                      <>
+                        <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
+                          <Icon className="h-4 w-4 text-teal-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-zinc-900">{stageType?.label || editingStage.type}</p>
+                          <p className="text-xs text-zinc-500">{stageType?.description}</p>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 bg-zinc-50 rounded-lg">
+                <div>
+                  <Label>Required Stage</Label>
+                  <p className="text-sm text-zinc-500">Applicant must complete this</p>
+                </div>
+                <Switch
+                  checked={editingStage.isRequired}
+                  onCheckedChange={(checked) => setEditingStage({ ...editingStage, isRequired: checked })}
+                  disabled={editingStage.name === 'Job Details' || editingStage.name === 'Review & Submit'}
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingStage(null)}>Cancel</Button>
+            <Button
+              onClick={updateStage}
+              disabled={!editingStage?.name?.trim()}
+              className="bg-teal-600 hover:bg-teal-700"
+            >
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>

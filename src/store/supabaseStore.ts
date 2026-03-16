@@ -210,6 +210,7 @@ interface CreateOpportunityData {
   status?: string;
   tags?: string[];
   applicationQuestions?: ApplicationQuestion[];
+  applicationStages?: ApplicationStage[];
 }
 
 interface OpportunityState {
@@ -244,7 +245,7 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
     const { data: opportunities, error } = await adminDb<Record<string, unknown>[]>({
       action: 'select',
       table: 'opportunities',
-      select: '*, application_questions (*)',
+      select: '*, application_questions (*), application_stages (*)',
       filters: Object.keys(filters).length > 0 ? filters : undefined,
       order: { column: 'created_at', ascending: false },
     });
@@ -286,7 +287,19 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
             placeholderEs: q.placeholder_es as string | undefined,
             validation: q.validation as { min?: number; max?: number; pattern?: string; message?: string } | undefined,
           })),
-        applicationStages: (opp.application_stages as ApplicationStage[]) || [],
+        applicationStages: ((opp.application_stages as Record<string, unknown>[]) || [])
+          .sort((a, b) => (a.order as number) - (b.order as number))
+          .map((s) => ({
+            id: s.id as string,
+            opportunityId: s.opportunity_id as string,
+            name: s.name as string,
+            description: s.description as string | undefined,
+            type: s.type as ApplicationStage['type'],
+            order: s.order as number,
+            isRequired: s.is_required as boolean,
+            content: s.content as Record<string, unknown> | undefined,
+            questions: s.questions as ApplicationQuestion[] | undefined,
+          })),
         jobSections: (opp.job_sections as JobSection[]) || [],
       }));
 
@@ -414,6 +427,7 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
       const newOpp = Array.isArray(result.data) ? result.data[0] : result.data;
       const opportunityId = newOpp.id;
 
+      // Save application questions
       if (data.applicationQuestions && data.applicationQuestions.length > 0) {
         const questionsToInsert = data.applicationQuestions.map((q, index) => ({
           opportunity_id: opportunityId,
@@ -432,6 +446,27 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
           action: 'insert',
           table: 'application_questions',
           data: questionsToInsert,
+          select: false,
+        });
+      }
+
+      // Save application stages
+      if (data.applicationStages && data.applicationStages.length > 0) {
+        const stagesToInsert = data.applicationStages.map((s, index) => ({
+          opportunity_id: opportunityId,
+          name: s.name,
+          description: s.description || null,
+          type: s.type,
+          order: index,
+          is_required: s.isRequired || false,
+          content: s.content || {},
+          questions: s.questions || [],
+        }));
+
+        await adminDb({
+          action: 'insert',
+          table: 'application_stages',
+          data: stagesToInsert,
           select: false,
         });
       }
@@ -520,6 +555,37 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
             action: 'insert',
             table: 'application_questions',
             data: questionsToInsert,
+            select: false,
+          });
+        }
+      }
+
+      // Update application stages
+      if (data.applicationStages !== undefined) {
+        // Delete existing stages
+        await adminDb({
+          action: 'delete',
+          table: 'application_stages',
+          match: { opportunity_id: id },
+        });
+
+        // Insert new stages
+        if (data.applicationStages.length > 0) {
+          const stagesToInsert = data.applicationStages.map((s, index) => ({
+            opportunity_id: id,
+            name: s.name,
+            description: s.description || null,
+            type: s.type,
+            order: index,
+            is_required: s.isRequired || false,
+            content: s.content || {},
+            questions: s.questions || [],
+          }));
+
+          await adminDb({
+            action: 'insert',
+            table: 'application_stages',
+            data: stagesToInsert,
             select: false,
           });
         }
