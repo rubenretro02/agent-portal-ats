@@ -16,6 +16,7 @@ import {
 } from '@dnd-kit/core';
 import { UnifiedLayout } from '@/components/layout/UnifiedLayout';
 import { useAuthContext } from '@/components/providers/AuthProvider';
+import { AgentProfileSheet } from '@/components/AgentProfileSheet';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -352,6 +353,8 @@ export default function OpportunityDetailPage() {
   const [activeApp, setActiveApp] = useState<Application | null>(null);
   const [filterStatus, setFilterStatus] = useState<'all' | AppStatus>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [isProfileSheetOpen, setIsProfileSheetOpen] = useState(false);
 
   const isAdmin = profile?.role === 'admin' || profile?.role === 'recruiter';
 
@@ -441,6 +444,43 @@ export default function OpportunityDetailPage() {
       moveApplication(app.id, newStatus);
     }
   };
+
+  // Get all agent IDs from filtered applications for navigation
+  const filteredAgentIds = applications
+    .filter(app => {
+      if (filterStatus !== 'all' && app.status !== filterStatus) return false;
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase();
+        const name = `${app.agent?.profiles?.first_name || ''} ${app.agent?.profiles?.last_name || ''}`.toLowerCase();
+        const email = app.agent?.profiles?.email?.toLowerCase() || '';
+        const agentId = app.agent?.agent_id?.toLowerCase() || '';
+        if (!name.includes(q) && !email.includes(q) && !agentId.includes(q)) return false;
+      }
+      return true;
+    })
+    .map(app => app.agent?.id)
+    .filter(Boolean) as string[];
+
+  const handleViewProfile = (agentId: string | undefined) => {
+    if (!agentId) return;
+    setSelectedAgentId(agentId);
+    setIsProfileSheetOpen(true);
+  };
+
+  const handleNavigateProfile = (direction: 'prev' | 'next') => {
+    if (!selectedAgentId) return;
+    const currentIndex = filteredAgentIds.indexOf(selectedAgentId);
+    if (currentIndex === -1) return;
+
+    const newIndex = direction === 'prev' ? currentIndex - 1 : currentIndex + 1;
+    if (newIndex >= 0 && newIndex < filteredAgentIds.length) {
+      setSelectedAgentId(filteredAgentIds[newIndex]);
+    }
+  };
+
+  const currentAgentIndex = selectedAgentId ? filteredAgentIds.indexOf(selectedAgentId) : -1;
+  const hasPrevAgent = currentAgentIndex > 0;
+  const hasNextAgent = currentAgentIndex >= 0 && currentAgentIndex < filteredAgentIds.length - 1;
 
   if (loading) return (
     <UnifiedLayout title="Loading...">
@@ -634,7 +674,7 @@ export default function OpportunityDetailPage() {
                 onMove={moveApplication}
                 onBatchMove={batchMove}
                 movingId={movingId}
-                onViewProfile={(agentId) => router.push(`/agents/${agentId}`)}
+                onViewProfile={handleViewProfile}
               />
             ))}
           </div>
@@ -644,6 +684,16 @@ export default function OpportunityDetailPage() {
           </DragOverlay>
         </DndContext>
       </div>
+
+      {/* Agent Profile Sheet */}
+      <AgentProfileSheet
+        agentId={selectedAgentId}
+        open={isProfileSheetOpen}
+        onOpenChange={setIsProfileSheetOpen}
+        onNavigate={handleNavigateProfile}
+        hasPrev={hasPrevAgent}
+        hasNext={hasNextAgent}
+      />
     </UnifiedLayout>
   );
 }
