@@ -380,7 +380,7 @@ export default function OpportunitiesPage() {
             </Select>
           </div>
           {isAdmin && (
-            <Button onClick={() => { setFormData(defaultFormData); setShowCreateDialog(true); }} className="bg-cyan-600 hover:bg-cyan-700">
+            <Button onClick={() => router.push('/opportunities/create')} className="bg-cyan-600 hover:bg-cyan-700">
               <Plus className="h-4 w-4 mr-2" />Create Opportunity
             </Button>
           )}
@@ -403,7 +403,7 @@ export default function OpportunitiesPage() {
           <Card><CardContent className="py-12 text-center">
             <Briefcase className="h-12 w-12 text-zinc-300 mx-auto mb-4" />
             <p className="text-zinc-500">No opportunities found</p>
-            {isAdmin && <Button onClick={() => setShowCreateDialog(true)} className="mt-4 bg-cyan-600"><Plus className="h-4 w-4 mr-2" />Create</Button>}
+            {isAdmin && <Button onClick={() => router.push('/opportunities/create')} className="mt-4 bg-cyan-600"><Plus className="h-4 w-4 mr-2" />Create</Button>}
           </CardContent></Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -415,8 +415,8 @@ export default function OpportunitiesPage() {
               const questionCount = opp.applicationQuestions?.length || 0;
 
               return (
-                <Card 
-                  key={opp.id} 
+                <Card
+                  key={opp.id}
                   className={`border-zinc-200 hover:border-teal-300 hover:shadow-lg transition-all overflow-hidden cursor-pointer ${opp.status !== 'active' ? 'opacity-75' : ''}`}
                   onClick={() => isAdmin && router.push(`/opportunities/${opp.id}`)}
                 >
@@ -435,7 +435,7 @@ export default function OpportunitiesPage() {
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="h-8 w-8"><MoreVertical className="h-4 w-4" /></Button></DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => openEditDialog(opp)}><Edit className="h-4 w-4 mr-2" />Edit Details</DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => router.push(`/opportunities/${opp.id}/edit`)}><Edit className="h-4 w-4 mr-2" />Edit Details</DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => router.push(`/admin/opportunities/${opp.id}/stages`)}>
                                   <Settings className="h-4 w-4 mr-2" />Configure Stages
                                 </DropdownMenuItem>
@@ -482,7 +482,7 @@ export default function OpportunitiesPage() {
                     )}
 
                     {isAdmin ? (
-                      <Button variant="outline" className="w-full" onClick={() => openEditDialog(opp)}><Edit className="h-4 w-4 mr-2" />Edit</Button>
+                      <Button variant="outline" className="w-full" onClick={() => router.push(`/opportunities/${opp.id}/edit`)}><Edit className="h-4 w-4 mr-2" />Edit</Button>
                     ) : !isApplied ? (
                       <Button className="w-full bg-teal-500 hover:bg-teal-600" onClick={() => handleApplyClick(opp)}>Apply<ArrowRight className="h-4 w-4 ml-2" /></Button>
                     ) : (

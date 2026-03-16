@@ -11,7 +11,6 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,
@@ -46,6 +45,7 @@ import {
   Shield,
   Award,
   BookOpen,
+  User,
 } from 'lucide-react';
 import type { ApplicationAnswer, ApplicationQuestion, ApplicationStage, StageType, JobSection } from '@/types';
 
@@ -149,7 +149,6 @@ export default function ApplyPage() {
 
   const totalStages = stages.length;
   const currentStage = stages[currentStageIndex];
-  const progress = totalStages > 0 ? ((currentStageIndex + 1) / totalStages) * 100 : 0;
   const isLastStage = currentStageIndex === totalStages - 1;
   const isFirstStage = currentStageIndex === 0;
 
@@ -284,7 +283,7 @@ export default function ApplyPage() {
         {sections.sort((a, b) => a.order - b.order).map((section) => {
           const IconComponent = SECTION_ICONS[section.icon] || Zap;
           const contentLines = section.content.split('\n').filter(line => line.trim());
-          
+
           return (
             <Card key={section.id} className="border-zinc-200 hover:shadow-md transition-shadow">
               <CardContent className="p-6">
@@ -518,18 +517,19 @@ export default function ApplyPage() {
   const compensation = opportunity.compensation as Record<string, unknown> | null;
   const training = opportunity.training as Record<string, unknown> | null;
   const StageIcon = currentStage ? STAGE_ICONS[currentStage.type] : FileText;
+  const applicantName = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Applicant';
 
   return (
     <div className="min-h-screen bg-zinc-50 flex">
-      {/* Sidebar */}
-      <div className="hidden lg:flex lg:w-80 bg-white border-r border-zinc-200 flex-col">
+      {/* Sidebar - Fixed */}
+      <div className="hidden lg:flex lg:w-80 bg-white border-r border-zinc-200 flex-col fixed left-0 top-0 bottom-0 z-20">
         <div className="p-6 border-b border-zinc-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-xl flex items-center justify-center font-bold text-white">AP</div>
             <span className="text-xl font-bold text-zinc-900">AgentHub</span>
           </div>
         </div>
-        <div className="p-6 flex-1">
+        <div className="p-6 flex-1 overflow-auto">
           <div className="mb-6">
             <p className="text-xs font-medium text-teal-600 uppercase tracking-wider mb-2">Applying for</p>
             <h2 className="text-lg font-bold text-zinc-900 mb-1">{opportunity.name}</h2>
@@ -568,37 +568,53 @@ export default function ApplyPage() {
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        <div className="bg-white border-b border-zinc-200 px-6 py-4">
-          <div className="max-w-3xl mx-auto">
-            <div className="flex items-center justify-between mb-3">
-              <div className="lg:hidden">
-                <p className="text-xs text-teal-600 font-medium">Applying for</p>
-                <p className="font-semibold text-zinc-900 truncate">{opportunity.name}</p>
-              </div>
-              <div className="hidden lg:flex items-center gap-2 text-sm text-zinc-500">
-                <StageIcon className="h-4 w-4" />
-                {currentStage?.name || `Stage ${currentStageIndex + 1}`}
-              </div>
-              <span className="font-medium text-teal-600 text-sm">{Math.round(progress)}% Complete</span>
-              <Button variant="ghost" size="icon" onClick={handleExit} className="text-zinc-400 hover:text-zinc-600"><X className="h-5 w-5" /></Button>
+      {/* Main Content Area */}
+      <div className="flex-1 lg:ml-80 flex flex-col min-h-screen">
+        {/* Top Header - Fixed */}
+        <div className="bg-white border-b border-zinc-200 px-6 py-4 sticky top-0 z-10">
+          <div className="max-w-3xl mx-auto flex items-center justify-between">
+            {/* Mobile: Show job name */}
+            <div className="lg:hidden">
+              <p className="text-xs text-teal-600 font-medium">Applying for</p>
+              <p className="font-semibold text-zinc-900 truncate">{opportunity.name}</p>
             </div>
-            <Progress value={progress} className="h-2" />
+            {/* Desktop: Just spacing */}
+            <div className="hidden lg:block" />
+
+            {/* Exit Button - Top Right */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleExit}
+              className="text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-full"
+            >
+              <X className="h-5 w-5" />
+            </Button>
           </div>
         </div>
 
+        {/* Scrollable Content Area */}
         <div className="flex-1 overflow-auto">
           <div className="max-w-3xl mx-auto px-6 py-8">
             {currentStage && renderStageContent(currentStage)}
           </div>
         </div>
 
-        <div className="bg-white border-t border-zinc-200 px-6 py-4">
+        {/* Bottom Footer - Fixed */}
+        <div className="bg-white border-t border-zinc-200 px-6 py-4 sticky bottom-0 z-10">
           <div className="max-w-3xl mx-auto flex items-center justify-between">
             <Button variant="outline" onClick={handleBack} disabled={isFirstStage} className="gap-2">
               <ArrowLeft className="h-4 w-4" />Previous
             </Button>
+
+            {/* Applicant Name in Center */}
+            <div className="flex items-center gap-2 text-sm text-zinc-600">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center">
+                <User className="h-4 w-4 text-white" />
+              </div>
+              <span className="font-medium text-zinc-900">{applicantName}</span>
+            </div>
+
             <Button onClick={handleNext} disabled={!canProceed() || submitting} className="gap-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 min-w-[140px]">
               {submitting ? (
                 <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Submitting...</>
