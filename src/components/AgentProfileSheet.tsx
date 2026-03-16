@@ -37,8 +37,13 @@ import {
   ChevronLeft,
   ChevronRight,
   ArrowRight,
+  ArrowLeft,
   MessageSquare,
-  ClipboardList,
+  Layers,
+  Download,
+  FileSpreadsheet,
+  FileDown,
+  FileJson,
 } from 'lucide-react';
 import { PIPELINE_STAGES, DOCUMENT_TYPES } from '@/lib/constants';
 import type { PipelineStatus, DocumentStatus } from '@/types';
@@ -295,6 +300,151 @@ export function AgentProfileSheet({
     return String(answer);
   };
 
+  const exportCandidate = (format: 'pdf' | 'excel' | 'csv' | 'json') => {
+    if (!application || !application.agent) return;
+
+    const agent = application.agent;
+    const candidateData = {
+      name: `${agent.profiles?.first_name || ''} ${agent.profiles?.last_name || ''}`.trim(),
+      agentId: agent.agent_id,
+      email: agent.profiles?.email || '',
+      phone: agent.profiles?.phone || '',
+      status: application.status,
+      appliedOn: application.submitted_at,
+      location: agent.address ? `${agent.address.city || ''}, ${agent.address.state || ''}` : '',
+      timezone: agent.timezone || '',
+      language: agent.preferred_language === 'es' ? 'Spanish' : 'English',
+      scores: agent.scores || {},
+      skills: agent.skills || [],
+      experience: agent.experience || [],
+      equipment: agent.equipment || {},
+      availability: agent.availability || {},
+      languages: agent.languages || [],
+      applicationResponses: application.answers?.map(a => ({
+        question: a.question,
+        answer: a.answer,
+      })) || [],
+    };
+
+    if (format === 'json') {
+      const blob = new Blob([JSON.stringify(candidateData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `candidate-${candidateData.agentId?.replace('AGENT ', '') || 'unknown'}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (format === 'csv') {
+      const headers = ['Name', 'Agent ID', 'Email', 'Phone', 'Status', 'Applied On', 'Location', 'Timezone', 'Language'];
+      const values = [
+        candidateData.name,
+        candidateData.agentId,
+        candidateData.email,
+        candidateData.phone,
+        candidateData.status,
+        candidateData.appliedOn,
+        candidateData.location,
+        candidateData.timezone,
+        candidateData.language,
+      ];
+      const csv = [headers.join(','), values.map(v => `"${v || ''}"`).join(',')].join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `candidate-${candidateData.agentId?.replace('AGENT ', '') || 'unknown'}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (format === 'excel') {
+      // For Excel, we'll create a CSV that Excel can open
+      const headers = ['Name', 'Agent ID', 'Email', 'Phone', 'Status', 'Applied On', 'Location', 'Timezone', 'Language', 'Skills', 'Languages'];
+      const values = [
+        candidateData.name,
+        candidateData.agentId,
+        candidateData.email,
+        candidateData.phone,
+        candidateData.status,
+        candidateData.appliedOn,
+        candidateData.location,
+        candidateData.timezone,
+        candidateData.language,
+        (candidateData.skills || []).join('; '),
+        (candidateData.languages || []).join('; '),
+      ];
+      const csv = '\ufeff' + [headers.join('\t'), values.map(v => `"${v || ''}"`).join('\t')].join('\n');
+      const blob = new Blob([csv], { type: 'application/vnd.ms-excel' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `candidate-${candidateData.agentId?.replace('AGENT ', '') || 'unknown'}.xls`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } else if (format === 'pdf') {
+      // Open print dialog for PDF
+      const printContent = `
+        <html>
+          <head>
+            <title>Candidate Profile - ${candidateData.name}</title>
+            <style>
+              body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+              h1 { color: #0891b2; border-bottom: 2px solid #0891b2; padding-bottom: 10px; }
+              h2 { color: #374151; margin-top: 30px; font-size: 16px; }
+              .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin: 20px 0; }
+              .info-item { padding: 10px; background: #f9fafb; border-radius: 8px; }
+              .info-label { font-size: 12px; color: #6b7280; }
+              .info-value { font-size: 14px; color: #111827; font-weight: 500; }
+              .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+              .badge-status { background: #e0f2fe; color: #0891b2; }
+              .section { margin: 25px 0; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px; }
+              .skills { display: flex; flex-wrap: wrap; gap: 8px; }
+              .skill { background: #f3f4f6; padding: 4px 10px; border-radius: 4px; font-size: 12px; }
+              .response { margin: 15px 0; padding: 15px; background: #f9fafb; border-radius: 8px; }
+              .question { font-weight: 500; color: #374151; margin-bottom: 5px; }
+              .answer { color: #111827; }
+            </style>
+          </head>
+          <body>
+            <h1>${candidateData.name}</h1>
+            <span class="badge badge-status">${candidateData.status?.replace('_', ' ').toUpperCase()}</span>
+            <span style="margin-left: 10px; color: #6b7280;">Agent ID: ${candidateData.agentId?.replace('AGENT ', '')}</span>
+
+            <div class="info-grid">
+              <div class="info-item"><div class="info-label">Email</div><div class="info-value">${candidateData.email}</div></div>
+              <div class="info-item"><div class="info-label">Phone</div><div class="info-value">${candidateData.phone || 'N/A'}</div></div>
+              <div class="info-item"><div class="info-label">Location</div><div class="info-value">${candidateData.location || 'N/A'}</div></div>
+              <div class="info-item"><div class="info-label">Timezone</div><div class="info-value">${candidateData.timezone || 'N/A'}</div></div>
+              <div class="info-item"><div class="info-label">Language</div><div class="info-value">${candidateData.language}</div></div>
+              <div class="info-item"><div class="info-label">Applied On</div><div class="info-value">${new Date(candidateData.appliedOn).toLocaleDateString()}</div></div>
+            </div>
+
+            ${candidateData.skills && candidateData.skills.length > 0 ? `
+              <h2>Skills</h2>
+              <div class="skills">
+                ${candidateData.skills.map((s: string) => `<span class="skill">${s}</span>`).join('')}
+              </div>
+            ` : ''}
+
+            ${candidateData.applicationResponses && candidateData.applicationResponses.length > 0 ? `
+              <h2>Application Responses</h2>
+              ${candidateData.applicationResponses.map((r: any) => `
+                <div class="response">
+                  <div class="question">${r.question}</div>
+                  <div class="answer">${r.answer || 'No answer'}</div>
+                </div>
+              `).join('')}
+            ` : ''}
+          </body>
+        </html>
+      `;
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(printContent);
+        printWindow.document.close();
+        printWindow.print();
+      }
+    }
+  };
+
   const agent = application?.agent;
   const stageInfo = application ? getStageInfo(application.status) : null;
   const fullName = agent ? `${agent.profiles?.first_name || ''} ${agent.profiles?.last_name || ''}`.trim() || 'Unknown' : '';
@@ -422,34 +572,105 @@ export function AgentProfileSheet({
               <Card className="border-zinc-200">
                 <CardHeader className="pb-2 pt-3 px-4">
                   <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                    <ClipboardList className="h-4 w-4 text-cyan-600" />
-                    Move in Pipeline
+                    <Layers className="h-4 w-4 text-cyan-600" />
+                    Application Status
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="px-4 pb-3">
                   <div className="flex flex-wrap gap-2">
-                    {APP_STAGES.filter(s => s.status !== 'withdrawn').map((stage) => (
-                      <Button
-                        key={stage.status}
-                        variant="outline"
-                        size="sm"
-                        disabled={updating || application.status === stage.status}
-                        onClick={() => handleStatusChange(stage.status)}
-                        className={`h-8 text-xs gap-1.5 transition-all ${
-                          application.status === stage.status
-                            ? `${stage.bgColor} ${stage.borderColor} font-medium`
-                            : 'hover:bg-zinc-50'
-                        }`}
-                        style={application.status === stage.status ? { color: stage.color } : {}}
-                      >
-                        {application.status === stage.status ? (
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                        ) : (
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        )}
-                        {stage.label}
-                      </Button>
-                    ))}
+                    {APP_STAGES.filter(s => s.status !== 'withdrawn').map((stage, idx) => {
+                      const currentIdx = APP_STAGES.findIndex(s => s.status === application.status);
+                      const targetIdx = idx;
+                      const isCurrentStage = application.status === stage.status;
+                      const isBackward = targetIdx < currentIdx;
+                      const isForward = targetIdx > currentIdx;
+
+                      // Determine which icon to show
+                      const getIcon = () => {
+                        if (isCurrentStage) {
+                          if (stage.status === 'approved') return <CheckCircle2 className="h-3.5 w-3.5" />;
+                          if (stage.status === 'rejected') return <XCircle className="h-3.5 w-3.5" />;
+                          return <CheckCircle2 className="h-3.5 w-3.5" />;
+                        }
+                        if (stage.status === 'approved') return <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />;
+                        if (stage.status === 'rejected') return <XCircle className="h-3.5 w-3.5 text-red-500" />;
+                        if (isBackward) return <ArrowLeft className="h-3.5 w-3.5" />;
+                        return <ArrowRight className="h-3.5 w-3.5" />;
+                      };
+
+                      return (
+                        <Button
+                          key={stage.status}
+                          variant="outline"
+                          size="sm"
+                          disabled={updating || isCurrentStage}
+                          onClick={() => handleStatusChange(stage.status)}
+                          className={`h-8 text-xs gap-1.5 transition-all ${
+                            isCurrentStage
+                              ? `${stage.bgColor} ${stage.borderColor} font-medium`
+                              : stage.status === 'rejected'
+                                ? 'hover:bg-red-50 hover:border-red-200 hover:text-red-600'
+                                : stage.status === 'approved'
+                                  ? 'hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600'
+                                  : 'hover:bg-zinc-50'
+                          }`}
+                          style={isCurrentStage ? { color: stage.color } : {}}
+                        >
+                          {getIcon()}
+                          {stage.label}
+                        </Button>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Export Options */}
+              <Card className="border-zinc-200">
+                <CardHeader className="pb-2 pt-3 px-4">
+                  <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
+                    <Download className="h-4 w-4 text-cyan-600" />
+                    Export Candidate
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="px-4 pb-3">
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => exportCandidate('pdf')}
+                      className="h-8 text-xs gap-1.5 hover:bg-red-50 hover:border-red-200 hover:text-red-600"
+                    >
+                      <FileDown className="h-3.5 w-3.5" />
+                      PDF
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => exportCandidate('excel')}
+                      className="h-8 text-xs gap-1.5 hover:bg-emerald-50 hover:border-emerald-200 hover:text-emerald-600"
+                    >
+                      <FileSpreadsheet className="h-3.5 w-3.5" />
+                      Excel
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => exportCandidate('csv')}
+                      className="h-8 text-xs gap-1.5 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-600"
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      CSV
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => exportCandidate('json')}
+                      className="h-8 text-xs gap-1.5 hover:bg-amber-50 hover:border-amber-200 hover:text-amber-600"
+                    >
+                      <FileJson className="h-3.5 w-3.5" />
+                      JSON
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
