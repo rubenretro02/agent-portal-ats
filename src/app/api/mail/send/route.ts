@@ -1,121 +1,110 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import nodemailer from 'nodemailer';
 
-// SMTP configuration - Update when you set up your mail server
-const SMTP_CONFIG = {
-  host: process.env.SMTP_HOST || 'mail.yourdomain.com',
-  port: parseInt(process.env.SMTP_PORT || '587'),
-  secure: process.env.SMTP_SECURE === 'true',
-  // For relay services like Brevo/SendGrid:
-  // host: 'smtp-relay.brevo.com',
-  // port: 587,
-};
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+
+// Decrypt password
+function decrypt(encryptedText: string, secretKey: string): string {
+  const decoded = Buffer.from(encryptedText, 'base64').toString();
+  let result = '';
+  for (let i = 0; i < decoded.length; i++) {
+    result += String.fromCharCode(decoded.charCodeAt(i) ^ secretKey.charCodeAt(i % secretKey.length));
+  }
+  return result;
+}
 
 interface SendEmailRequest {
-  to: string[];
-  cc?: string[];
-  bcc?: string[];
+  to: string;
   subject: string;
   body: string;
-  html?: string;
-  attachments?: {
-    filename: string;
-    content: string; // base64
-    contentType: string;
-  }[];
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const data: SendEmailRequest = await request.json();
-    const { to, cc, bcc, subject, body, html, attachments } = data;
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    const token = authHeader.split(' ')[1];
 
-    // Validate required fields
-    if (!to || !to.length || !subject) {
-      return NextResponse.json(
-        { error: 'Missing required fields: to, subject' },
-        { status: 400 }
-      );
+    const data: SendEmailRequest = await request.json();
+    const { to, subject, body } = data;
+
+    if (!to || !subject) {
+      return NextResponse.json({ error: 'Missing required fields: to, subject' }, { status: 400 });
     }
 
-    // In production, uncomment and use this code:
-    /*
-    // Get user credentials from session/database
-    const userEmail = 'agent@yourdomain.com'; // From session
-    const userPassword = 'user-mail-password'; // From secure storage
+    // Verify user
+    const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } }
+    });
 
+    const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Get mail account credentials
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+
+    const { data: mailAccount, error: mailError } = await supabaseAdmin
+      .from('agent_mail_accounts')
+      .select('*')
+      .eq('agent_id', user.id)
+      .single();
+
+    if (mailError || !mailAccount) {
+      return NextResponse.json({ error: 'Mail account not found' }, { status: 404 });
+    }
+
+    if (!mailAccount.is_active) {
+      return NextResponse.json({ error: 'Mail account is not active' }, { status: 403 });
+    }
+
+    // Decrypt password
+    const encryptionKey = process.env.MAIL_ENCRYPTION_KEY || 'default-key-change-in-production';
+    const password = decrypt(mailAccount.smtp_password_encrypted, encryptionKey);
+
+    // Create transporter
     const transporter = nodemailer.createTransport({
-      host: SMTP_CONFIG.host,
-      port: SMTP_CONFIG.port,
-      secure: SMTP_CONFIG.secure,
+      host: mailAccount.smtp_host || 'mail.agent-mail.online',
+      port: mailAccount.smtp_port || 587,
+      secure: false, // Use STARTTLS
       auth: {
-        user: userEmail,
-        pass: userPassword,
+        user: mailAccount.email_address,
+        pass: password,
       },
     });
 
-    const mailOptions = {
-      from: userEmail,
-      to: to.join(', '),
-      cc: cc?.join(', '),
-      bcc: bcc?.join(', '),
-      subject,
+    // Send email
+    const info = await transporter.sendMail({
+      from: mailAccount.email_address,
+      to: to,
+      subject: subject,
       text: body,
-      html: html || body,
-      attachments: attachments?.map(att => ({
-        filename: att.filename,
-        content: Buffer.from(att.content, 'base64'),
-        contentType: att.contentType,
-      })),
-    };
+      html: body.replace(/\n/g, '<br>'),
+    });
 
-    const info = await transporter.sendMail(mailOptions);
+    console.log('[Mail] Email sent:', info.messageId);
 
     return NextResponse.json({
       success: true,
       messageId: info.messageId,
     });
-    */
 
-    // Demo response until mail server is configured
-    return NextResponse.json({
-      success: false,
-      message: 'Mail server not configured. Email was not sent.',
-      demo: true,
-      wouldSend: {
-        to,
-        cc,
-        bcc,
-        subject,
-        bodyPreview: body.substring(0, 100) + '...',
-      },
-      instructions: [
-        '1. Set up your mail server or SMTP relay',
-        '2. Add SMTP_HOST, SMTP_PORT, SMTP_SECURE to .env',
-        '3. Implement user mail credentials storage',
-        '4. Uncomment the nodemailer code above',
-      ],
-    });
   } catch (error) {
-    console.error('Send mail error:', error);
-    return NextResponse.json(
-      { error: 'Failed to send email' },
-      { status: 500 }
-    );
+    console.error('[Mail] Send error:', error);
+    return NextResponse.json({
+      error: 'Failed to send email',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 });
   }
 }
-
-// Example .env configuration for production:
-//
-// # Your own mail server:
-// SMTP_HOST=mail.yourdomain.com
-// SMTP_PORT=587
-// SMTP_SECURE=false
-// IMAP_HOST=mail.yourdomain.com
-// IMAP_PORT=993
-//
-// # Or using Brevo (free relay):
-// SMTP_HOST=smtp-relay.brevo.com
-// SMTP_PORT=587
-// SMTP_USER=your-brevo-email
-// SMTP_PASS=your-brevo-api-key

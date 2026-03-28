@@ -1,32 +1,40 @@
-# Agent Portal ATS - Todos
+# Agent Portal ATS - Agent Mail Feature
 
-## Agent Mail Feature
+## Completed
+- [x] Clone repository from GitHub
+- [x] Create feature/agent-mail-switch branch
+- [x] Install ssh2 dependency for SSH connection
+- [x] Create /api/mail/activate endpoint (creates mailbox via SSH)
+- [x] Create /api/mail/status endpoint (get/toggle mail status)
+- [x] Create AgentMailSection component with Switch UI
+- [x] Integrate component in agent profile page (/agents/[agentId])
+- [x] Update .env.example with mail server SSH configuration
+- [x] Test linting - passed
+- [x] Commit and push to feature/agent-mail-switch branch
 
-### Completed
-- [x] Created mail store (Zustand) with state management
-- [x] Created MailLayout component
-- [x] Created MailSidebar component (Gmail-style folders)
-- [x] Created MailList component (email list with search)
-- [x] Created MailView component (email reader)
-- [x] Created ComposeModal component (compose new email)
-- [x] Added "Agent Mail" to sidebar navigation
-- [x] Added translations (English/Spanish)
-- [x] Created API routes for IMAP/SMTP (ready for integration)
-- [x] Updated .env.example with mail configuration
+## Manual Steps Required
+- [ ] Run SQL schema in Supabase (see supabase/mail_schema.sql)
+- [ ] Configure environment variables in production:
+  - MAIL_DOMAIN
+  - MAIL_SERVER_HOST
+  - MAIL_SERVER_SSH_PORT
+  - MAIL_SERVER_SSH_USER
+  - MAIL_SERVER_SSH_PASSWORD
+  - MAIL_SERVER_SETUP_PATH
+  - MAIL_ENCRYPTION_KEY
 
-### Pending (When setting up mail server)
-- [ ] Set up mail server (Stalwart/Mailcow on Hetzner)
-- [ ] Configure DNS records (SPF, DKIM, DMARC)
-- [ ] Create mailboxes for agents
-- [ ] Implement user mail credentials storage (encrypted)
-- [ ] Connect API routes to real IMAP/SMTP
-- [ ] Add attachments upload functionality
-- [ ] Add email threading/conversations
-- [ ] Add contact autocomplete
-- [ ] Add email signatures
+## Files Created/Modified
+### New Files:
+- `src/app/api/mail/activate/route.ts` - API to create mailbox via SSH
+- `src/app/api/mail/status/route.ts` - API to get/toggle mail status
+- `src/components/mail/AgentMailSection.tsx` - UI component with switch
 
-## Future Enhancements
-- [ ] Calendar integration (if using SOGo backend)
-- [ ] Email templates
-- [ ] Scheduled sending
-- [ ] Email analytics
+### Modified Files:
+- `src/app/agents/[agentId]/page.tsx` - Added AgentMailSection
+- `.env.example` - Added mail server SSH variables
+- `package.json` / `bun.lock` - Added ssh2 dependency
+
+## Branch Info
+- Branch: `feature/agent-mail-switch`
+- Pushed to: https://github.com/rubenretro02/agent-portal-ats
+- PR URL: https://github.com/rubenretro02/agent-portal-ats/pull/new/feature/agent-mail-switch
