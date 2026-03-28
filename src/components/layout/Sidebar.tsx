@@ -1,5 +1,4 @@
 'use client';
-
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -31,7 +30,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useState } from 'react';
-
 const navItems = [
   { key: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
   { key: 'opportunities', href: '/opportunities', icon: Briefcase },
@@ -40,12 +38,10 @@ const navItems = [
   { key: 'messages', href: '/messages', icon: MessageSquare },
   { key: 'mail', href: '/mail', icon: Mail },
 ];
-
 const bottomNavItems = [
   { key: 'profile', href: '/profile', icon: User },
   { key: 'settings', href: '/settings', icon: Settings },
 ];
-
 export function Sidebar() {
   const pathname = usePathname();
   const { t, language, setLanguage } = useTranslation();
@@ -53,12 +49,10 @@ export function Sidebar() {
   const { agent } = useAuthStore();
   const { unreadCount } = useNotificationStore();
   const [collapsed, setCollapsed] = useState(false);
-
   const getInitials = () => {
     if (!profile) return 'A';
     return `${profile.first_name[0]}${profile.last_name[0]}`;
   };
-
   return (
     <aside
       className={cn(
@@ -85,14 +79,12 @@ export function Sidebar() {
           {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
         </Button>
       </div>
-
       {/* Main Navigation */}
       <nav className="flex-1 py-4 px-2 space-y-1">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = pathname === item.href;
+          const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
           const showBadge = item.key === 'messages' && unreadCount > 0;
-
           return (
             <Link
               key={item.key}
@@ -124,13 +116,11 @@ export function Sidebar() {
           );
         })}
       </nav>
-
       {/* Bottom Navigation */}
       <div className="py-4 px-2 space-y-1 border-t border-zinc-800">
         {bottomNavItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
-
           return (
             <Link
               key={item.key}
@@ -147,7 +137,6 @@ export function Sidebar() {
             </Link>
           );
         })}
-
         {/* Language Toggle */}
         <button
           onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
@@ -160,7 +149,6 @@ export function Sidebar() {
             </span>
           )}
         </button>
-
         {/* Logout */}
         <button
           onClick={signOut}
@@ -170,7 +158,6 @@ export function Sidebar() {
           {!collapsed && <span className="text-sm font-medium">{t('nav', 'logout')}</span>}
         </button>
       </div>
-
       {/* User Profile */}
       <div className="p-4 border-t border-zinc-800">
         <DropdownMenu>
