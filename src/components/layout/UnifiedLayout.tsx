@@ -32,6 +32,7 @@ import {
   Shield,
   UserPlus,
   Bell,
+  Mail,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -84,6 +85,7 @@ export function UnifiedLayout({ children, title }: UnifiedLayoutProps) {
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/opportunities', label: 'Opportunities', icon: Briefcase },
     { href: '/applications', label: 'My Applications', icon: ClipboardList },
+    { href: '/mail', label: 'Agent Mail', icon: Mail },
     { href: '/profile', label: 'Profile', icon: User },
   ];
 

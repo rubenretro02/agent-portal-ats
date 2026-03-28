@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Globe,
+  Mail,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +38,7 @@ const navItems = [
   { key: 'onboarding', href: '/onboarding', icon: ClipboardList },
   { key: 'documents', href: '/documents', icon: FileText },
   { key: 'messages', href: '/messages', icon: MessageSquare },
+  { key: 'mail', href: '/mail', icon: Mail },
 ];
 
 const bottomNavItems = [

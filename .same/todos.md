@@ -1,47 +1,32 @@
-# Agent Portal ATS - Estado Actual
+# Agent Portal ATS - Todos
 
-## Cambios Realizados
+## Agent Mail Feature
 
-### ✅ Eliminado contenido hardcoded
-- Apply page ya NO tiene texto mock como "Handle inbound/outbound calls"
-- Solo muestra datos REALES de la oportunidad desde la base de datos
+### Completed
+- [x] Created mail store (Zustand) with state management
+- [x] Created MailLayout component
+- [x] Created MailSidebar component (Gmail-style folders)
+- [x] Created MailList component (email list with search)
+- [x] Created MailView component (email reader)
+- [x] Created ComposeModal component (compose new email)
+- [x] Added "Agent Mail" to sidebar navigation
+- [x] Added translations (English/Spanish)
+- [x] Created API routes for IMAP/SMTP (ready for integration)
+- [x] Updated .env.example with mail configuration
 
-### ✅ Indicador de preguntas para Admin
-- Admin/recruiter ahora ve en cada tarjeta de oportunidad cuántas preguntas tiene configuradas
-- Muestra "X questions" o "No questions" según corresponda
+### Pending (When setting up mail server)
+- [ ] Set up mail server (Stalwart/Mailcow on Hetzner)
+- [ ] Configure DNS records (SPF, DKIM, DMARC)
+- [ ] Create mailboxes for agents
+- [ ] Implement user mail credentials storage (encrypted)
+- [ ] Connect API routes to real IMAP/SMTP
+- [ ] Add attachments upload functionality
+- [ ] Add email threading/conversations
+- [ ] Add contact autocomplete
+- [ ] Add email signatures
 
-### ✅ Columna application_stages agregada
-- La tabla `opportunities` ahora tiene la columna `application_stages` (JSONB)
-- Permite guardar stages personalizados configurados por admin
-
-### ✅ Store actualizado
-- `applicationStages` se carga desde `opp.application_stages` en la DB
-- Las preguntas se cargan desde `applicationQuestions`
-
-## Cómo funciona ahora:
-
-### Para Admin/Recruiter:
-1. Ver `/opportunities` - muestra todas las oportunidades con contador de preguntas
-2. Click en "..." -> "Edit Details" - abre el formulario con ApplicationBuilder para agregar preguntas
-3. Click en "..." -> "Configure Stages" - abre StageBuilder para configurar stages avanzados
-
-### Para Agent:
-1. Ver `/opportunities` - muestra solo oportunidades activas
-2. Click "Apply" - inicia el flujo de aplicación multi-step
-3. Cada stage muestra datos REALES de la oportunidad (descripción, compensación, etc.)
-4. Las preguntas configuradas aparecen en el stage de Questions
-
-## Estructura de datos:
-```
-opportunity.applicationQuestions = [
-  { id, question, type, required, options, ... }
-]
-
-opportunity.applicationStages = [
-  { id, name, type: 'info'|'questions'|..., order, questions: [...] }
-]
-```
-
-## Pendiente:
-- Integrar stages configurados con el apply flow
-- Mostrar preview de stages en admin
+## Future Enhancements
+- [ ] Calendar integration (if using SOGo backend)
+- [ ] Email templates
+- [ ] Scheduled sending
+- [ ] Email analytics
