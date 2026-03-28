@@ -3,7 +3,8 @@
 import { useState, useEffect } from 'react';
 import { UnifiedLayout } from '@/components/layout/UnifiedLayout';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, MailX } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, MailX, Mail, ExternalLink, Inbox, Send, Settings } from 'lucide-react';
 
 interface MailAccount {
   has_mail: boolean;
@@ -49,6 +50,10 @@ export default function MailPage() {
 
     checkMailAccount();
   }, []);
+
+  const openWebmail = () => {
+    window.open('http://172.86.89.39:8080', '_blank');
+  };
 
   if (loading) {
     return (
@@ -96,16 +101,64 @@ export default function MailPage() {
     );
   }
 
-  // Has mail - show Roundcube iframe
+  // Has mail - show mail info and button to open webmail
   return (
     <UnifiedLayout title="Agent Mail">
-      <div className="h-[calc(100vh-140px)] bg-white rounded-xl border border-zinc-200 overflow-hidden">
-        <iframe
-          src="http://172.86.89.39:8080"
-          className="w-full h-full border-0"
-          title="Agent Mail - Roundcube"
-          allow="clipboard-read; clipboard-write"
-        />
+      <div className="max-w-2xl mx-auto py-8">
+        <Card className="border-zinc-200 overflow-hidden">
+          <div className="bg-gradient-to-r from-teal-500 to-cyan-500 p-6 text-white">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-2xl bg-white/20 flex items-center justify-center">
+                <Mail className="h-8 w-8" />
+              </div>
+              <div>
+                <h2 className="text-2xl font-bold">Agent Mail</h2>
+                <p className="text-teal-100">{mailAccount.email}</p>
+              </div>
+            </div>
+          </div>
+          
+          <CardContent className="p-6">
+            <div className="grid grid-cols-3 gap-4 mb-6">
+              <div className="text-center p-4 rounded-xl bg-zinc-50 border border-zinc-200">
+                <Inbox className="h-6 w-6 mx-auto mb-2 text-teal-600" />
+                <p className="text-sm text-zinc-600">Bandeja de entrada</p>
+              </div>
+              <div className="text-center p-4 rounded-xl bg-zinc-50 border border-zinc-200">
+                <Send className="h-6 w-6 mx-auto mb-2 text-cyan-600" />
+                <p className="text-sm text-zinc-600">Enviar correo</p>
+              </div>
+              <div className="text-center p-4 rounded-xl bg-zinc-50 border border-zinc-200">
+                <Settings className="h-6 w-6 mx-auto mb-2 text-zinc-600" />
+                <p className="text-sm text-zinc-600">Configuración</p>
+              </div>
+            </div>
+
+            <Button 
+              onClick={openWebmail}
+              className="w-full bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white py-6 text-lg"
+            >
+              <ExternalLink className="h-5 w-5 mr-2" />
+              Abrir correo en nueva pestaña
+            </Button>
+
+            <p className="text-center text-sm text-zinc-500 mt-4">
+              Tu correo se abrirá en Roundcube Webmail
+            </p>
+
+            <div className="mt-6 p-4 rounded-xl bg-amber-50 border border-amber-200">
+              <p className="text-sm text-amber-800">
+                <strong>Credenciales de acceso:</strong>
+              </p>
+              <p className="text-sm text-amber-700 mt-1">
+                Usuario: <code className="bg-amber-100 px-1 rounded">{mailAccount.email}</code>
+              </p>
+              <p className="text-sm text-amber-700">
+                Contraseña: La que te proporcionó tu administrador
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </UnifiedLayout>
   );
