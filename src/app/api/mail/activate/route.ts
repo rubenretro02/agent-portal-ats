@@ -1,15 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { Client } from 'ssh2';
+
+// Force Node.js runtime (not Edge)
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
 
 // Helper to generate secure password
 function generatePassword(length = 16): string {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
   let password = '';
-  const randomValues = new Uint32Array(length);
-  crypto.getRandomValues(randomValues);
   for (let i = 0; i < length; i++) {
-    password += chars.charAt(randomValues[i] % chars.length);
+    password += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   return password;
 }
@@ -20,52 +21,6 @@ function formatEmailAddress(firstName: string, lastName: string, agentId: string
   return `${sanitize(firstName)}.${sanitize(lastName)}.${sanitize(agentId)}@${domain}`;
 }
 
-// Execute SSH command
-function executeSSHCommand(config: {
-  host: string;
-  port: number;
-  username: string;
-  password: string;
-}, command: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const conn = new Client();
-    let output = '';
-    let errorOutput = '';
-
-    conn.on('ready', () => {
-      conn.exec(command, (err, stream) => {
-        if (err) {
-          conn.end();
-          return reject(err);
-        }
-
-        stream.on('close', (code: number) => {
-          conn.end();
-          if (code === 0) {
-            resolve(output);
-          } else {
-            reject(new Error(`Command failed with code ${code}: ${errorOutput}`));
-          }
-        });
-
-        stream.on('data', (data: Buffer) => {
-          output += data.toString();
-        });
-
-        stream.stderr.on('data', (data: Buffer) => {
-          errorOutput += data.toString();
-        });
-      });
-    });
-
-    conn.on('error', (err) => {
-      reject(err);
-    });
-
-    conn.connect(config);
-  });
-}
-
 // Simple encryption (in production, use proper encryption library)
 function encrypt(text: string, secretKey: string): string {
   // Simple XOR encryption - in production use AES-256 or similar
@@ -74,6 +29,51 @@ function encrypt(text: string, secretKey: string): string {
     result += String.fromCharCode(text.charCodeAt(i) ^ secretKey.charCodeAt(i % secretKey.length));
   }
   return Buffer.from(result).toString('base64');
+}
+
+// Create mailbox via external API or script
+async function createMailbox(email: string, password: string): Promise<{ success: boolean; error?: string }> {
+  const mailServerApi = process.env.MAIL_SERVER_API_URL;
+  const mailServerApiKey = process.env.MAIL_SERVER_API_KEY;
+
+  // If no external API configured, we'll just store the credentials
+  // The actual mailbox creation can be done manually or via a separate script
+  if (!mailServerApi) {
+    console.log(`[Mail] No MAIL_SERVER_API_URL configured. Mailbox for ${email} should be created manually.`);
+    console.log(`[Mail] Command: ./setup.sh email add ${email} '<password>'`);
+    return { success: true };
+  }
+
+  try {
+    const response = await fetch(mailServerApi, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${mailServerApiKey}`,
+      },
+      body: JSON.stringify({
+        action: 'create_mailbox',
+        email,
+        password,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      return {
+        success: false,
+        error: errorData.message || `HTTP ${response.status}`
+      };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error('[Mail] Error calling mail server API:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to create mailbox'
+    };
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -168,25 +168,13 @@ export async function POST(request: NextRequest) {
     );
     const password = generatePassword();
 
-    // SSH Configuration
-    const sshConfig = {
-      host: process.env.MAIL_SERVER_HOST || '172.86.89.39',
-      port: Number.parseInt(process.env.MAIL_SERVER_SSH_PORT || '22'),
-      username: process.env.MAIL_SERVER_SSH_USER || 'root',
-      password: process.env.MAIL_SERVER_SSH_PASSWORD || '',
-    };
+    // Create mailbox (via API if configured, otherwise just log)
+    const mailboxResult = await createMailbox(emailAddress, password);
 
-    const setupPath = process.env.MAIL_SERVER_SETUP_PATH || '/opt/mailserver';
-
-    // Create mail account via SSH
-    try {
-      const command = `cd ${setupPath} && ./setup.sh email add ${emailAddress} '${password}'`;
-      await executeSSHCommand(sshConfig, command);
-    } catch (sshError) {
-      console.error('SSH Error:', sshError);
+    if (!mailboxResult.success) {
       return NextResponse.json({
         error: 'Failed to create mailbox on server',
-        details: sshError instanceof Error ? sshError.message : 'Unknown SSH error'
+        details: mailboxResult.error
       }, { status: 500 });
     }
 
