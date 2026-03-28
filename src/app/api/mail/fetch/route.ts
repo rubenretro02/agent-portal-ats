@@ -68,7 +68,8 @@ export async function GET(request: NextRequest) {
       const emails: any[] = [];
 
       try {
-        const total = client.mailbox?.exists || 0;
+        const mailbox = client.mailbox;
+        const total = (mailbox && typeof mailbox !== 'boolean' && mailbox.exists) ? mailbox.exists : 0;
         const start = Math.max(1, total - 49);
 
         for await (const msg of client.fetch(`${start}:*`, { envelope: true, flags: true })) {
