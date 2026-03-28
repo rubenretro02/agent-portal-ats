@@ -40,6 +40,7 @@ import {
 } from 'lucide-react';
 import { PIPELINE_STAGES, DOCUMENT_TYPES } from '@/lib/constants';
 import type { PipelineStatus, DocumentStatus } from '@/types';
+import { AgentMailSection } from '@/components/mail/AgentMailSection';
 
 interface AgentProfile {
   id: string;
@@ -131,7 +132,7 @@ function ScoreGauge({ score, label, size = 120 }: { score: number; label: string
   const radius = (size - 16) / 2;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (score / 100) * circumference;
-  
+
   const getScoreColor = (s: number) => {
     if (s >= 80) return '#10b981'; // emerald
     if (s >= 60) return '#0891b2'; // cyan
@@ -380,7 +381,7 @@ const location = agent.address ?
 
         {/* Main Grid Layout */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
+
           {/* Left Column - Profile Card */}
           <div className="lg:col-span-1 space-y-6">
             {/* Profile Hero Card */}
@@ -397,7 +398,7 @@ const location = agent.address ?
                   </div>
                 ) : null}
               </div>
-              
+
               <CardContent className="pt-0 pb-6 -mt-12">
                 {/* Avatar with gradient ring */}
                 <div className="relative mx-auto w-24 h-24">
@@ -409,16 +410,16 @@ const location = agent.address ?
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Name & Role */}
                 <div className="text-center mt-4">
                   <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">{fullName}</h1>
                   <div className="flex items-center justify-center gap-2 mt-2">
-                    <div 
+                    <div
                       className="w-2 h-2 rounded-full animate-pulse"
                       style={{ backgroundColor: stageInfo?.color }}
                     />
-                    <Badge 
+                    <Badge
                       className="text-xs font-medium border-0"
                       style={{ backgroundColor: `${stageInfo?.color}15`, color: stageInfo?.color }}
                     >
@@ -485,18 +486,18 @@ const location = agent.address ?
 
                 {/* Contact Actions */}
                 <div className="mt-5 flex gap-2">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="flex-1 gap-2 rounded-xl border-cyan-200 text-cyan-700 hover:bg-cyan-50 hover:border-cyan-300 transition-all"
                     onClick={() => agent.profiles?.email && window.open(`mailto:${agent.profiles.email}`)}
                   >
                     <Mail className="h-4 w-4" />
                     Email
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="flex-1 gap-2 rounded-xl border-emerald-200 text-emerald-700 hover:bg-emerald-50 hover:border-emerald-300 transition-all"
                     onClick={() => agent.profiles?.phone && window.open(`tel:${agent.profiles.phone}`)}
                   >
@@ -525,8 +526,8 @@ const location = agent.address ?
                         </p>
                         <p className="text-xs text-zinc-500">{app.opportunities?.client || 'Unknown Client'}</p>
                       </div>
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         className={`text-xs ${
                           app.status === 'accepted' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
                           app.status === 'rejected' ? 'bg-red-50 text-red-700 border-red-200' :
@@ -585,29 +586,29 @@ const location = agent.address ?
           <div className="lg:col-span-2 space-y-6">
             {/* Score Cards Row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <ScoreCard 
-                value={agent.scores?.typing || 0} 
-                label="Typing Test" 
-                icon={Zap} 
-                color="bg-cyan-100 text-cyan-600" 
+              <ScoreCard
+                value={agent.scores?.typing || 0}
+                label="Typing Test"
+                icon={Zap}
+                color="bg-cyan-100 text-cyan-600"
               />
-              <ScoreCard 
-                value={agent.scores?.communication || 0} 
-                label="Communication" 
-                icon={Target} 
-                color="bg-emerald-100 text-emerald-600" 
+              <ScoreCard
+                value={agent.scores?.communication || 0}
+                label="Communication"
+                icon={Target}
+                color="bg-emerald-100 text-emerald-600"
               />
-              <ScoreCard 
-                value={agent.scores?.leadership || 0} 
-                label="Leadership" 
-                icon={Award} 
-                color="bg-amber-100 text-amber-600" 
+              <ScoreCard
+                value={agent.scores?.leadership || 0}
+                label="Leadership"
+                icon={Award}
+                color="bg-amber-100 text-amber-600"
               />
-              <ScoreCard 
-                value={`${agent.availability?.hoursPerWeek || 0}h`} 
-                label="Weekly Availability" 
-                icon={Clock} 
-                color="bg-violet-100 text-violet-600" 
+              <ScoreCard
+                value={`${agent.availability?.hoursPerWeek || 0}h`}
+                label="Weekly Availability"
+                icon={Clock}
+                color="bg-violet-100 text-violet-600"
               />
             </div>
 
@@ -775,6 +776,14 @@ const location = agent.address ?
                 </div>
               </CardContent>
             </Card>
+
+            {/* Agent Mail Section */}
+            <AgentMailSection
+              agentId={agent.id}
+              agentFirstName={agent.profiles?.first_name || ''}
+              agentLastName={agent.profiles?.last_name || ''}
+              agentNumericId={agent.agent_id?.replace('AGENT ', '') || ''}
+            />
 
 {/* Languages */}
                 {Array.isArray(agent.languages) && agent.languages.length > 0 && (
