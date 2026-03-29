@@ -56,6 +56,8 @@ export async function GET(request: NextRequest) {
   try {
     // Get token from query params
     const token = request.nextUrl.searchParams.get('token');
+    // Check if we should force logout first (for page reload scenarios)
+    const forceLogout = request.nextUrl.searchParams.get('logout') === '1';
 
     if (!token) {
       return new NextResponse(generateErrorPage('Token no proporcionado'), {
@@ -121,14 +123,20 @@ export async function GET(request: NextRequest) {
     const jwtPayload = {
       email: mailAccount.email_address,
       pass: encryptedForPHP,
-      exp: Math.floor(Date.now() / 1000) + 60, // Expires in 60 seconds
+      exp: Math.floor(Date.now() / 1000) + 120, // Extended expiry for page reloads
       iat: Math.floor(Date.now() / 1000),
+      nonce: Math.random().toString(36).substring(7), // Unique per request
     };
 
     const jwtToken = createJWT(jwtPayload, SSO_SECRET);
 
     // Redirect to SSO PHP script on mail server
-    const ssoUrl = `${WEBMAIL_URL}/sso.php?token=${encodeURIComponent(jwtToken)}`;
+    let ssoUrl = `${WEBMAIL_URL}/sso.php?token=${encodeURIComponent(jwtToken)}`;
+
+    // If force logout is requested, tell the PHP script to logout first
+    if (forceLogout) {
+      ssoUrl += '&_logout=1';
+    }
 
     return NextResponse.redirect(ssoUrl);
 
