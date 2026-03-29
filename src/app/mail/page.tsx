@@ -15,24 +15,10 @@ export default function MailPage() {
   const [loading, setLoading] = useState(true);
   const [ssoUrl, setSsoUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [loggingOut, setLoggingOut] = useState(true); // Start with logout phase
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const logoutIframeRef = useRef<HTMLIFrameElement>(null);
-
-  // First, logout from any existing Roundcube session
-  useEffect(() => {
-    // Load logout URL in hidden iframe to clear any existing session
-    const timer = setTimeout(() => {
-      setLoggingOut(false);
-    }, 1500); // Wait 1.5 seconds for logout to complete
-
-    return () => clearTimeout(timer);
-  }, []);
 
   // Get session token and build SSO URL
   const initializeSSO = useCallback(async () => {
-    if (loggingOut) return; // Wait for logout to complete
-
     try {
       const { createBrowserClient } = await import('@supabase/ssr');
       const supabase = createBrowserClient(
@@ -73,33 +59,20 @@ export default function MailPage() {
     } finally {
       setLoading(false);
     }
-  }, [loggingOut]);
+  }, []);
 
   useEffect(() => {
-    if (!loggingOut) {
-      initializeSSO();
-    }
-  }, [loggingOut, initializeSSO]);
+    initializeSSO();
+  }, [initializeSSO]);
 
-  // Loading state (including logout phase)
-  if (loading || loggingOut) {
+  // Loading state
+  if (loading) {
     return (
       <UnifiedLayout title="Agent Mail">
-        {/* Hidden iframe to logout from Roundcube */}
-        {loggingOut && (
-          <iframe
-            ref={logoutIframeRef}
-            src="https://mail.agent-mail.online/?_task=logout"
-            className="hidden"
-            title="Logout"
-          />
-        )}
         <div className="flex items-center justify-center h-[calc(100vh-120px)]">
           <div className="text-center">
             <Loader2 className="h-12 w-12 animate-spin text-teal-500 mx-auto mb-4" />
-            <p className="text-zinc-500">
-              {loggingOut ? 'Preparando tu correo...' : 'Conectando con tu correo...'}
-            </p>
+            <p className="text-zinc-500">Conectando con tu correo...</p>
           </div>
         </div>
       </UnifiedLayout>
