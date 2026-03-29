@@ -15,10 +15,24 @@ export default function MailPage() {
   const [loading, setLoading] = useState(true);
   const [ssoUrl, setSsoUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [loggingOut, setLoggingOut] = useState(true); // Start with logout phase
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const logoutIframeRef = useRef<HTMLIFrameElement>(null);
+
+  // First, logout from any existing Roundcube session
+  useEffect(() => {
+    // Load logout URL in hidden iframe to clear any existing session
+    const timer = setTimeout(() => {
+      setLoggingOut(false);
+    }, 1500); // Wait 1.5 seconds for logout to complete
+
+    return () => clearTimeout(timer);
+  }, []);
 
   // Get session token and build SSO URL
   const initializeSSO = useCallback(async () => {
+    if (loggingOut) return; // Wait for logout to complete
+
     try {
       const { createBrowserClient } = await import('@supabase/ssr');
       const supabase = createBrowserClient(
@@ -45,34 +59,10 @@ export default function MailPage() {
         const data = await response.json();
         setMailAccount(data);
 
-        // If mail is active, get SSO URL from the API
+        // If mail is active, build SSO URL
         if (data.has_mail && data.is_active) {
-          // Call SSO endpoint to get the redirect URL
-          const ssoResponse = await fetch(`/api/mail/sso?token=${encodeURIComponent(session.access_token)}`, {
-            redirect: 'manual', // Don't follow redirects, we want the URL
-          });
-
-          // The API returns a redirect, get the location
-          if (ssoResponse.type === 'opaqueredirect' || ssoResponse.status === 307 || ssoResponse.status === 308) {
-            // For redirects, we need to construct the URL ourselves
-            // since we can't get the Location header from an opaque redirect
-            const ssoEndpoint = `/api/mail/sso?token=${encodeURIComponent(session.access_token)}`;
-            setSsoUrl(ssoEndpoint);
-          } else if (ssoResponse.ok) {
-            // If it's not a redirect, it might be an error page
-            const text = await ssoResponse.text();
-            if (text.includes('Error')) {
-              setError('Error al conectar con el correo');
-            } else {
-              // Use the endpoint directly, the iframe will follow the redirect
-              const ssoEndpoint = `/api/mail/sso?token=${encodeURIComponent(session.access_token)}`;
-              setSsoUrl(ssoEndpoint);
-            }
-          } else {
-            // Use the endpoint, let iframe handle it
-            const ssoEndpoint = `/api/mail/sso?token=${encodeURIComponent(session.access_token)}`;
-            setSsoUrl(ssoEndpoint);
-          }
+          const ssoEndpoint = `/api/mail/sso?token=${encodeURIComponent(session.access_token)}`;
+          setSsoUrl(ssoEndpoint);
         }
       } else {
         setError('Error al verificar cuenta de correo');
@@ -83,33 +73,33 @@ export default function MailPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [loggingOut]);
 
   useEffect(() => {
-    initializeSSO();
-  }, [initializeSSO]);
+    if (!loggingOut) {
+      initializeSSO();
+    }
+  }, [loggingOut, initializeSSO]);
 
-  // Listen for portal logout to also logout from mail
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      // Clear iframe to prevent session persistence
-      if (iframeRef.current) {
-        iframeRef.current.src = 'about:blank';
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
-
-  // Loading state
-  if (loading) {
+  // Loading state (including logout phase)
+  if (loading || loggingOut) {
     return (
       <UnifiedLayout title="Agent Mail">
+        {/* Hidden iframe to logout from Roundcube */}
+        {loggingOut && (
+          <iframe
+            ref={logoutIframeRef}
+            src="https://mail.agent-mail.online/?_task=logout"
+            className="hidden"
+            title="Logout"
+          />
+        )}
         <div className="flex items-center justify-center h-[calc(100vh-120px)]">
           <div className="text-center">
             <Loader2 className="h-12 w-12 animate-spin text-teal-500 mx-auto mb-4" />
-            <p className="text-zinc-500">Conectando con tu correo...</p>
+            <p className="text-zinc-500">
+              {loggingOut ? 'Preparando tu correo...' : 'Conectando con tu correo...'}
+            </p>
           </div>
         </div>
       </UnifiedLayout>
