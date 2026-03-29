@@ -262,6 +262,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase]);
 
   const signOut = useCallback(async () => {
+    // First, logout from Roundcube webmail to clear mail session
+    // This is done by loading the logout URL in a hidden iframe
+    try {
+      const logoutFrame = document.createElement('iframe');
+      logoutFrame.style.display = 'none';
+      logoutFrame.src = 'https://mail.agent-mail.online/?_task=logout';
+      document.body.appendChild(logoutFrame);
+      // Give it a moment to process the logout
+      await new Promise(resolve => setTimeout(resolve, 500));
+      document.body.removeChild(logoutFrame);
+    } catch (e) {
+      console.log('Mail logout cleanup:', e);
+    }
+
+    // Then logout from the portal
     await supabase.auth.signOut();
     setAuth(null, null);
     initStartedRef.current = false;

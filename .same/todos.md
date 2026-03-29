@@ -1,40 +1,33 @@
-# Agent Portal ATS - Agent Mail Feature
+# Agent Portal ATS - Todos
 
-## Completed
-- [x] Clone repository from GitHub
-- [x] Create feature/agent-mail-switch branch
-- [x] Install ssh2 dependency for SSH connection
-- [x] Create /api/mail/activate endpoint (creates mailbox via SSH)
-- [x] Create /api/mail/status endpoint (get/toggle mail status)
-- [x] Create AgentMailSection component with Switch UI
-- [x] Integrate component in agent profile page (/agents/[agentId])
-- [x] Update .env.example with mail server SSH configuration
-- [x] Test linting - passed
-- [x] Commit and push to feature/agent-mail-switch branch
+## Completado
+- [x] Clonar repositorio de GitHub
+- [x] Eliminar barra de header verde del Agent Mail
+- [x] Crear endpoint SSO `/api/mail/sso` para auto-login tipo Okta SWA
+- [x] Modificar página de mail para usar SSO automático
+- [x] Agregar cierre de sesión de Roundcube cuando se cierra sesión del portal
+- [x] Mejorar manejo de caracteres especiales en credenciales (base64 encoding)
+- [x] Linting pasado sin errores
 
-## Manual Steps Required
-- [ ] Run SQL schema in Supabase (see supabase/mail_schema.sql)
-- [ ] Configure environment variables in production:
-  - MAIL_DOMAIN
-  - MAIL_SERVER_HOST
-  - MAIL_SERVER_SSH_PORT
-  - MAIL_SERVER_SSH_USER
-  - MAIL_SERVER_SSH_PASSWORD
-  - MAIL_SERVER_SETUP_PATH
-  - MAIL_ENCRYPTION_KEY
+## Notas Técnicas
 
-## Files Created/Modified
-### New Files:
-- `src/app/api/mail/activate/route.ts` - API to create mailbox via SSH
-- `src/app/api/mail/status/route.ts` - API to get/toggle mail status
-- `src/components/mail/AgentMailSection.tsx` - UI component with switch
+### Cómo funciona el SSO (tipo Okta SWA):
+1. El usuario navega a la página de Agent Mail en el portal
+2. La página obtiene el token de sesión de Supabase
+3. Se carga el endpoint `/api/mail/sso?token=...` en un iframe
+4. El endpoint:
+   - Verifica el token del usuario
+   - Obtiene las credenciales del mail desde la base de datos
+   - Descifra la contraseña
+   - Genera una página HTML que hace auto-submit del formulario de login a Roundcube
+5. Roundcube procesa el login y muestra el webmail
 
-### Modified Files:
-- `src/app/agents/[agentId]/page.tsx` - Added AgentMailSection
-- `.env.example` - Added mail server SSH variables
-- `package.json` / `bun.lock` - Added ssh2 dependency
+### Logout sincronizado:
+- Cuando el usuario cierra sesión del portal (`signOut` en AuthProvider)
+- Se carga la URL de logout de Roundcube en un iframe oculto
+- Esto cierra la sesión del mail también
 
-## Branch Info
-- Branch: `feature/agent-mail-switch`
-- Pushed to: https://github.com/rubenretro02/agent-portal-ats
-- PR URL: https://github.com/rubenretro02/agent-portal-ats/pull/new/feature/agent-mail-switch
+### Archivos modificados:
+- `src/app/mail/page.tsx` - Página limpia sin barra de header, usa SSO
+- `src/app/api/mail/sso/route.ts` - Nuevo endpoint SSO
+- `src/components/providers/AuthProvider.tsx` - Logout sincronizado
