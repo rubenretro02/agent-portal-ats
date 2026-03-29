@@ -16,7 +16,6 @@ export default function MailPage() {
   const [ssoUrl, setSsoUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
-  const tokenRef = useRef<string | null>(null);
 
   // Get session token and build SSO URL
   const initializeSSO = useCallback(async () => {
@@ -35,8 +34,6 @@ export default function MailPage() {
         return;
       }
 
-      tokenRef.current = session.access_token;
-
       // Check mail account status
       const response = await fetch('/api/mail/status', {
         headers: {
@@ -48,11 +45,34 @@ export default function MailPage() {
         const data = await response.json();
         setMailAccount(data);
 
-        // If mail is active, build SSO URL
+        // If mail is active, get SSO URL from the API
         if (data.has_mail && data.is_active) {
-          // Build SSO URL with token as query param
-          const ssoEndpoint = `/api/mail/sso?token=${encodeURIComponent(session.access_token)}`;
-          setSsoUrl(ssoEndpoint);
+          // Call SSO endpoint to get the redirect URL
+          const ssoResponse = await fetch(`/api/mail/sso?token=${encodeURIComponent(session.access_token)}`, {
+            redirect: 'manual', // Don't follow redirects, we want the URL
+          });
+
+          // The API returns a redirect, get the location
+          if (ssoResponse.type === 'opaqueredirect' || ssoResponse.status === 307 || ssoResponse.status === 308) {
+            // For redirects, we need to construct the URL ourselves
+            // since we can't get the Location header from an opaque redirect
+            const ssoEndpoint = `/api/mail/sso?token=${encodeURIComponent(session.access_token)}`;
+            setSsoUrl(ssoEndpoint);
+          } else if (ssoResponse.ok) {
+            // If it's not a redirect, it might be an error page
+            const text = await ssoResponse.text();
+            if (text.includes('Error')) {
+              setError('Error al conectar con el correo');
+            } else {
+              // Use the endpoint directly, the iframe will follow the redirect
+              const ssoEndpoint = `/api/mail/sso?token=${encodeURIComponent(session.access_token)}`;
+              setSsoUrl(ssoEndpoint);
+            }
+          } else {
+            // Use the endpoint, let iframe handle it
+            const ssoEndpoint = `/api/mail/sso?token=${encodeURIComponent(session.access_token)}`;
+            setSsoUrl(ssoEndpoint);
+          }
         }
       } else {
         setError('Error al verificar cuenta de correo');
@@ -175,7 +195,7 @@ export default function MailPage() {
     );
   }
 
-  // Active mail - show clean iframe with SSO
+  // Active mail - show iframe with SSO
   return (
     <UnifiedLayout title="Agent Mail">
       <div className="h-[calc(100vh-120px)] bg-white rounded-xl shadow-sm border border-zinc-200 overflow-hidden">
@@ -186,7 +206,6 @@ export default function MailPage() {
             className="w-full h-full border-0"
             title="Agent Mail"
             allow="fullscreen"
-            sandbox="allow-same-origin allow-scripts allow-forms allow-popups allow-popups-to-escape-sandbox"
           />
         ) : (
           <div className="flex items-center justify-center h-full">

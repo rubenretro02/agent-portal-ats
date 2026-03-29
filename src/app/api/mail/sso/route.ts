@@ -8,10 +8,11 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const WEBMAIL_URL = process.env.WEBMAIL_URL || 'https://mail.agent-mail.online';
+const SSO_SECRET = process.env.SSO_SECRET || 'your-sso-secret-key-min-32-chars!!';
 
 // Decrypt function (must match encrypt function in activate/route.ts)
 function decrypt(encryptedText: string, secretKey: string): string {
-  const decoded = Buffer.from(encryptedText, 'base64').toString();
+  const decoded = Buffer.from(encryptedText, 'base64').toString('binary');
   let result = '';
   for (let i = 0; i < decoded.length; i++) {
     result += String.fromCharCode(decoded.charCodeAt(i) ^ secretKey.charCodeAt(i % secretKey.length));
@@ -19,10 +20,41 @@ function decrypt(encryptedText: string, secretKey: string): string {
   return result;
 }
 
-// This endpoint returns an HTML page that auto-submits to Roundcube login (SSO like Okta SWA)
+// Simple encrypt for passing to PHP (same algorithm)
+function encrypt(text: string, secretKey: string): string {
+  let result = '';
+  for (let i = 0; i < text.length; i++) {
+    result += String.fromCharCode(text.charCodeAt(i) ^ secretKey.charCodeAt(i % secretKey.length));
+  }
+  return Buffer.from(result, 'binary').toString('base64');
+}
+
+// Base64 URL encoding
+function base64UrlEncode(data: string | Buffer): string {
+  const base64 = Buffer.isBuffer(data) ? data.toString('base64') : Buffer.from(data).toString('base64');
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+}
+
+// Create JWT token
+function createJWT(payload: Record<string, unknown>, secret: string): string {
+  const header = { alg: 'HS256', typ: 'JWT' };
+  const headerB64 = base64UrlEncode(JSON.stringify(header));
+  const payloadB64 = base64UrlEncode(JSON.stringify(payload));
+
+  const crypto = require('crypto');
+  const signature = crypto
+    .createHmac('sha256', secret)
+    .update(`${headerB64}.${payloadB64}`)
+    .digest();
+  const signatureB64 = base64UrlEncode(signature);
+
+  return `${headerB64}.${payloadB64}.${signatureB64}`;
+}
+
+// This endpoint redirects to the SSO PHP script on the mail server
 export async function GET(request: NextRequest) {
   try {
-    // Get token from query params (for iframe usage)
+    // Get token from query params
     const token = request.nextUrl.searchParams.get('token');
 
     if (!token) {
@@ -82,14 +114,23 @@ export async function GET(request: NextRequest) {
     const encryptionKey = process.env.MAIL_ENCRYPTION_KEY || 'default-key-change-in-production';
     const password = decrypt(mailAccount.imap_password_encrypted, encryptionKey);
 
-    // Return HTML page that auto-submits login form to Roundcube (SWA-style)
-    return new NextResponse(generateAutoLoginPage(mailAccount.email_address, password, WEBMAIL_URL), {
-      status: 200,
-      headers: {
-        'Content-Type': 'text/html',
-        'Cache-Control': 'no-store, no-cache, must-revalidate',
-      },
-    });
+    // Re-encrypt password with SSO_SECRET for PHP script
+    const encryptedForPHP = encrypt(password, SSO_SECRET);
+
+    // Create JWT token with credentials
+    const jwtPayload = {
+      email: mailAccount.email_address,
+      pass: encryptedForPHP,
+      exp: Math.floor(Date.now() / 1000) + 60, // Expires in 60 seconds
+      iat: Math.floor(Date.now() / 1000),
+    };
+
+    const jwtToken = createJWT(jwtPayload, SSO_SECRET);
+
+    // Redirect to SSO PHP script on mail server
+    const ssoUrl = `${WEBMAIL_URL}/sso.php?token=${encodeURIComponent(jwtToken)}`;
+
+    return NextResponse.redirect(ssoUrl);
 
   } catch (error) {
     console.error('[Mail SSO] Error:', error);
@@ -98,112 +139,6 @@ export async function GET(request: NextRequest) {
       headers: { 'Content-Type': 'text/html' },
     });
   }
-}
-
-function generateAutoLoginPage(email: string, password: string, webmailUrl: string): string {
-  // Escape special characters for HTML display
-  const escapeHtml = (str: string) => str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-
-  // Encode credentials as base64 to avoid issues with special characters in JS
-  const credentialsBase64 = Buffer.from(JSON.stringify({ user: email, pass: password })).toString('base64');
-
-  return `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agent Mail - Conectando...</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
-      color: white;
-    }
-    .loading-container {
-      text-align: center;
-      padding: 2rem;
-    }
-    .spinner {
-      width: 50px;
-      height: 50px;
-      border: 3px solid rgba(255,255,255,0.1);
-      border-top-color: #14b8a6;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin: 0 auto 1.5rem;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    .loading-text {
-      font-size: 1rem;
-      color: rgba(255,255,255,0.8);
-    }
-    .loading-email {
-      font-size: 0.875rem;
-      color: #14b8a6;
-      margin-top: 0.5rem;
-    }
-  </style>
-</head>
-<body>
-  <div class="loading-container">
-    <div class="spinner"></div>
-    <p class="loading-text">Iniciando sesión automáticamente...</p>
-    <p class="loading-email">${escapeHtml(email)}</p>
-  </div>
-
-  <script>
-    // Decode credentials and create auto-submit form
-    (function() {
-      try {
-        var creds = JSON.parse(atob('${credentialsBase64}'));
-
-        var form = document.createElement('form');
-        form.method = 'POST';
-        form.action = '${webmailUrl}/?_task=login';
-        form.style.display = 'none';
-
-        var fields = {
-          '_action': 'login',
-          '_task': 'login',
-          '_user': creds.user,
-          '_pass': creds.pass,
-          '_timezone': Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York',
-          '_url': ''
-        };
-
-        for (var key in fields) {
-          var input = document.createElement('input');
-          input.type = 'hidden';
-          input.name = key;
-          input.value = fields[key];
-          form.appendChild(input);
-        }
-
-        document.body.appendChild(form);
-
-        // Submit after a brief delay
-        setTimeout(function() {
-          form.submit();
-        }, 300);
-      } catch (e) {
-        document.body.innerHTML = '<div style="text-align:center;padding:2rem;"><p style="color:#ef4444;">Error al iniciar sesión</p></div>';
-      }
-    })();
-  </script>
-</body>
-</html>`;
 }
 
 function generateErrorPage(message: string): string {
@@ -238,11 +173,7 @@ function generateErrorPage(message: string): string {
       align-items: center;
       justify-content: center;
       margin: 0 auto 1.5rem;
-    }
-    .error-icon svg {
-      width: 30px;
-      height: 30px;
-      color: #ef4444;
+      font-size: 1.5rem;
     }
     .error-title {
       font-size: 1.25rem;
@@ -258,11 +189,7 @@ function generateErrorPage(message: string): string {
 </head>
 <body>
   <div class="error-container">
-    <div class="error-icon">
-      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-      </svg>
-    </div>
+    <div class="error-icon">⚠️</div>
     <h2 class="error-title">Error</h2>
     <p class="error-message">${message}</p>
   </div>
