@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const WEBMAIL_URL = process.env.WEBMAIL_URL || 'https://mail.agent-mail.online';
 const SSO_SECRET = process.env.SSO_SECRET || 'your-sso-secret-key-min-32-chars!!';
-
 // Decrypt function (must match encrypt function in activate/route.ts)
 function decrypt(encryptedText: string, secretKey: string): string {
   const decoded = Buffer.from(encryptedText, 'base64').toString('binary');
@@ -19,7 +16,6 @@ function decrypt(encryptedText: string, secretKey: string): string {
   }
   return result;
 }
-
 // Simple encrypt for passing to PHP (same algorithm)
 function encrypt(text: string, secretKey: string): string {
   let result = '';
@@ -28,61 +24,49 @@ function encrypt(text: string, secretKey: string): string {
   }
   return Buffer.from(result, 'binary').toString('base64');
 }
-
 // Base64 URL encoding
 function base64UrlEncode(data: string | Buffer): string {
   const base64 = Buffer.isBuffer(data) ? data.toString('base64') : Buffer.from(data).toString('base64');
   return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
 }
-
 // Create JWT token
 function createJWT(payload: Record<string, unknown>, secret: string): string {
   const header = { alg: 'HS256', typ: 'JWT' };
   const headerB64 = base64UrlEncode(JSON.stringify(header));
   const payloadB64 = base64UrlEncode(JSON.stringify(payload));
-
   const crypto = require('crypto');
   const signature = crypto
     .createHmac('sha256', secret)
     .update(`${headerB64}.${payloadB64}`)
     .digest();
   const signatureB64 = base64UrlEncode(signature);
-
   return `${headerB64}.${payloadB64}.${signatureB64}`;
 }
-
 // This endpoint redirects to the SSO PHP script on the mail server
 export async function GET(request: NextRequest) {
   try {
     // Get token from query params
     const token = request.nextUrl.searchParams.get('token');
-    // Check if we should force logout first (for page reload scenarios)
-    const forceLogout = request.nextUrl.searchParams.get('logout') === '1';
-
     if (!token) {
       return new NextResponse(generateErrorPage('Token no proporcionado'), {
         status: 401,
         headers: { 'Content-Type': 'text/html' },
       });
     }
-
     // Create client with user token
     const supabaseAuth = createClient(supabaseUrl, supabaseAnonKey, {
       global: {
         headers: { Authorization: `Bearer ${token}` }
       }
     });
-
     // Get current user
     const { data: { user }, error: authError } = await supabaseAuth.auth.getUser();
-
     if (authError || !user) {
       return new NextResponse(generateErrorPage('Sesión expirada. Por favor, recarga la página.'), {
         status: 401,
         headers: { 'Content-Type': 'text/html' },
       });
     }
-
     // Create admin client for database operations
     const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
@@ -90,56 +74,40 @@ export async function GET(request: NextRequest) {
         persistSession: false,
       },
     });
-
     // Get agent's mail account
     const { data: mailAccount, error: mailError } = await supabaseAdmin
       .from('agent_mail_accounts')
       .select('email_address, imap_password_encrypted, is_active')
       .eq('agent_id', user.id)
       .single();
-
     if (mailError || !mailAccount) {
       return new NextResponse(generateErrorPage('Cuenta de correo no encontrada. Contacta al administrador.'), {
         status: 404,
         headers: { 'Content-Type': 'text/html' },
       });
     }
-
     if (!mailAccount.is_active) {
       return new NextResponse(generateErrorPage('Tu buzón está desactivado. Contacta al administrador.'), {
         status: 403,
         headers: { 'Content-Type': 'text/html' },
       });
     }
-
     // Decrypt password
     const encryptionKey = process.env.MAIL_ENCRYPTION_KEY || 'default-key-change-in-production';
     const password = decrypt(mailAccount.imap_password_encrypted, encryptionKey);
-
     // Re-encrypt password with SSO_SECRET for PHP script
     const encryptedForPHP = encrypt(password, SSO_SECRET);
-
     // Create JWT token with credentials
     const jwtPayload = {
       email: mailAccount.email_address,
       pass: encryptedForPHP,
-      exp: Math.floor(Date.now() / 1000) + 120, // Extended expiry for page reloads
+      exp: Math.floor(Date.now() / 1000) + 60, // Expires in 60 seconds
       iat: Math.floor(Date.now() / 1000),
-      nonce: Math.random().toString(36).substring(7), // Unique per request
     };
-
     const jwtToken = createJWT(jwtPayload, SSO_SECRET);
-
     // Redirect to SSO PHP script on mail server
-    let ssoUrl = `${WEBMAIL_URL}/sso.php?token=${encodeURIComponent(jwtToken)}`;
-
-    // If force logout is requested, tell the PHP script to logout first
-    if (forceLogout) {
-      ssoUrl += '&_logout=1';
-    }
-
+    const ssoUrl = `${WEBMAIL_URL}/sso.php?token=${encodeURIComponent(jwtToken)}`;
     return NextResponse.redirect(ssoUrl);
-
   } catch (error) {
     console.error('[Mail SSO] Error:', error);
     return new NextResponse(generateErrorPage('Error interno. Intenta de nuevo.'), {
@@ -148,7 +116,6 @@ export async function GET(request: NextRequest) {
     });
   }
 }
-
 function generateErrorPage(message: string): string {
   return `<!DOCTYPE html>
 <html>

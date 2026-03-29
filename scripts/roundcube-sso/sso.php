@@ -9,59 +9,46 @@
  * 1. Copiar este archivo a /var/www/html/sso.php en el servidor de Roundcube
  * 2. Configurar la clave secreta SSO_SECRET (debe coincidir con el portal)
  */
-
 // Configuración - CAMBIAR ESTOS VALORES
 define('SSO_SECRET', 'your-sso-secret-key-min-32-chars!!');
-define('TOKEN_EXPIRY', 120); // Token válido por 120 segundos (increased)
+define('TOKEN_EXPIRY', 60); // Token válido por 60 segundos
 define('ROUNDCUBE_URL', '/');
-
 // Evitar caché
 header('Cache-Control: no-store, no-cache, must-revalidate');
 header('Pragma: no-cache');
-header('Expires: 0');
-
 /**
  * Decodificar y verificar token JWT simple
  */
 function verifyToken($token, $secret) {
     $parts = explode('.', $token);
     if (count($parts) !== 3) {
-        return ['error' => 'Token invalido'];
+        return ['error' => 'Token inválido'];
     }
-
     list($headerB64, $payloadB64, $signatureB64) = $parts;
-
     // Verificar firma
     $expectedSignature = base64UrlEncode(
         hash_hmac('sha256', "$headerB64.$payloadB64", $secret, true)
     );
-
     if (!hash_equals($expectedSignature, $signatureB64)) {
-        return ['error' => 'Firma invalida'];
+        return ['error' => 'Firma inválida'];
     }
-
     // Decodificar payload
     $payload = json_decode(base64UrlDecode($payloadB64), true);
     if (!$payload) {
-        return ['error' => 'Payload invalido'];
+        return ['error' => 'Payload inválido'];
     }
-
     // Verificar expiración
     if (!isset($payload['exp']) || $payload['exp'] < time()) {
         return ['error' => 'Token expirado'];
     }
-
     return $payload;
 }
-
 function base64UrlEncode($data) {
     return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
 }
-
 function base64UrlDecode($data) {
     return base64_decode(strtr($data, '-_', '+/'));
 }
-
 /**
  * Desencriptar contraseña (debe coincidir con el método del portal)
  */
@@ -69,14 +56,11 @@ function decryptPassword($encrypted, $key) {
     $decoded = base64_decode($encrypted);
     $result = '';
     $keyLen = strlen($key);
-
     for ($i = 0; $i < strlen($decoded); $i++) {
         $result .= chr(ord($decoded[$i]) ^ ord($key[$i % $keyLen]));
     }
-
     return $result;
 }
-
 /**
  * Mostrar página de error
  */
@@ -86,7 +70,7 @@ function showError($message) {
     <html>
     <head>
         <meta charset="UTF-8">
-        <title>Error de Autenticacion</title>
+        <title>Error de Autenticación</title>
         <style>
             body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -111,46 +95,29 @@ function showError($message) {
             }
             h2 { margin: 0 0 0.5rem; }
             p { color: rgba(255,255,255,0.7); margin: 0; }
-            .retry-btn {
-                margin-top: 1.5rem;
-                padding: 0.75rem 1.5rem;
-                background: #14b8a6;
-                color: white;
-                border: none;
-                border-radius: 0.5rem;
-                cursor: pointer;
-                font-size: 0.875rem;
-                font-weight: 500;
-            }
-            .retry-btn:hover {
-                background: #0d9488;
-            }
         </style>
     </head>
     <body>
         <div class="error-box">
-            <div class="error-icon">!</div>
+            <div class="error-icon">⚠️</div>
             <h2>Error</h2>
             <p><?php echo htmlspecialchars($message); ?></p>
-            <button class="retry-btn" onclick="window.parent.location.reload()">Reintentar</button>
         </div>
     </body>
     </html>
     <?php
     exit;
 }
-
 /**
  * Mostrar página de login con auto-submit
- * Maneja el logout previo si es necesario
  */
-function autoLogin($email, $password, $forceLogout = false) {
+function autoLogin($email, $password) {
     ?>
     <!DOCTYPE html>
     <html>
     <head>
         <meta charset="UTF-8">
-        <title>Iniciando sesion...</title>
+        <title>Iniciando sesión...</title>
         <style>
             body {
                 font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -182,9 +149,8 @@ function autoLogin($email, $password, $forceLogout = false) {
     <body>
         <div class="loading">
             <div class="spinner"></div>
-            <p>Iniciando sesion...</p>
+            <p>Iniciando sesión...</p>
         </div>
-
         <form id="loginForm" method="POST" action="<?php echo ROUNDCUBE_URL; ?>?_task=login" style="display:none;">
             <input type="hidden" name="_action" value="login">
             <input type="hidden" name="_task" value="login">
@@ -193,107 +159,62 @@ function autoLogin($email, $password, $forceLogout = false) {
             <input type="hidden" name="_timezone" value="America/New_York">
             <input type="hidden" name="_url" value="">
         </form>
-
         <script>
-            var forceLogout = <?php echo $forceLogout ? 'true' : 'false'; ?>;
-            
-            async function performLogin() {
-                try {
-                    // Si se requiere logout, primero cerrar cualquier sesión existente
-                    if (forceLogout) {
-                        console.log('Performing logout first...');
-                        // Intentar logout primero
-                        try {
-                            await fetch('<?php echo ROUNDCUBE_URL; ?>?_task=logout', {
-                                credentials: 'same-origin'
-                            });
-                            // Esperar un momento para que el logout se complete
-                            await new Promise(resolve => setTimeout(resolve, 300));
-                        } catch (e) {
-                            console.log('Logout request failed, continuing anyway');
-                        }
-                    }
-                    
-                    // Cargar la página de login para obtener el token CSRF fresco
-                    console.log('Fetching login page for CSRF token...');
-                    var response = await fetch('<?php echo ROUNDCUBE_URL; ?>?_task=login', {
-                        credentials: 'same-origin',
-                        cache: 'no-store'
-                    });
-                    var html = await response.text();
-                    
-                    // Extraer el token CSRF del HTML
-                    var parser = new DOMParser();
-                    var doc = parser.parseFromString(html, 'text/html');
-                    var tokenInput = doc.querySelector('input[name="_token"]');
-                    
-                    if (tokenInput) {
-                        console.log('Found CSRF token');
-                        // Agregar token al formulario
-                        var input = document.createElement('input');
-                        input.type = 'hidden';
-                        input.name = '_token';
-                        input.value = tokenInput.value;
-                        document.getElementById('loginForm').appendChild(input);
-                    } else {
-                        console.log('No CSRF token found, proceeding anyway');
-                    }
-                    
-                    // Enviar formulario
-                    console.log('Submitting login form...');
-                    document.getElementById('loginForm').submit();
-                    
-                } catch (error) {
-                    console.error('Login error:', error);
-                    // Si falla, intentar sin token
-                    document.getElementById('loginForm').submit();
+            // Primero, cargar la página de login para obtener el token CSRF
+            fetch('<?php echo ROUNDCUBE_URL; ?>?_task=login', {
+                credentials: 'same-origin'
+            })
+            .then(response => response.text())
+            .then(html => {
+                // Extraer el token CSRF del HTML
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(html, 'text/html');
+                var tokenInput = doc.querySelector('input[name="_token"]');
+                if (tokenInput) {
+                    // Agregar token al formulario
+                    var input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = '_token';
+                    input.value = tokenInput.value;
+                    document.getElementById('loginForm').appendChild(input);
                 }
-            }
-            
-            // Ejecutar el login
-            performLogin();
+                // Enviar formulario
+                document.getElementById('loginForm').submit();
+            })
+            .catch(function() {
+                // Si falla, intentar sin token
+                document.getElementById('loginForm').submit();
+            });
         </script>
     </body>
     </html>
     <?php
     exit;
 }
-
 // ============================================
 // MAIN
 // ============================================
-
 // Obtener token de la URL
 $token = isset($_GET['token']) ? $_GET['token'] : '';
-// Check if force logout is requested
-$forceLogout = isset($_GET['_logout']) && $_GET['_logout'] === '1';
-
 if (empty($token)) {
     showError('Token no proporcionado');
 }
-
 // Verificar token
 $payload = verifyToken($token, SSO_SECRET);
-
 if (isset($payload['error'])) {
     showError($payload['error']);
 }
-
 // Extraer datos
 $email = isset($payload['email']) ? $payload['email'] : '';
 $encryptedPass = isset($payload['pass']) ? $payload['pass'] : '';
 $encryptionKey = isset($payload['key']) ? $payload['key'] : SSO_SECRET;
-
 if (empty($email) || empty($encryptedPass)) {
-    showError('Datos de autenticacion incompletos');
+    showError('Datos de autenticación incompletos');
 }
-
 // Desencriptar contraseña
 $password = decryptPassword($encryptedPass, $encryptionKey);
-
 if (empty($password)) {
     showError('Error al procesar credenciales');
 }
-
-// Hacer login automático (with optional logout first)
-autoLogin($email, $password, $forceLogout);
+// Hacer login automático
+autoLogin($email, $password);
