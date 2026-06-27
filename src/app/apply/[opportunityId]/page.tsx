@@ -49,6 +49,7 @@ import {
   User,
 } from 'lucide-react';
 import type { ApplicationAnswer, ApplicationQuestion, ApplicationStage, StageType, JobSection } from '@/types';
+import { checkRequirements, type JobRequirements, type SystemCheckResult } from '@/lib/systemCheck';
 
 const STAGE_ICONS: Record<StageType, React.ElementType> = {
   info: FileText,
@@ -435,6 +436,65 @@ export default function ApplyPage() {
                 </section>
               </>
             )}
+
+            {/* Minimum system requirements */}
+            {(() => {
+              const sysReq = (opportunity as unknown as { requirements?: { systemRequirements?: JobRequirements } })?.requirements?.systemRequirements;
+              if (!sysReq) return null;
+              const items: { label: string; value: string }[] = [];
+              if (sysReq.minInternetSpeed) items.push({ label: 'Internet', value: `${sysReq.minInternetSpeed}+ Mbps` });
+              if (sysReq.minRam) items.push({ label: 'RAM', value: `${sysReq.minRam}+ GB` });
+              if (sysReq.minCpuCores) items.push({ label: 'CPU', value: `${sysReq.minCpuCores}+ cores` });
+              if (sysReq.minScreenWidth) items.push({ label: 'Screen', value: `${sysReq.minScreenWidth}px+ wide` });
+              if (sysReq.requiresWebcam) items.push({ label: 'Webcam', value: 'Required' });
+              if (sysReq.requiresMicrophone) items.push({ label: 'Microphone', value: 'Required' });
+              if (sysReq.noVpn) items.push({ label: 'Connection', value: 'No VPN / proxy' });
+              if (items.length === 0) return null;
+
+              const sc = (agent as unknown as { system_check?: SystemCheckResult })?.system_check;
+              const check = sc ? checkRequirements(sc, sysReq) : null;
+
+              return (
+                <section>
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wide flex items-center gap-2">
+                      <Shield className="h-4 w-4 text-[var(--brand-blue)]" />
+                      Minimum System Requirements
+                    </h2>
+                    {check && (
+                      <Badge className={check.passed ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
+                        {check.passed ? 'Your system qualifies' : 'Below requirements'}
+                      </Badge>
+                    )}
+                  </div>
+                  {check ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {check.checks.map((c) => (
+                        <div key={c.name} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-zinc-200">
+                          <div className="flex items-center gap-2 min-w-0">
+                            {c.passed ? (
+                              <CheckCircle className="h-4 w-4 text-emerald-500 shrink-0" />
+                            ) : (
+                              <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
+                            )}
+                            <span className="text-sm text-zinc-700 truncate">{c.name}</span>
+                          </div>
+                          <span className="text-sm font-medium text-zinc-900 shrink-0">{c.required}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {items.map((it) => (
+                        <span key={it.label} className="text-sm px-3 py-1.5 rounded-full border border-zinc-200 text-zinc-700">
+                          <span className="text-zinc-500">{it.label}:</span> <span className="font-medium">{it.value}</span>
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </section>
+              );
+            })()}
 
             {/* CTA */}
             <div className="gradient-brand rounded-2xl px-5 py-4 text-white flex items-center justify-between gap-4">

@@ -32,8 +32,11 @@ import {
   Loader2,
   AlertCircle,
   Keyboard,
+  Cpu,
 } from 'lucide-react';
 import { TypingTest, type TypingResult } from '@/components/onboarding/TypingTest';
+import { SystemCheck } from '@/components/SystemCheck';
+import type { SystemCheckResult } from '@/lib/systemCheck';
 
 const STEPS = [
   { id: 'personal', title: 'Personal Info', icon: User },
@@ -41,6 +44,7 @@ const STEPS = [
   { id: 'experience', title: 'Experience', icon: Briefcase },
   { id: 'availability', title: 'Availability', icon: Globe },
   { id: 'typing', title: 'Typing Test', icon: Keyboard },
+  { id: 'systemcheck', title: 'System Check', icon: Cpu },
 ];
 
 const MONTHS = [
@@ -96,6 +100,11 @@ export function OnboardingModal({ open, onOpenChange, onComplete }: OnboardingMo
     existingTyping?.typing
       ? { wpm: existingTyping.typing, accuracy: existingTyping.typingAccuracy ?? 100 }
       : null
+  );
+
+  // System check result, captured on the last onboarding step.
+  const [systemCheckResult, setSystemCheckResult] = useState<SystemCheckResult | null>(
+    (agent as unknown as { system_check?: SystemCheckResult } | null)?.system_check ?? null
   );
 
   const [formData, setFormData] = useState({
@@ -156,6 +165,12 @@ export function OnboardingModal({ open, onOpenChange, onComplete }: OnboardingMo
       if (scores?.typing) {
         setTypingResult(prev => prev ?? { wpm: scores.typing as number, accuracy: scores.typingAccuracy ?? 100 });
       }
+
+      // Prefill an existing system check so the step counts as done.
+      const sysCheck = (agent as unknown as { system_check?: SystemCheckResult }).system_check;
+      if (sysCheck) {
+        setSystemCheckResult(prev => prev ?? sysCheck);
+      }
     }
   }, [profile, agent]);
 
@@ -203,6 +218,12 @@ export function OnboardingModal({ open, onOpenChange, onComplete }: OnboardingMo
       case 4:
         if (!typingResult) {
           setError('Please finish the typing test to continue');
+          return false;
+        }
+        break;
+      case 5:
+        if (!systemCheckResult) {
+          setError('Please run the system check to continue');
           return false;
         }
         break;
@@ -279,6 +300,20 @@ export function OnboardingModal({ open, onOpenChange, onComplete }: OnboardingMo
             ...prevScores,
             typing: typingResult.wpm,
             typingAccuracy: typingResult.accuracy,
+          };
+        }
+
+        // Persist the system check (internet, hardware, IP/VPN) for clients to review.
+        if (systemCheckResult) {
+          agentUpdateData.system_check = systemCheckResult;
+          agentUpdateData.system_check_date = new Date().toISOString();
+          agentUpdateData.equipment = {
+            hasComputer: true,
+            hasWebcam: systemCheckResult.mediaDevices.hasWebcam,
+            hasMicrophone: systemCheckResult.mediaDevices.hasMicrophone,
+            internetSpeed: systemCheckResult.internetSpeed.downloadMbps,
+            cpuCores: systemCheckResult.hardware.cpuCores,
+            ramGB: systemCheckResult.hardware.ramGB,
           };
         }
 
@@ -515,6 +550,23 @@ export function OnboardingModal({ open, onOpenChange, onComplete }: OnboardingMo
                 seed={agent?.id || profile?.id || 'default'}
                 initialResult={typingResult}
                 onComplete={setTypingResult}
+              />
+            </div>
+          )}
+
+          {/* Step 5: System Check */}
+          {currentStep === 5 && (
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm font-medium text-zinc-900">Computer & connection check</p>
+                <p className="text-xs text-zinc-500">
+                  We run a real test of your internet speed, hardware, screen and connection. Clients review this to confirm you meet a role&apos;s requirements.
+                </p>
+              </div>
+              <SystemCheck
+                agentId={agent?.id}
+                showSaveButton={false}
+                onComplete={setSystemCheckResult}
               />
             </div>
           )}

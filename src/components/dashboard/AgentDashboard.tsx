@@ -23,7 +23,6 @@ import {
   Users,
   ArrowRight,
   Briefcase,
-  Clock,
   Star,
   Zap,
   Target,
@@ -146,18 +145,26 @@ export function AgentDashboard() {
         </div>
       </div>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard icon={Briefcase} value={opportunities.length} label="Available Jobs" accent="text-[var(--brand-blue)]" chip="bg-[var(--brand-blue-soft)]" />
-        <StatCard icon={Target} value={appliedCount} label="Applications" accent="text-emerald-600" chip="bg-emerald-50" />
-        <StatCard icon={Star} value={`${onboardingProgress.percent}%`} label="Profile Score" accent="text-amber-600" chip="bg-amber-50" />
-        <StatCard
-          icon={Clock}
-          value={agent?.pipeline_status === 'active' ? 'Active' : 'Pending'}
-          label="Status"
-          accent="text-[var(--brand-purple)]"
-          chip="bg-[var(--brand-purple-soft)]"
-        />
+      {/* Summary strip — two key metrics, not a templated card grid */}
+      <div className="flex items-stretch rounded-2xl border border-zinc-200/80 bg-white shadow-sm divide-x divide-zinc-100">
+        <div className="flex items-center gap-3.5 px-5 py-4 flex-1">
+          <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center shrink-0">
+            <Briefcase className="h-5 w-5 text-[var(--brand-blue)]" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-zinc-900 tracking-tight leading-none">{opportunities.length}</p>
+            <p className="text-sm text-zinc-500 mt-1">Available jobs</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3.5 px-5 py-4 flex-1">
+          <div className="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center shrink-0">
+            <Target className="h-5 w-5 text-emerald-600" />
+          </div>
+          <div>
+            <p className="text-2xl font-bold text-zinc-900 tracking-tight leading-none">{appliedCount}</p>
+            <p className="text-sm text-zinc-500 mt-1">Your applications</p>
+          </div>
+        </div>
       </div>
 
       {/* Onboarding Banner - only if not complete */}
@@ -387,31 +394,5 @@ export function AgentDashboard() {
         </DialogContent>
       </Dialog>
     </div>
-  );
-}
-
-function StatCard({
-  icon: Icon,
-  value,
-  label,
-  accent,
-  chip,
-}: {
-  icon: React.ElementType;
-  value: string | number;
-  label: string;
-  accent: string;
-  chip: string;
-}) {
-  return (
-    <Card className="border border-zinc-200/80 shadow-sm rounded-2xl hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className={`w-9 h-9 rounded-xl ${chip} flex items-center justify-center mb-3`}>
-          <Icon className={`h-5 w-5 ${accent}`} />
-        </div>
-        <p className="text-2xl font-bold text-zinc-900 tracking-tight leading-none">{value}</p>
-        <p className="text-sm text-zinc-500 mt-1.5">{label}</p>
-      </CardContent>
-    </Card>
   );
 }

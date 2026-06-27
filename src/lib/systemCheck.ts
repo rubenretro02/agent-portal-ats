@@ -5,6 +5,7 @@ export interface SystemCheckResult {
   // Internet
   internetSpeed: {
     downloadMbps: number;
+    uploadMbps: number;
     latencyMs: number;
     connectionType: string;
     effectiveType: string;
@@ -103,44 +104,51 @@ function detectDeviceType(): { isMobile: boolean; isTablet: boolean } {
   return { isMobile: isMobile && !isTablet, isTablet };
 }
 
-// Test internet speed by downloading a test file
-async function testInternetSpeed(): Promise<{ downloadMbps: number; latencyMs: number }> {
-  const testUrls = [
-    'https://www.google.com/images/phd/px.gif', // ~35 bytes
-    'https://www.cloudflare.com/cdn-cgi/trace', // ~200 bytes
-  ];
-
+// Real internet speed test using Cloudflare's open speed endpoints.
+// Measures latency, download (~8MB) and upload (~4MB) against speed.cloudflare.com.
+async function testInternetSpeed(): Promise<{ downloadMbps: number; uploadMbps: number; latencyMs: number }> {
   let latencyMs = 0;
   let downloadMbps = 0;
+  let uploadMbps = 0;
 
+  // Latency — time a tiny payload round trip.
   try {
-    // Test latency with small request
-    const latencyStart = performance.now();
-    await fetch(testUrls[0], { cache: 'no-store', mode: 'no-cors' });
-    latencyMs = Math.round(performance.now() - latencyStart);
+    const lStart = performance.now();
+    await fetch('https://speed.cloudflare.com/__down?bytes=1000', { cache: 'no-store' });
+    latencyMs = Math.round(performance.now() - lStart);
+  } catch { /* ignore */ }
 
-    // For a more accurate speed test, we'd need a larger file
-    // This is a simplified version
-    const speedStart = performance.now();
-    const response = await fetch(testUrls[1], { cache: 'no-store' });
-    const data = await response.text();
-    const speedEnd = performance.now();
-
-    const duration = (speedEnd - speedStart) / 1000; // seconds
-    const bytes = new Blob([data]).size;
-    const bits = bytes * 8;
-    downloadMbps = Math.round((bits / duration / 1000000) * 100) / 100;
-
-    // Estimate based on connection type if available
-    const connection = (navigator as Navigator & { connection?: { downlink?: number; effectiveType?: string } }).connection;
-    if (connection?.downlink) {
-      downloadMbps = connection.downlink;
-    }
+  // Download — pull a sizeable payload and measure throughput.
+  try {
+    const bytes = 8_000_000; // 8 MB
+    const dStart = performance.now();
+    const res = await fetch(`https://speed.cloudflare.com/__down?bytes=${bytes}`, { cache: 'no-store' });
+    const blob = await res.blob();
+    const seconds = (performance.now() - dStart) / 1000;
+    if (seconds > 0) downloadMbps = Math.round((blob.size * 8 / seconds / 1_000_000) * 10) / 10;
   } catch (error) {
-    console.error('Speed test error:', error);
+    console.error('Download speed test error:', error);
   }
 
-  return { downloadMbps: Math.max(downloadMbps, 1), latencyMs };
+  // Upload — push a payload and measure throughput.
+  try {
+    const upSize = 4_000_000; // 4 MB
+    const payload = new Uint8Array(upSize);
+    const uStart = performance.now();
+    await fetch('https://speed.cloudflare.com/__up', { method: 'POST', body: payload, cache: 'no-store' });
+    const seconds = (performance.now() - uStart) / 1000;
+    if (seconds > 0) uploadMbps = Math.round((upSize * 8 / seconds / 1_000_000) * 10) / 10;
+  } catch (error) {
+    console.error('Upload speed test error:', error);
+  }
+
+  // Fallback to the browser's reported downlink if the download test failed.
+  if (downloadMbps === 0) {
+    const connection = (navigator as Navigator & { connection?: { downlink?: number } }).connection;
+    if (connection?.downlink) downloadMbps = connection.downlink;
+  }
+
+  return { downloadMbps, uploadMbps, latencyMs };
 }
 
 // Get connection info
@@ -155,7 +163,10 @@ function getConnectionInfo(): { connectionType: string; effectiveType: string } 
   };
 }
 
-// Fetch IP info and VPN detection
+// Fetch IP info and VPN detection.
+// Goes through our own /api/system/ip route so the lookup runs server-side
+// (no mixed-content block on https) and can read the agent's real client IP
+// plus proxy/VPN/hosting flags.
 async function fetchIpInfo(): Promise<SystemCheckResult['ipInfo']> {
   const defaultResult: SystemCheckResult['ipInfo'] = {
     ip: 'unknown',
@@ -170,52 +181,23 @@ async function fetchIpInfo(): Promise<SystemCheckResult['ipInfo']> {
   };
 
   try {
-    // Using ip-api.com (free, no API key needed, includes VPN detection)
-    const response = await fetch('http://ip-api.com/json/?fields=status,message,country,regionName,city,zip,lat,lon,timezone,isp,org,as,proxy,hosting,query');
-
-    if (!response.ok) {
-      // Fallback to ipify for just IP
-      const ipResponse = await fetch('https://api.ipify.org?format=json');
-      const ipData = await ipResponse.json();
-      return { ...defaultResult, ip: ipData.ip };
-    }
-
-    const data = await response.json();
-
-    if (data.status === 'success') {
-      return {
-        ip: data.query || 'unknown',
-        city: data.city || 'unknown',
-        region: data.regionName || 'unknown',
-        country: data.country || 'unknown',
-        timezone: data.timezone || defaultResult.timezone,
-        isp: data.isp || 'unknown',
-        isVpn: data.proxy === true,
-        isProxy: data.proxy === true,
-        isHosting: data.hosting === true,
-      };
-    }
-  } catch (error) {
-    console.error('IP info fetch error:', error);
-
-    // Try alternative API
-    try {
-      const response = await fetch('https://ipapi.co/json/');
+    const response = await fetch('/api/system/ip', { cache: 'no-store' });
+    if (response.ok) {
       const data = await response.json();
       return {
         ip: data.ip || 'unknown',
         city: data.city || 'unknown',
         region: data.region || 'unknown',
-        country: data.country_name || 'unknown',
+        country: data.country || 'unknown',
         timezone: data.timezone || defaultResult.timezone,
-        isp: data.org || 'unknown',
-        isVpn: false,
-        isProxy: false,
-        isHosting: false,
+        isp: data.isp || 'unknown',
+        isVpn: !!data.isVpn,
+        isProxy: !!data.isProxy,
+        isHosting: !!data.isHosting,
       };
-    } catch {
-      // Return default
     }
+  } catch (error) {
+    console.error('IP info fetch error:', error);
   }
 
   return defaultResult;
@@ -264,6 +246,7 @@ export async function runSystemCheck(): Promise<SystemCheckResult> {
   const result: SystemCheckResult = {
     internetSpeed: {
       downloadMbps: speedTest.downloadMbps,
+      uploadMbps: speedTest.uploadMbps,
       latencyMs: speedTest.latencyMs,
       connectionType: connectionInfo.connectionType,
       effectiveType: connectionInfo.effectiveType,

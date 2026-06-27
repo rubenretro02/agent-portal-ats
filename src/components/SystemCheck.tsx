@@ -270,7 +270,11 @@ export function SystemCheck({ agentId, onComplete, showSaveButton = true, compac
               </div>
               <p className="text-sm text-zinc-500">Mbps Download Speed</p>
               <Separator />
-              <div className="grid grid-cols-2 gap-2 text-sm">
+              <div className="grid grid-cols-3 gap-2 text-sm">
+                <div>
+                  <p className="text-zinc-500">Upload</p>
+                  <p className="font-medium">{result.internetSpeed.uploadMbps} Mbps</p>
+                </div>
                 <div>
                   <p className="text-zinc-500">Latency</p>
                   <p className="font-medium">{result.internetSpeed.latencyMs}ms</p>

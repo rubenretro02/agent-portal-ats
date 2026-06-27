@@ -36,9 +36,14 @@ import {
   Zap,
   Award,
   Languages,
+  Cpu,
+  Shield,
+  ShieldAlert,
+  Gauge,
 } from 'lucide-react';
 import { PIPELINE_STAGES, DOCUMENT_TYPES } from '@/lib/constants';
 import type { PipelineStatus, DocumentStatus } from '@/types';
+import type { SystemCheckResult } from '@/lib/systemCheck';
 import { AgentMailSection } from '@/components/mail/AgentMailSection';
 
 interface AgentProfile {
@@ -59,6 +64,8 @@ interface AgentProfile {
   preferred_language: 'en' | 'es';
   timezone?: string;
   application_date?: string;
+  system_check?: SystemCheckResult | null;
+  system_check_date?: string | null;
   profiles: {
     id: string;
     first_name: string;
@@ -251,6 +258,8 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
   address: agentData.address || null,
   timezone: agentData.timezone || 'America/New_York',
   application_date: agentData.application_date,
+  system_check: agentData.system_check || null,
+  system_check_date: agentData.system_check_date || null,
   preferred_language: agentData.preferred_language || 'en',
   profiles: agentData.profiles || null,
   };
@@ -788,6 +797,75 @@ const location = agent.address ?
                 </div>
               </CardContent>
             </Card>
+
+            {/* System Check (real device + connection report) */}
+            {agent.system_check && (() => {
+              const sc = agent.system_check as SystemCheckResult;
+              const dl = sc.internetSpeed?.downloadMbps ?? 0;
+              const up = sc.internetSpeed?.uploadMbps ?? 0;
+              const vpn = sc.ipInfo?.isVpn || sc.ipInfo?.isProxy;
+              const tiles = [
+                { icon: Gauge, label: 'Download', value: `${dl} Mbps`, good: dl >= 25 },
+                { icon: Gauge, label: 'Upload', value: `${up} Mbps`, good: up >= 5 },
+                { icon: Cpu, label: 'CPU Cores', value: `${sc.hardware?.cpuCores ?? '—'}`, good: (sc.hardware?.cpuCores ?? 0) >= 4 },
+                { icon: Monitor, label: 'RAM', value: sc.hardware?.ramGB ? `${sc.hardware.ramGB} GB` : 'N/A', good: (sc.hardware?.ramGB ?? 0) >= 8 },
+              ];
+              const rows = [
+                { label: 'Screen', value: `${sc.screen?.width ?? 0} × ${sc.screen?.height ?? 0}` },
+                { label: 'Latency', value: `${sc.internetSpeed?.latencyMs ?? 0} ms` },
+                { label: 'Browser', value: `${sc.browser?.name ?? '—'} ${sc.browser?.version ?? ''}`.trim() },
+                { label: 'Platform', value: sc.hardware?.platform ?? '—' },
+                { label: 'IP Address', value: sc.ipInfo?.ip ?? '—', mono: true },
+                { label: 'ISP', value: sc.ipInfo?.isp ?? '—' },
+                { label: 'Location', value: [sc.ipInfo?.city, sc.ipInfo?.region, sc.ipInfo?.country].filter(v => v && v !== 'unknown').join(', ') || '—' },
+                { label: 'Webcam / Mic', value: `${sc.mediaDevices?.hasWebcam ? 'Webcam' : 'No webcam'} · ${sc.mediaDevices?.hasMicrophone ? 'Mic' : 'No mic'}` },
+              ];
+              return (
+                <Card className="border-zinc-200">
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
+                        <Cpu className="h-4 w-4 text-[var(--brand-blue)]" />
+                        System Check
+                      </CardTitle>
+                      <div className="flex items-center gap-2">
+                        {vpn ? (
+                          <Badge className="bg-amber-100 text-amber-700 border-0 gap-1">
+                            <ShieldAlert className="h-3 w-3" /> VPN / Proxy
+                          </Badge>
+                        ) : (
+                          <Badge className="bg-emerald-100 text-emerald-700 border-0 gap-1">
+                            <Shield className="h-3 w-3" /> Direct
+                          </Badge>
+                        )}
+                        {agent.system_check_date && (
+                          <span className="text-xs text-zinc-400">{formatDate(agent.system_check_date)}</span>
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      {tiles.map((t) => (
+                        <div key={t.label} className={`p-4 rounded-xl border ${t.good ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+                          <t.icon className={`h-5 w-5 ${t.good ? 'text-emerald-600' : 'text-amber-600'}`} />
+                          <p className="text-lg font-bold text-zinc-900 mt-2 leading-none">{t.value}</p>
+                          <p className="text-xs text-zinc-500 mt-1">{t.label}</p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 rounded-xl border border-zinc-200 p-4">
+                      {rows.map((r) => (
+                        <div key={r.label} className="flex items-center justify-between gap-3">
+                          <span className="text-xs text-zinc-500">{r.label}</span>
+                          <span className={`text-sm font-medium text-zinc-900 text-right truncate ${r.mono ? 'font-mono text-xs' : ''}`}>{r.value}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
 
             {/* Agent Mail Section */}
             <AgentMailSection

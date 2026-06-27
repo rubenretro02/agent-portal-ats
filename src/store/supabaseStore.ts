@@ -197,6 +197,16 @@ interface OpportunityWithQuestions {
   };
 }
 
+export interface SystemRequirements {
+  minInternetSpeed?: number;
+  minRam?: number;
+  minCpuCores?: number;
+  minScreenWidth?: number;
+  requiresWebcam?: boolean;
+  requiresMicrophone?: boolean;
+  noVpn?: boolean;
+}
+
 interface CreateOpportunityData {
   name: string;
   description: string;
@@ -209,6 +219,7 @@ interface CreateOpportunityData {
   minScore?: number;
   status?: string;
   tags?: string[];
+  systemRequirements?: SystemRequirements;
   applicationQuestions?: ApplicationQuestion[];
   applicationStages?: ApplicationStage[];
 }
@@ -406,6 +417,7 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
           minScore: data.minScore || 0,
           languages: data.languages,
           minExperience: 0,
+          systemRequirements: data.systemRequirements || null,
         },
         schedule: {
           type: 'flexible',

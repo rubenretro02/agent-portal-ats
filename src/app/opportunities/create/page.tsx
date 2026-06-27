@@ -68,6 +68,12 @@ import {
   Layers,
   Sparkles,
   Palette,
+  Wifi,
+  Cpu,
+  Monitor,
+  Shield,
+  Camera,
+  Mic,
 } from 'lucide-react';
 import type { ApplicationQuestion, QuestionType, ApplicationStage, StageType } from '@/types';
 
@@ -292,6 +298,14 @@ export default function CreateOpportunityPage() {
     minScore: 0,
     status: 'draft',
     tags: [] as string[],
+    // Minimum system requirements (0/false = no minimum)
+    minInternetSpeed: 25,
+    minRam: 8,
+    minCpuCores: 4,
+    minScreenWidth: 1280,
+    requiresWebcam: false,
+    requiresMicrophone: true,
+    noVpn: true,
   });
   const [tagInput, setTagInput] = useState('');
 
@@ -468,6 +482,15 @@ export default function CreateOpportunityPage() {
 
     const opportunityData = {
       ...formData,
+      systemRequirements: {
+        minInternetSpeed: formData.minInternetSpeed || undefined,
+        minRam: formData.minRam || undefined,
+        minCpuCores: formData.minCpuCores || undefined,
+        minScreenWidth: formData.minScreenWidth || undefined,
+        requiresWebcam: formData.requiresWebcam,
+        requiresMicrophone: formData.requiresMicrophone,
+        noVpn: formData.noVpn,
+      },
       applicationQuestions: questions,
       applicationStages: stages,
     };
@@ -694,6 +717,57 @@ export default function CreateOpportunityPage() {
                         ))}
                       </div>
                     )}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Cpu className="h-5 w-5 text-[var(--brand-blue)]" />
+                    Minimum System Requirements
+                  </CardTitle>
+                  <p className="text-sm text-zinc-500">
+                    Checked against each agent&apos;s system check. Set a value to 0 to skip it.
+                  </p>
+                </CardHeader>
+                <CardContent className="space-y-5">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1.5"><Wifi className="h-3.5 w-3.5 text-[var(--brand-blue)]" /> Internet (Mbps)</Label>
+                      <Input type="number" min={0} value={formData.minInternetSpeed}
+                        onChange={(e) => setFormData({ ...formData, minInternetSpeed: Number(e.target.value) })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1.5"><Monitor className="h-3.5 w-3.5 text-purple-500" /> RAM (GB)</Label>
+                      <Input type="number" min={0} value={formData.minRam}
+                        onChange={(e) => setFormData({ ...formData, minRam: Number(e.target.value) })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1.5"><Cpu className="h-3.5 w-3.5 text-amber-500" /> CPU Cores</Label>
+                      <Input type="number" min={0} value={formData.minCpuCores}
+                        onChange={(e) => setFormData({ ...formData, minCpuCores: Number(e.target.value) })} />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="flex items-center gap-1.5"><Monitor className="h-3.5 w-3.5 text-blue-500" /> Screen Width (px)</Label>
+                      <Input type="number" min={0} value={formData.minScreenWidth}
+                        onChange={(e) => setFormData({ ...formData, minScreenWidth: Number(e.target.value) })} />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <label className="flex items-center justify-between gap-2 p-3 rounded-xl border border-zinc-200 cursor-pointer">
+                      <span className="flex items-center gap-2 text-sm text-zinc-700"><Camera className="h-4 w-4 text-zinc-400" /> Webcam</span>
+                      <Switch checked={formData.requiresWebcam} onCheckedChange={(c) => setFormData({ ...formData, requiresWebcam: c })} />
+                    </label>
+                    <label className="flex items-center justify-between gap-2 p-3 rounded-xl border border-zinc-200 cursor-pointer">
+                      <span className="flex items-center gap-2 text-sm text-zinc-700"><Mic className="h-4 w-4 text-zinc-400" /> Microphone</span>
+                      <Switch checked={formData.requiresMicrophone} onCheckedChange={(c) => setFormData({ ...formData, requiresMicrophone: c })} />
+                    </label>
+                    <label className="flex items-center justify-between gap-2 p-3 rounded-xl border border-zinc-200 cursor-pointer">
+                      <span className="flex items-center gap-2 text-sm text-zinc-700"><Shield className="h-4 w-4 text-zinc-400" /> Block VPN</span>
+                      <Switch checked={formData.noVpn} onCheckedChange={(c) => setFormData({ ...formData, noVpn: c })} />
+                    </label>
                   </div>
                 </CardContent>
               </Card>
