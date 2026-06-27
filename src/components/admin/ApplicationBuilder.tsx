@@ -338,7 +338,7 @@ export function ApplicationBuilder({ questions, onChange, readOnly = false }: Ap
           <h3 className="font-semibold text-zinc-900">Application Questions</h3>
           <p className="text-sm text-zinc-500">Build your custom application form</p>
         </div>
-        <Button onClick={() => setShowAddDialog(true)} size="sm" className="bg-teal-600 hover:bg-teal-700">
+        <Button onClick={() => setShowAddDialog(true)} size="sm" className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
           <Plus className="h-4 w-4 mr-2" />
           Add Question
         </Button>
@@ -472,7 +472,7 @@ export function ApplicationBuilder({ questions, onChange, readOnly = false }: Ap
             <Button
               onClick={addQuestion}
               disabled={!newQuestion.question?.trim()}
-              className="bg-teal-600 hover:bg-teal-700"
+              className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]"
             >
               Add Question
             </Button>
@@ -502,7 +502,7 @@ export function ApplicationBuilder({ questions, onChange, readOnly = false }: Ap
             </Button>
             <Button
               onClick={updateQuestion}
-              className="bg-teal-600 hover:bg-teal-700"
+              className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]"
             >
               Save Changes
             </Button>

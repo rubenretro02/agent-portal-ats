@@ -106,7 +106,7 @@ export function SystemCheck({ agentId, onComplete, showSaveButton = true, compac
 
   const getSpeedRating = (mbps: number) => {
     if (mbps >= 50) return { label: 'Excellent', color: 'text-emerald-600', bg: 'bg-emerald-100' };
-    if (mbps >= 25) return { label: 'Good', color: 'text-cyan-600', bg: 'bg-cyan-100' };
+    if (mbps >= 25) return { label: 'Good', color: 'text-[var(--brand-blue)]', bg: 'bg-[var(--brand-blue-soft)]' };
     if (mbps >= 10) return { label: 'Fair', color: 'text-amber-600', bg: 'bg-amber-100' };
     return { label: 'Poor', color: 'text-red-600', bg: 'bg-red-100' };
   };
@@ -116,14 +116,14 @@ export function SystemCheck({ agentId, onComplete, showSaveButton = true, compac
       <Card className="border-zinc-200">
         <CardContent className="p-6">
           <div className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-cyan-100 to-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <Cpu className="h-8 w-8 text-cyan-600" />
+            <div className="w-16 h-16 bg-[var(--brand-blue-soft)] rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <Cpu className="h-8 w-8 text-[var(--brand-blue)]" />
             </div>
             <h3 className="text-lg font-semibold text-zinc-900 mb-2">System Requirements Check</h3>
             <p className="text-sm text-zinc-500 mb-6 max-w-md mx-auto">
               We'll check your internet speed, hardware specs, and equipment to ensure you meet job requirements.
             </p>
-            <Button onClick={runCheck} className="bg-cyan-600 hover:bg-cyan-700">
+            <Button onClick={runCheck} className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
               <Zap className="h-4 w-4 mr-2" />
               Run System Check
             </Button>
@@ -138,8 +138,8 @@ export function SystemCheck({ agentId, onComplete, showSaveButton = true, compac
       <Card className="border-zinc-200">
         <CardContent className="p-6">
           <div className="text-center">
-            <div className="w-16 h-16 bg-gradient-to-br from-cyan-100 to-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
-              <Loader2 className="h-8 w-8 text-cyan-600 animate-spin" />
+            <div className="w-16 h-16 bg-[var(--brand-blue-soft)] rounded-2xl flex items-center justify-center mx-auto mb-4 animate-pulse">
+              <Loader2 className="h-8 w-8 text-[var(--brand-blue)] animate-spin" />
             </div>
             <h3 className="text-lg font-semibold text-zinc-900 mb-2">Scanning Your System...</h3>
             <p className="text-sm text-zinc-500 mb-4">{currentCheck}</p>
@@ -181,7 +181,7 @@ export function SystemCheck({ agentId, onComplete, showSaveButton = true, compac
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
             <div className="flex items-center gap-2">
-              <Wifi className="h-4 w-4 text-cyan-500" />
+              <Wifi className="h-4 w-4 text-[var(--brand-blue)]" />
               <span>{result.internetSpeed.downloadMbps} Mbps</span>
             </div>
             <div className="flex items-center gap-2">
@@ -209,7 +209,7 @@ export function SystemCheck({ agentId, onComplete, showSaveButton = true, compac
   return (
     <div className="space-y-6">
       {/* Header */}
-      <Card className="border-emerald-200 bg-gradient-to-r from-emerald-50 to-cyan-50">
+      <Card className="border-emerald-200 bg-gradient-to-r from-emerald-50 to-[#EEF1FF]">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
@@ -258,7 +258,7 @@ export function SystemCheck({ agentId, onComplete, showSaveButton = true, compac
         <Card className="border-zinc-200">
           <CardHeader className="pb-2">
             <CardTitle className="text-base flex items-center gap-2">
-              <Wifi className="h-5 w-5 text-cyan-500" />
+              <Wifi className="h-5 w-5 text-[var(--brand-blue)]" />
               Internet Connection
             </CardTitle>
           </CardHeader>

@@ -254,13 +254,13 @@ export function OnboardingWidget({ onComplete, onSkip }: OnboardingWidgetProps) 
   };
 
   return (
-    <Card className="border-2 border-teal-200 bg-gradient-to-br from-white to-teal-50/30 overflow-hidden">
+    <Card className="border-2 border-[rgba(32,71,255,0.3)] bg-gradient-to-br from-white to-[#C873E5]/30 overflow-hidden">
       {/* Header */}
-      <div className="bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-4">
+      <div className="bg-gradient-to-r from-[#2047FF] to-[#C873E5] px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-lg font-bold text-white">Complete Your Profile</h2>
-            <p className="text-teal-100 text-sm">Required to apply for opportunities</p>
+            <p className="text-white/80 text-sm">Required to apply for opportunities</p>
           </div>
           {onSkip && (
             <Button variant="ghost" size="sm" onClick={onSkip} className="text-white/70 hover:text-white hover:bg-white/10">
@@ -271,11 +271,11 @@ export function OnboardingWidget({ onComplete, onSkip }: OnboardingWidgetProps) 
 
         {/* Progress */}
         <div className="mt-4">
-          <div className="flex items-center justify-between text-xs text-teal-100 mb-1">
+          <div className="flex items-center justify-between text-xs text-white/80 mb-1">
             <span>Step {currentStep + 1} of {STEPS.length}</span>
             <span>{Math.round(progress)}%</span>
           </div>
-          <Progress value={progress} className="h-1.5 bg-teal-700" />
+          <Progress value={progress} className="h-1.5 bg-white/20" />
         </div>
 
         {/* Step Pills */}
@@ -285,10 +285,10 @@ export function OnboardingWidget({ onComplete, onSkip }: OnboardingWidgetProps) 
               key={step.id}
               className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all ${
                 index === currentStep
-                  ? 'bg-white text-teal-700'
+                  ? 'bg-white text-[var(--brand-blue)]'
                   : index < currentStep
-                  ? 'bg-teal-500 text-white'
-                  : 'bg-teal-700/50 text-teal-200'
+                  ? 'bg-white/25 text-white'
+                  : 'bg-white/10 text-white/70'
               }`}
             >
               {index < currentStep ? (
@@ -404,7 +404,7 @@ export function OnboardingWidget({ onComplete, onSkip }: OnboardingWidgetProps) 
                   <Badge
                     key={lang}
                     variant={formData.languages.includes(lang) ? 'default' : 'outline'}
-                    className={`cursor-pointer ${formData.languages.includes(lang) ? 'bg-teal-500' : ''}`}
+                    className={`cursor-pointer ${formData.languages.includes(lang) ? 'bg-[var(--brand-blue)]' : ''}`}
                     onClick={() => toggleLanguage(lang)}
                   >
                     {lang}
@@ -447,7 +447,7 @@ export function OnboardingWidget({ onComplete, onSkip }: OnboardingWidgetProps) 
           <Button
             onClick={handleNext}
             disabled={saving}
-            className="gap-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600"
+            className="gap-2 bg-gradient-to-r from-[#2047FF] to-[#C873E5] hover:from-[#2047FF] hover:to-[#C873E5]"
           >
             {saving ? (
               <><Loader2 className="h-4 w-4 animate-spin" />Saving...</>

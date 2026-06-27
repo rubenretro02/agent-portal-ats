@@ -131,7 +131,7 @@ export default function RecruitersPage() {
           {hasPermission('canManageRecruiters') && (
             <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="bg-cyan-600 hover:bg-cyan-700">
+                <Button className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
                   <UserPlus className="h-4 w-4 mr-2" />
                   Add Recruiter
                 </Button>
@@ -174,7 +174,7 @@ export default function RecruitersPage() {
                       onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
                         setNewRecruiter({ ...newRecruiter, email: e.target.value })
                       }
-                      placeholder="john.doe@agenthub.com"
+                      placeholder="john.doe@wingcx.com"
                     />
                   </div>
                   <div className="space-y-2">
@@ -206,7 +206,7 @@ export default function RecruitersPage() {
                   <Button
                     onClick={handleAddRecruiter}
                     disabled={isLoading || !newRecruiter.email || !newRecruiter.firstName}
-                    className="bg-cyan-600 hover:bg-cyan-700"
+                    className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]"
                   >
                     {isLoading ? 'Adding...' : 'Add Recruiter'}
                   </Button>
@@ -298,7 +298,7 @@ export default function RecruitersPage() {
                     <TableRow key={recruiter.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center text-white font-medium text-sm">
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2047FF] to-[#C873E5] flex items-center justify-center text-white font-medium text-sm">
                             {recruiter.firstName[0]}{recruiter.lastName[0]}
                           </div>
                           <div>

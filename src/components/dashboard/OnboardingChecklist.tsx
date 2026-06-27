@@ -530,29 +530,29 @@ export function OnboardingChecklist({ onComplete }: OnboardingChecklistProps) {
       <div className="space-y-6">
         {/* Header Card */}
         <Card className="border-zinc-200 overflow-hidden">
-          <div className="bg-gradient-to-r from-teal-600 to-cyan-600 px-6 py-5">
+          <div className="bg-gradient-to-r from-[#2047FF] to-[#C873E5] px-6 py-5">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-lg font-semibold text-white">
                   Complete Your Profile
                 </h2>
-                <p className="text-teal-100 text-sm mt-0.5">
+                <p className="text-white/80 text-sm mt-0.5">
                   Fill in the required information to access opportunities
                 </p>
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-right">
                   <p className="text-2xl font-bold text-white">{completedCount}/{totalSteps}</p>
-                  <p className="text-xs text-teal-200">Steps done</p>
+                  <p className="text-xs text-white/80">Steps done</p>
                 </div>
               </div>
             </div>
             <div className="mt-4">
-              <div className="flex items-center justify-between text-xs text-teal-200 mb-1.5">
+              <div className="flex items-center justify-between text-xs text-white/80 mb-1.5">
                 <span>Progress</span>
                 <span>{Math.round(progressPercent)}%</span>
               </div>
-              <div className="h-2 bg-teal-800/40 rounded-full overflow-hidden">
+              <div className="h-2 bg-white/20 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-white rounded-full transition-all duration-500 ease-out"
                   style={{ width: `${progressPercent}%` }}
@@ -576,9 +576,9 @@ export function OnboardingChecklist({ onComplete }: OnboardingChecklistProps) {
                 key={step.key}
                 className={`border transition-all duration-200 cursor-pointer group ${
                   isComplete
-                    ? 'border-teal-200 bg-teal-50/50 hover:bg-teal-50'
+                    ? 'border-[rgba(32,71,255,0.3)] bg-[var(--brand-blue-soft)] hover:bg-[var(--brand-blue-soft)]'
                     : isCurrent
-                    ? 'border-teal-300 bg-white shadow-sm hover:shadow-md ring-1 ring-teal-100'
+                    ? 'border-[rgba(32,71,255,0.3)] bg-white shadow-sm hover:shadow-md ring-1 ring-[var(--brand-blue)]'
                     : 'border-zinc-200 bg-white hover:bg-zinc-50'
                 }`}
                 onClick={step.onOpen}
@@ -588,9 +588,9 @@ export function OnboardingChecklist({ onComplete }: OnboardingChecklistProps) {
                     {/* Step Number / Check */}
                     <div className={`relative flex items-center justify-center w-11 h-11 rounded-full shrink-0 transition-colors ${
                       isComplete
-                        ? 'bg-teal-600 text-white'
+                        ? 'bg-[var(--brand-blue)] text-white'
                         : isCurrent
-                        ? 'bg-teal-100 text-teal-700 ring-2 ring-teal-300'
+                        ? 'bg-[var(--brand-blue-soft)] text-[var(--brand-blue)] ring-2 ring-[var(--brand-blue)]'
                         : 'bg-zinc-100 text-zinc-400'
                     }`}>
                       {isComplete ? (
@@ -606,18 +606,18 @@ export function OnboardingChecklist({ onComplete }: OnboardingChecklistProps) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className={`font-medium text-sm ${
-                          isComplete ? 'text-teal-800' : 'text-zinc-900'
+                          isComplete ? 'text-[var(--brand-blue)]' : 'text-zinc-900'
                         }`}>
                           {step.title}
                         </p>
                         {isCurrent && !isComplete && (
-                          <Badge className="bg-teal-100 text-teal-700 text-[10px] px-1.5 py-0 font-medium border-0">
+                          <Badge className="bg-[var(--brand-blue-soft)] text-[var(--brand-blue)] text-[10px] px-1.5 py-0 font-medium border-0">
                             Next
                           </Badge>
                         )}
                       </div>
                       <p className={`text-xs mt-0.5 truncate ${
-                        isComplete ? 'text-teal-600' : 'text-zinc-500'
+                        isComplete ? 'text-[var(--brand-blue)]' : 'text-zinc-500'
                       }`}>
                         {step.summary}
                       </p>
@@ -626,7 +626,7 @@ export function OnboardingChecklist({ onComplete }: OnboardingChecklistProps) {
                     {/* Action */}
                     <div className="flex items-center gap-2 shrink-0">
                       {isComplete ? (
-                        <Badge className="bg-teal-100 text-teal-700 border-0 text-xs font-medium">
+                        <Badge className="bg-[var(--brand-blue-soft)] text-[var(--brand-blue)] border-0 text-xs font-medium">
                           Complete
                         </Badge>
                       ) : (
@@ -635,7 +635,7 @@ export function OnboardingChecklist({ onComplete }: OnboardingChecklistProps) {
                         </Badge>
                       )}
                       <ChevronRight className={`h-4 w-4 transition-transform group-hover:translate-x-0.5 ${
-                        isComplete ? 'text-teal-400' : 'text-zinc-300'
+                        isComplete ? 'text-[var(--brand-blue)]' : 'text-zinc-300'
                       }`} />
                     </div>
                   </div>
@@ -658,7 +658,7 @@ export function OnboardingChecklist({ onComplete }: OnboardingChecklistProps) {
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <User className="h-5 w-5 text-teal-600" />
+              <User className="h-5 w-5 text-[var(--brand-blue)]" />
               Personal Information
             </DialogTitle>
             <DialogDescription>
@@ -730,7 +730,7 @@ export function OnboardingChecklist({ onComplete }: OnboardingChecklistProps) {
               />
             </div>
             {errors.personal && <p className="text-sm text-red-600">{errors.personal}</p>}
-            <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white" onClick={savePersonalInfo} disabled={savingStep === 'personal'}>
+            <Button className="w-full bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)] text-white" onClick={savePersonalInfo} disabled={savingStep === 'personal'}>
               {savingStep === 'personal' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
               Save Personal Information
             </Button>
@@ -743,7 +743,7 @@ export function OnboardingChecklist({ onComplete }: OnboardingChecklistProps) {
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <MapPin className="h-5 w-5 text-teal-600" />
+              <MapPin className="h-5 w-5 text-[var(--brand-blue)]" />
               Home Address
             </DialogTitle>
             <DialogDescription>
@@ -817,7 +817,7 @@ export function OnboardingChecklist({ onComplete }: OnboardingChecklistProps) {
               />
             </div>
             {errors.address && <p className="text-sm text-red-600">{errors.address}</p>}
-            <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white" onClick={saveAddress} disabled={savingStep === 'address'}>
+            <Button className="w-full bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)] text-white" onClick={saveAddress} disabled={savingStep === 'address'}>
               {savingStep === 'address' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
               Save Address
             </Button>
@@ -830,7 +830,7 @@ export function OnboardingChecklist({ onComplete }: OnboardingChecklistProps) {
         <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Cpu className="h-5 w-5 text-teal-600" />
+              <Cpu className="h-5 w-5 text-[var(--brand-blue)]" />
               Computer Check
             </DialogTitle>
             <DialogDescription>
@@ -852,7 +852,7 @@ export function OnboardingChecklist({ onComplete }: OnboardingChecklistProps) {
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Briefcase className="h-5 w-5 text-teal-600" />
+              <Briefcase className="h-5 w-5 text-[var(--brand-blue)]" />
               Experience
             </DialogTitle>
             <DialogDescription>
@@ -901,7 +901,7 @@ export function OnboardingChecklist({ onComplete }: OnboardingChecklistProps) {
               />
             </div>
             {errors.experience && <p className="text-sm text-red-600">{errors.experience}</p>}
-            <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white" onClick={saveExperience} disabled={savingStep === 'experience'}>
+            <Button className="w-full bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)] text-white" onClick={saveExperience} disabled={savingStep === 'experience'}>
               {savingStep === 'experience' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
               Save Experience
             </Button>
@@ -914,7 +914,7 @@ export function OnboardingChecklist({ onComplete }: OnboardingChecklistProps) {
         <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Globe className="h-5 w-5 text-teal-600" />
+              <Globe className="h-5 w-5 text-[var(--brand-blue)]" />
               Languages & Availability
             </DialogTitle>
             <DialogDescription>
@@ -932,7 +932,7 @@ export function OnboardingChecklist({ onComplete }: OnboardingChecklistProps) {
                     onClick={() => toggleLanguage(lang)}
                     className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                       languagesForm.languages.includes(lang)
-                        ? 'bg-teal-600 text-white'
+                        ? 'bg-[var(--brand-blue)] text-white'
                         : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
                     }`}
                   >
@@ -965,7 +965,7 @@ export function OnboardingChecklist({ onComplete }: OnboardingChecklistProps) {
               <Input value={languagesForm.timezone} disabled className="bg-zinc-50 text-zinc-500" />
             </div>
             {errors.languages && <p className="text-sm text-red-600">{errors.languages}</p>}
-            <Button className="w-full bg-teal-600 hover:bg-teal-700 text-white" onClick={saveLanguages} disabled={savingStep === 'languages'}>
+            <Button className="w-full bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)] text-white" onClick={saveLanguages} disabled={savingStep === 'languages'}>
               {savingStep === 'languages' ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Save className="h-4 w-4 mr-2" />}
               Save Languages & Availability
             </Button>

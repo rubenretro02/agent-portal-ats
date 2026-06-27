@@ -61,7 +61,7 @@ export default function MailPage() {
       <UnifiedLayout title="Agent Mail">
         <div className="flex items-center justify-center h-[calc(100vh-120px)]">
           <div className="text-center">
-            <Loader2 className="h-12 w-12 animate-spin text-teal-500 mx-auto mb-4" />
+            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
             <p className="text-zinc-500">Conectando con tu correo...</p>
           </div>
         </div>
@@ -158,7 +158,7 @@ export default function MailPage() {
           />
         ) : (
           <div className="flex items-center justify-center h-full">
-            <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
       </div>

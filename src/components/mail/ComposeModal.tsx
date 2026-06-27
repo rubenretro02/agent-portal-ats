@@ -74,7 +74,7 @@ export function ComposeModal({ open, onOpenChange }: ComposeModalProps) {
   return (
     <div
       className={cn(
-        'fixed bg-zinc-900 border border-zinc-700 rounded-t-lg shadow-2xl flex flex-col z-50 transition-all duration-200',
+        'fixed bg-card border border-border rounded-t-lg shadow-2xl flex flex-col z-50 transition-all duration-200',
         minimized
           ? 'bottom-0 right-4 w-72 h-10'
           : maximized
@@ -84,10 +84,10 @@ export function ComposeModal({ open, onOpenChange }: ComposeModalProps) {
     >
       {/* Header */}
       <div
-        className="flex items-center justify-between px-4 py-2 bg-zinc-800 rounded-t-lg cursor-pointer"
+        className="flex items-center justify-between px-4 py-2 bg-secondary rounded-t-lg cursor-pointer"
         onClick={() => minimized && setMinimized(false)}
       >
-        <span className="text-sm font-medium text-white">
+        <span className="text-sm font-medium text-foreground">
           {subject || 'New Message'}
         </span>
         <div className="flex items-center gap-1">
@@ -97,7 +97,7 @@ export function ComposeModal({ open, onOpenChange }: ComposeModalProps) {
               setMinimized(!minimized);
               if (maximized) setMaximized(false);
             }}
-            className="p-1 text-zinc-400 hover:text-white transition-colors"
+            className="p-1 text-muted-foreground hover:text-foreground transition-colors"
           >
             <Minus size={14} />
           </button>
@@ -107,7 +107,7 @@ export function ComposeModal({ open, onOpenChange }: ComposeModalProps) {
               setMaximized(!maximized);
               if (minimized) setMinimized(false);
             }}
-            className="p-1 text-zinc-400 hover:text-white transition-colors"
+            className="p-1 text-muted-foreground hover:text-foreground transition-colors"
           >
             {maximized ? <Minimize2 size={14} /> : <Maximize2 size={14} />}
           </button>
@@ -116,7 +116,7 @@ export function ComposeModal({ open, onOpenChange }: ComposeModalProps) {
               e.stopPropagation();
               handleClose();
             }}
-            className="p-1 text-zinc-400 hover:text-white transition-colors"
+            className="p-1 text-muted-foreground hover:text-foreground transition-colors"
           >
             <X size={14} />
           </button>
@@ -128,22 +128,22 @@ export function ComposeModal({ open, onOpenChange }: ComposeModalProps) {
         <>
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* To Field */}
-            <div className="flex items-center px-4 py-2 border-b border-zinc-800">
-              <span className="text-sm text-zinc-500 w-16">To</span>
+            <div className="flex items-center px-4 py-2 border-b border-border">
+              <span className="text-sm text-muted-foreground w-16">To</span>
               <Input
                 value={to}
                 onChange={(e) => setTo(e.target.value)}
                 placeholder="Recipients"
-                className="border-0 bg-transparent text-white placeholder:text-zinc-600 focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+                className="border-0 bg-transparent text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
               />
-              <div className="flex items-center gap-2 text-sm text-zinc-500">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 {!showCc && (
-                  <button onClick={() => setShowCc(true)} className="hover:text-zinc-300">
+                  <button onClick={() => setShowCc(true)} className="hover:text-foreground">
                     Cc
                   </button>
                 )}
                 {!showBcc && (
-                  <button onClick={() => setShowBcc(true)} className="hover:text-zinc-300">
+                  <button onClick={() => setShowBcc(true)} className="hover:text-foreground">
                     Bcc
                   </button>
                 )}
@@ -152,35 +152,35 @@ export function ComposeModal({ open, onOpenChange }: ComposeModalProps) {
 
             {/* Cc Field */}
             {showCc && (
-              <div className="flex items-center px-4 py-2 border-b border-zinc-800">
-                <span className="text-sm text-zinc-500 w-16">Cc</span>
+              <div className="flex items-center px-4 py-2 border-b border-border">
+                <span className="text-sm text-muted-foreground w-16">Cc</span>
                 <Input
                   value={cc}
                   onChange={(e) => setCc(e.target.value)}
-                  className="border-0 bg-transparent text-white placeholder:text-zinc-600 focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+                  className="border-0 bg-transparent text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
                 />
               </div>
             )}
 
             {/* Bcc Field */}
             {showBcc && (
-              <div className="flex items-center px-4 py-2 border-b border-zinc-800">
-                <span className="text-sm text-zinc-500 w-16">Bcc</span>
+              <div className="flex items-center px-4 py-2 border-b border-border">
+                <span className="text-sm text-muted-foreground w-16">Bcc</span>
                 <Input
                   value={bcc}
                   onChange={(e) => setBcc(e.target.value)}
-                  className="border-0 bg-transparent text-white placeholder:text-zinc-600 focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+                  className="border-0 bg-transparent text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
                 />
               </div>
             )}
 
             {/* Subject Field */}
-            <div className="flex items-center px-4 py-2 border-b border-zinc-800">
-              <span className="text-sm text-zinc-500 w-16">Subject</span>
+            <div className="flex items-center px-4 py-2 border-b border-border">
+              <span className="text-sm text-muted-foreground w-16">Subject</span>
               <Input
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                className="border-0 bg-transparent text-white placeholder:text-zinc-600 focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
+                className="border-0 bg-transparent text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
               />
             </div>
 
@@ -189,33 +189,33 @@ export function ComposeModal({ open, onOpenChange }: ComposeModalProps) {
               value={body}
               onChange={(e) => setBody(e.target.value)}
               placeholder="Write your message..."
-              className="flex-1 border-0 bg-transparent text-white placeholder:text-zinc-600 focus-visible:ring-0 focus-visible:ring-offset-0 resize-none p-4"
+              className="flex-1 border-0 bg-transparent text-foreground placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 resize-none p-4"
             />
           </div>
 
           {/* Footer */}
-          <div className="flex items-center justify-between px-4 py-3 border-t border-zinc-800">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-border">
             <div className="flex items-center gap-1">
               <Button
                 onClick={handleSend}
                 disabled={!to || !subject || isLoading}
-                className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white"
+                className="bg-gradient-to-r from-[#2047FF] to-[#C873E5] hover:from-[#2047FF] hover:to-[#C873E5] text-white"
               >
                 Send
                 <ChevronDown size={14} className="ml-1" />
               </Button>
 
               <div className="flex items-center gap-0.5 ml-2">
-                <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white hover:bg-zinc-800 h-8 w-8">
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-secondary h-8 w-8">
                   <Paperclip size={16} />
                 </Button>
-                <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white hover:bg-zinc-800 h-8 w-8">
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-secondary h-8 w-8">
                   <Link size={16} />
                 </Button>
-                <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white hover:bg-zinc-800 h-8 w-8">
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-secondary h-8 w-8">
                   <Smile size={16} />
                 </Button>
-                <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white hover:bg-zinc-800 h-8 w-8">
+                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-secondary h-8 w-8">
                   <Image size={16} />
                 </Button>
               </div>
@@ -224,15 +224,15 @@ export function ComposeModal({ open, onOpenChange }: ComposeModalProps) {
             <div className="flex items-center gap-1">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white hover:bg-zinc-800 h-8 w-8">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground hover:bg-secondary h-8 w-8">
                     <MoreVertical size={16} />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800">
-                  <DropdownMenuItem className="text-zinc-300 focus:bg-zinc-800">
+                <DropdownMenuContent align="end" className="bg-card border-border">
+                  <DropdownMenuItem className="text-foreground focus:bg-secondary">
                     Schedule send
                   </DropdownMenuItem>
-                  <DropdownMenuItem className="text-zinc-300 focus:bg-zinc-800">
+                  <DropdownMenuItem className="text-foreground focus:bg-secondary">
                     Save draft
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -240,7 +240,7 @@ export function ComposeModal({ open, onOpenChange }: ComposeModalProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-zinc-400 hover:text-red-400 hover:bg-zinc-800 h-8 w-8"
+                className="text-muted-foreground hover:text-red-400 hover:bg-secondary h-8 w-8"
                 onClick={handleClose}
               >
                 <Trash2 size={16} />

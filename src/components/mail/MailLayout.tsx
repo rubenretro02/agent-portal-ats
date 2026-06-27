@@ -8,7 +8,7 @@ interface MailLayoutProps {
 
 export function MailLayout({ children }: MailLayoutProps) {
   return (
-    <div className="flex-1 flex bg-zinc-950 overflow-hidden">
+    <div className="flex-1 flex bg-background overflow-hidden">
       {children}
     </div>
   );

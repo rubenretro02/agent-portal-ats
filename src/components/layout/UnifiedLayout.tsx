@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthContext } from '@/components/providers/AuthProvider';
+import BrandMark from '@/components/BrandMark';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -54,7 +55,7 @@ export function UnifiedLayout({ children, title }: UnifiedLayoutProps) {
 
     if (!isLoading && !isAuthenticated) {
       redirectTimeout = setTimeout(() => {
-        router.push('/login');
+        router.push('/');
       }, 100);
     }
 
@@ -67,10 +68,10 @@ export function UnifiedLayout({ children, title }: UnifiedLayoutProps) {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-zinc-500">Loading...</p>
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -109,35 +110,20 @@ export function UnifiedLayout({ children, title }: UnifiedLayoutProps) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
       {/* Logo */}
-      <div className="p-4 border-b border-zinc-200">
-        <Link href="/dashboard" className="flex items-center gap-3">
-          <div className={cn(
-            "w-10 h-10 rounded-xl flex items-center justify-center font-bold text-white",
-            isAdmin
-              ? "bg-gradient-to-br from-cyan-400 to-teal-500"
-              : "bg-gradient-to-br from-teal-400 to-cyan-500"
-          )}>
-            {isAdmin ? 'ATS' : 'AP'}
-          </div>
-          <div>
-            <span className="text-xl font-bold text-zinc-900">AgentHub</span>
-            {isAdmin && (
-              <span className="text-zinc-400 text-xs block">Admin Portal</span>
-            )}
-          </div>
-        </Link>
+      <div className="p-4 border-b border-border">
+        <BrandMark href="/dashboard" subtitle={isAdmin ? 'Admin Portal' : undefined} />
       </div>
 
       {/* Role Badge */}
-      <div className="px-4 py-3 border-b border-zinc-100">
+      <div className="px-4 py-3 border-b border-border">
         <Badge
           variant="secondary"
           className={cn(
             "w-full justify-center py-1",
             profile.role === 'admin'
-              ? 'bg-cyan-100 text-cyan-700'
+              ? 'bg-[var(--brand-blue-soft)] text-[var(--brand-blue)]'
               : profile.role === 'recruiter'
-              ? 'bg-teal-100 text-teal-700'
+              ? 'bg-[var(--brand-purple-soft)] text-[var(--brand-purple)]'
               : 'bg-emerald-100 text-emerald-700'
           )}
         >
@@ -162,10 +148,8 @@ export function UnifiedLayout({ children, title }: UnifiedLayoutProps) {
               className={cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200',
                 isActive
-                  ? isAdmin
-                    ? 'bg-cyan-50 text-cyan-700'
-                    : 'bg-teal-50 text-teal-700'
-                  : 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
+                  ? 'bg-accent text-accent-foreground font-semibold'
+                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
               )}
             >
               <Icon className="h-5 w-5" />
@@ -177,10 +161,10 @@ export function UnifiedLayout({ children, title }: UnifiedLayoutProps) {
       </nav>
 
       {/* Support */}
-      <div className="p-4 border-t border-zinc-200">
+      <div className="p-4 border-t border-border">
         <a
-          href="mailto:support@agenthub.com"
-          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900 transition-all duration-200"
+          href="mailto:support@wingcx.com"
+          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-secondary hover:text-foreground transition-all duration-200"
         >
           <HelpCircle className="h-5 w-5" />
           <span className="font-medium">Support</span>
@@ -190,9 +174,9 @@ export function UnifiedLayout({ children, title }: UnifiedLayoutProps) {
   );
 
   return (
-    <div className="flex min-h-screen bg-zinc-50">
+    <div className="flex min-h-screen bg-background">
       {/* Desktop Sidebar */}
-      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-white border-r border-zinc-200">
+      <div className="hidden lg:flex lg:w-64 lg:flex-col lg:fixed lg:inset-y-0 bg-card border-r border-border">
         <SidebarContent />
       </div>
 
@@ -206,7 +190,7 @@ export function UnifiedLayout({ children, title }: UnifiedLayoutProps) {
       {/* Main Content */}
       <div className="flex-1 lg:pl-64">
         {/* Header */}
-        <header className="sticky top-0 z-40 bg-white border-b border-zinc-200">
+        <header className="sticky top-0 z-40 bg-card/80 backdrop-blur-md border-b border-border">
           <div className="flex items-center justify-between px-4 py-3 lg:px-6">
             <div className="flex items-center gap-4">
               <Button
@@ -218,7 +202,7 @@ export function UnifiedLayout({ children, title }: UnifiedLayoutProps) {
                 <Menu className="h-5 w-5" />
               </Button>
               {title && (
-                <h1 className="text-lg font-semibold text-zinc-900">{title}</h1>
+                <h1 className="text-lg font-semibold text-foreground">{title}</h1>
               )}
             </div>
 
@@ -226,7 +210,7 @@ export function UnifiedLayout({ children, title }: UnifiedLayoutProps) {
               {/* Notifications - only for admin */}
               {isAdmin && (
                 <Button variant="ghost" size="icon" className="relative">
-                  <Bell className="h-5 w-5 text-zinc-600" />
+                  <Bell className="h-5 w-5 text-muted-foreground" />
                   <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center">
                     3
                   </span>
@@ -235,37 +219,27 @@ export function UnifiedLayout({ children, title }: UnifiedLayoutProps) {
 
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2 hover:bg-zinc-100">
-                    <div className={cn(
-                      "w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium",
-                      isAdmin
-                        ? "bg-gradient-to-br from-cyan-400 to-teal-500"
-                        : "bg-gradient-to-br from-teal-400 to-cyan-500"
-                    )}>
+                  <Button variant="ghost" className="flex items-center gap-2 hover:bg-secondary">
+                    <div className="w-8 h-8 rounded-full gradient-brand flex items-center justify-center text-white text-sm font-medium">
                       {initials}
                     </div>
-                    <span className="hidden sm:block text-sm font-medium text-zinc-700">
+                    <span className="hidden sm:block text-sm font-medium text-foreground">
                       {profile.first_name}
                     </span>
-                    <ChevronDown className="h-4 w-4 text-zinc-400" />
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-64">
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex items-center gap-3">
-                      <div className={cn(
-                        "w-10 h-10 rounded-full flex items-center justify-center text-white font-medium",
-                        isAdmin
-                          ? "bg-gradient-to-br from-cyan-400 to-teal-500"
-                          : "bg-gradient-to-br from-teal-400 to-cyan-500"
-                      )}>
+                      <div className="w-10 h-10 rounded-full gradient-brand flex items-center justify-center text-white font-medium">
                         {initials}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-zinc-900">
+                        <p className="text-sm font-semibold text-foreground">
                           {profile.first_name} {profile.last_name}
                         </p>
-                        <p className="text-xs text-zinc-500 truncate">{profile.email}</p>
+                        <p className="text-xs text-muted-foreground truncate">{profile.email}</p>
                       </div>
                     </div>
                   </DropdownMenuLabel>

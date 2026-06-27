@@ -76,7 +76,7 @@ export const UI_TRANSLATIONS = {
       hasAccount: 'Already have an account?',
       welcome: 'Welcome',
       welcomeBack: 'Welcome Back',
-      loginSubtitle: 'Log in to your Agent Portal',
+      loginSubtitle: 'Log in to your WingCX account',
       signupSubtitle: 'Create your account to get started',
     },
     // Dashboard
@@ -164,7 +164,7 @@ export const UI_TRANSLATIONS = {
       hasAccount: '¿Ya tienes una cuenta?',
       welcome: 'Bienvenido',
       welcomeBack: 'Bienvenido de Nuevo',
-      loginSubtitle: 'Inicia sesión en tu Portal de Agente',
+      loginSubtitle: 'Inicia sesión en tu cuenta WingCX',
       signupSubtitle: 'Crea tu cuenta para comenzar',
     },
     // Dashboard

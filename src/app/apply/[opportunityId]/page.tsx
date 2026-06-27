@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuthContext } from '@/components/providers/AuthProvider';
 import { useOpportunityStore } from '@/store/supabaseStore';
+import BrandMark from '@/components/BrandMark';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -197,7 +198,7 @@ export default function ApplyPage() {
             placeholder={question.placeholder || 'Enter your answer...'}
             value={(value as string) || ''}
             onChange={(e) => updateAnswer(question.id, e.target.value)}
-            className="h-12 border-zinc-300 focus:border-teal-500"
+            className="h-12 border-zinc-300 focus:border-[var(--brand-blue)]"
           />
         );
       case 'textarea':
@@ -207,7 +208,7 @@ export default function ApplyPage() {
             value={(value as string) || ''}
             onChange={(e) => updateAnswer(question.id, e.target.value)}
             rows={4}
-            className="border-zinc-300 focus:border-teal-500"
+            className="border-zinc-300 focus:border-[var(--brand-blue)]"
           />
         );
       case 'number':
@@ -219,7 +220,7 @@ export default function ApplyPage() {
             onChange={(e) => updateAnswer(question.id, Number(e.target.value))}
             min={question.validation?.min}
             max={question.validation?.max}
-            className="h-12 border-zinc-300 focus:border-teal-500"
+            className="h-12 border-zinc-300 focus:border-[var(--brand-blue)]"
           />
         );
       case 'select':
@@ -239,7 +240,7 @@ export default function ApplyPage() {
         return (
           <RadioGroup value={(value as string) || ''} onValueChange={(v) => updateAnswer(question.id, v)} className="space-y-3">
             {question.options?.map(opt => (
-              <div key={opt.value} className="flex items-center space-x-3 p-4 rounded-xl border border-zinc-200 hover:border-teal-300 hover:bg-teal-50/50 transition-all cursor-pointer" onClick={() => updateAnswer(question.id, opt.value)}>
+              <div key={opt.value} className="flex items-center space-x-3 p-4 rounded-xl border border-zinc-200 hover:border-[rgba(32,71,255,0.3)] hover:bg-[var(--brand-blue-soft)] transition-all cursor-pointer" onClick={() => updateAnswer(question.id, opt.value)}>
                 <RadioGroupItem value={opt.value} id={`${question.id}-${opt.value}`} />
                 <Label htmlFor={`${question.id}-${opt.value}`} className="flex-1 cursor-pointer font-normal">{opt.label}</Label>
               </div>
@@ -248,7 +249,7 @@ export default function ApplyPage() {
         );
       case 'checkbox':
         return (
-          <div className="flex items-center space-x-3 p-4 rounded-xl border border-zinc-200 hover:border-teal-300 hover:bg-teal-50/50 transition-all cursor-pointer" onClick={() => updateAnswer(question.id, !value)}>
+          <div className="flex items-center space-x-3 p-4 rounded-xl border border-zinc-200 hover:border-[rgba(32,71,255,0.3)] hover:bg-[var(--brand-blue-soft)] transition-all cursor-pointer" onClick={() => updateAnswer(question.id, !value)}>
             <Checkbox id={question.id} checked={(value as boolean) || false} onCheckedChange={(checked) => updateAnswer(question.id, checked as boolean)} />
             <Label htmlFor={question.id} className="flex-1 cursor-pointer font-normal">{question.question}</Label>
           </div>
@@ -258,7 +259,7 @@ export default function ApplyPage() {
         return (
           <div className="space-y-3">
             {question.options?.map(opt => (
-              <div key={opt.value} className={`flex items-center space-x-3 p-4 rounded-xl border transition-all cursor-pointer ${selectedValues.includes(opt.value) ? 'border-teal-500 bg-teal-50' : 'border-zinc-200 hover:border-teal-300 hover:bg-teal-50/50'}`} onClick={() => {
+              <div key={opt.value} className={`flex items-center space-x-3 p-4 rounded-xl border transition-all cursor-pointer ${selectedValues.includes(opt.value) ? 'border-[var(--brand-blue)] bg-[var(--brand-blue-soft)]' : 'border-zinc-200 hover:border-[rgba(32,71,255,0.3)] hover:bg-[var(--brand-blue-soft)]'}`} onClick={() => {
                 if (selectedValues.includes(opt.value)) {
                   updateAnswer(question.id, selectedValues.filter(v => v !== opt.value));
                 } else {
@@ -288,7 +289,7 @@ export default function ApplyPage() {
             <Card key={section.id} className="border-zinc-200 hover:shadow-md transition-shadow">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2047FF] to-[#C873E5] flex items-center justify-center">
                     <IconComponent className="h-5 w-5 text-white" />
                   </div>
                   <h3 className="text-lg font-semibold text-zinc-900">{section.title}</h3>
@@ -298,7 +299,7 @@ export default function ApplyPage() {
                     const cleanLine = line.replace(/^[-•]\s*/, '').trim();
                     return (
                       <li key={idx} className="flex items-start gap-2 text-zinc-600">
-                        <CheckCircle className="h-4 w-4 text-teal-500 mt-0.5 flex-shrink-0" />
+                        <CheckCircle className="h-4 w-4 text-[var(--brand-blue)] mt-0.5 flex-shrink-0" />
                         <span>{cleanLine}</span>
                       </li>
                     );
@@ -322,7 +323,7 @@ export default function ApplyPage() {
         if (stage.id.includes('review') || isLastStage) {
           return (
             <div className="text-center">
-              <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-[#C873E5] rounded-2xl flex items-center justify-center mx-auto mb-6">
                 <CheckCircle2 className="h-10 w-10 text-white" />
               </div>
               <h1 className="text-3xl font-bold text-zinc-900 mb-4">Ready to Submit?</h1>
@@ -354,7 +355,7 @@ export default function ApplyPage() {
             {/* Header */}
             <div className="border-b border-zinc-200 pb-6">
               <div className="flex items-start gap-4 mb-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                <div className="w-16 h-16 bg-gradient-to-br from-[#2047FF] to-[#C873E5] rounded-xl flex items-center justify-center flex-shrink-0">
                   <Briefcase className="h-8 w-8 text-white" />
                 </div>
                 <div className="flex-1">
@@ -382,7 +383,7 @@ export default function ApplyPage() {
                 {/* Fallback: show basic description */}
                 <section>
                   <h2 className="text-lg font-semibold text-zinc-900 mb-4 flex items-center gap-2">
-                    <FileText className="h-5 w-5 text-teal-600" />
+                    <FileText className="h-5 w-5 text-[var(--brand-blue)]" />
                     Job Description
                   </h2>
                   <div className="bg-slate-50 rounded-xl p-5 border border-slate-100">
@@ -399,8 +400,8 @@ export default function ApplyPage() {
                       <p className="text-2xl font-bold text-zinc-900">${String(compensation?.baseRate || 0)}</p>
                       <p className="text-sm text-zinc-500">per hour</p>
                     </div>
-                    <div className="p-4 bg-cyan-50 rounded-xl">
-                      <Clock className="h-5 w-5 text-cyan-600 mb-2" />
+                    <div className="p-4 bg-[var(--brand-blue-soft)] rounded-xl">
+                      <Clock className="h-5 w-5 text-[var(--brand-blue)] mb-2" />
                       <p className="text-2xl font-bold text-zinc-900">{String(training?.duration || 0)}h</p>
                       <p className="text-sm text-zinc-500">training</p>
                     </div>
@@ -420,14 +421,14 @@ export default function ApplyPage() {
             )}
 
             {/* CTA */}
-            <div className="bg-gradient-to-r from-teal-500 to-cyan-500 rounded-xl p-6 text-white">
+            <div className="bg-gradient-to-r from-[#2047FF] to-[#C873E5] rounded-xl p-6 text-white">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-teal-100 text-sm mb-1">Positions Available</p>
+                  <p className="text-white/80 text-sm mb-1">Positions Available</p>
                   <p className="text-3xl font-bold">{opportunity?.capacity?.openPositions || 0} spots</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-teal-100 text-sm mb-1">Ready to apply?</p>
+                  <p className="text-white/80 text-sm mb-1">Ready to apply?</p>
                   <p className="text-lg font-medium">Click "Next" to continue</p>
                 </div>
               </div>
@@ -447,7 +448,7 @@ export default function ApplyPage() {
                 {stage.questions.map((question, idx) => (
                   <div key={question.id} className="space-y-3">
                     <Label className="text-base font-medium text-zinc-900 flex items-start gap-2">
-                      <span className="bg-teal-100 text-teal-700 rounded-full w-6 h-6 flex items-center justify-center text-sm flex-shrink-0">{idx + 1}</span>
+                      <span className="bg-[var(--brand-blue-soft)] text-[var(--brand-blue)] rounded-full w-6 h-6 flex items-center justify-center text-sm flex-shrink-0">{idx + 1}</span>
                       <span className="flex-1">{question.question}{question.required && <span className="text-red-500 ml-1">*</span>}</span>
                     </Label>
                     {renderQuestion(question)}
@@ -476,7 +477,7 @@ export default function ApplyPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-50">
-        <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-[var(--brand-blue)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -496,16 +497,16 @@ export default function ApplyPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-teal-50 to-cyan-50 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-[var(--brand-blue-soft)] to-[var(--brand-purple-soft)] flex items-center justify-center p-4">
         <Card className="max-w-lg w-full border-0 shadow-2xl">
           <CardContent className="p-8 text-center">
-            <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-20 h-20 bg-gradient-to-br from-emerald-400 to-[#C873E5] rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 className="h-10 w-10 text-white" />
             </div>
             <h1 className="text-2xl font-bold text-zinc-900 mb-3">Application Submitted!</h1>
             <p className="text-zinc-600 mb-6">Your application for <strong>{opportunity.name}</strong> has been submitted.</p>
             <div className="space-y-3">
-              <Button className="w-full bg-gradient-to-r from-teal-500 to-cyan-500" onClick={() => router.push('/applications')}>View My Applications</Button>
+              <Button className="w-full bg-gradient-to-r from-[#2047FF] to-[#C873E5]" onClick={() => router.push('/applications')}>View My Applications</Button>
               <Button variant="outline" className="w-full" onClick={() => router.push('/dashboard')}>Go to Dashboard</Button>
             </div>
           </CardContent>
@@ -525,16 +526,13 @@ export default function ApplyPage() {
       <div className="hidden lg:flex lg:w-80 bg-white border-r border-zinc-200 flex-col fixed left-0 top-0 bottom-0 z-20">
         {/* Header */}
         <div className="p-6 border-b border-zinc-100">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-xl flex items-center justify-center font-bold text-white">AP</div>
-            <span className="text-xl font-bold text-zinc-900">AgentHub</span>
-          </div>
+          <BrandMark href="/dashboard" />
         </div>
 
         {/* Scrollable Content */}
         <div className="p-6 flex-1 overflow-auto">
           <div className="mb-6">
-            <p className="text-xs font-medium text-teal-600 uppercase tracking-wider mb-2">Applying for</p>
+            <p className="text-xs font-medium text-[var(--brand-blue)] uppercase tracking-wider mb-2">Applying for</p>
             <h2 className="text-lg font-bold text-zinc-900 mb-1">{opportunity.name}</h2>
             <p className="text-sm text-zinc-500">{opportunity.client}</p>
           </div>
@@ -544,7 +542,7 @@ export default function ApplyPage() {
               <div><p className="font-semibold text-zinc-900">${String(compensation?.baseRate || 0)}/hr</p><p className="text-xs text-zinc-500">Base Rate</p></div>
             </div>
             <div className="flex items-center gap-3 text-sm">
-              <div className="w-8 h-8 rounded-lg bg-cyan-100 flex items-center justify-center"><Clock className="h-4 w-4 text-cyan-600" /></div>
+              <div className="w-8 h-8 rounded-lg bg-[var(--brand-blue-soft)] flex items-center justify-center"><Clock className="h-4 w-4 text-[var(--brand-blue)]" /></div>
               <div><p className="font-semibold text-zinc-900">{String(training?.duration || 0)} hours</p><p className="text-xs text-zinc-500">Training</p></div>
             </div>
             <div className="flex items-center gap-3 text-sm">
@@ -558,8 +556,8 @@ export default function ApplyPage() {
               {stages.map((stage, index) => {
                 const Icon = STAGE_ICONS[stage.type];
                 return (
-                  <div key={stage.id} className={`flex items-center gap-3 p-2 rounded-lg transition-all ${index === currentStageIndex ? 'bg-teal-50 text-teal-700' : index < currentStageIndex ? 'text-emerald-600' : 'text-zinc-400'}`}>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${index === currentStageIndex ? 'bg-teal-500 text-white' : index < currentStageIndex ? 'bg-emerald-500 text-white' : 'bg-zinc-200 text-zinc-500'}`}>
+                  <div key={stage.id} className={`flex items-center gap-3 p-2 rounded-lg transition-all ${index === currentStageIndex ? 'bg-[var(--brand-blue-soft)] text-[var(--brand-blue)]' : index < currentStageIndex ? 'text-emerald-600' : 'text-zinc-400'}`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${index === currentStageIndex ? 'bg-[var(--brand-blue)] text-white' : index < currentStageIndex ? 'bg-emerald-500 text-white' : 'bg-zinc-200 text-zinc-500'}`}>
                       {index < currentStageIndex ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-3 w-3" />}
                     </div>
                     <span className="text-sm font-medium truncate">{stage.name}</span>
@@ -573,7 +571,7 @@ export default function ApplyPage() {
         {/* Applicant Info - Fixed at Bottom */}
         <div className="p-6 border-t border-zinc-100 bg-white">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#2047FF] to-[#C873E5] flex items-center justify-center flex-shrink-0">
               <User className="h-5 w-5 text-white" />
             </div>
             <p className="font-semibold text-zinc-900">{applicantName}</p>
@@ -588,7 +586,7 @@ export default function ApplyPage() {
           <div className="flex items-center justify-between px-6 py-4">
             {/* Mobile: Show job name */}
             <div className="lg:hidden">
-              <p className="text-xs text-teal-600 font-medium">Applying for</p>
+              <p className="text-xs text-[var(--brand-blue)] font-medium">Applying for</p>
               <p className="font-semibold text-zinc-900 truncate">{opportunity.name}</p>
             </div>
             {/* Desktop: Just spacing to push exit to far right */}
@@ -619,7 +617,7 @@ export default function ApplyPage() {
             <Button variant="outline" onClick={handleBack} disabled={isFirstStage} className="gap-2">
               <ArrowLeft className="h-4 w-4" />Previous
             </Button>
-            <Button onClick={handleNext} disabled={!canProceed() || submitting} className="gap-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 min-w-[140px]">
+            <Button onClick={handleNext} disabled={!canProceed() || submitting} className="gap-2 bg-gradient-to-r from-[#2047FF] to-[#C873E5] hover:from-[#2047FF] hover:to-[#C873E5] min-w-[140px]">
               {submitting ? (
                 <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Submitting...</>
               ) : isLastStage ? (

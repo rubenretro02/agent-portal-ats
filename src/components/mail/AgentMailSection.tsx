@@ -181,14 +181,14 @@ export function AgentMailSection({
     return (
       <Card className="border-zinc-200">
         <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-            <Mail className="h-4 w-4 text-cyan-600" />
+          <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Mail className="h-4 w-4 text-[var(--brand-blue)]" />
             Agent Mail
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-6">
-            <Loader2 className="h-6 w-6 animate-spin text-zinc-400" />
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         </CardContent>
       </Card>
@@ -197,24 +197,24 @@ export function AgentMailSection({
 
   return (
     <Card className="border-zinc-200 overflow-hidden">
-      <CardHeader className="pb-3 bg-gradient-to-r from-cyan-50 to-teal-50">
+      <CardHeader className="pb-3 bg-[var(--brand-blue-soft)]">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center">
+          <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#2047FF] to-[#C873E5] flex items-center justify-center">
               <Mail className="h-4 w-4 text-white" />
             </div>
             Agent Mail
           </CardTitle>
           {mailStatus?.has_mail && (
             <div className="flex items-center gap-3">
-              <span className="text-xs text-zinc-500">
+              <span className="text-xs text-muted-foreground">
                 {mailStatus.is_active ? 'Active' : 'Inactive'}
               </span>
               <Switch
                 checked={mailStatus.is_active}
                 onCheckedChange={handleToggleActive}
                 disabled={toggling}
-                className="data-[state=checked]:bg-cyan-500"
+                className="data-[state=checked]:bg-[var(--brand-blue)]"
               />
             </div>
           )}
@@ -226,12 +226,12 @@ export function AgentMailSection({
           <div className="space-y-4">
             {/* Email Address */}
             <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-zinc-50 to-white border border-zinc-200">
-              <div className="w-10 h-10 rounded-lg bg-cyan-100 flex items-center justify-center flex-shrink-0">
-                <Mail className="h-5 w-5 text-cyan-600" />
+              <div className="w-10 h-10 rounded-lg bg-[var(--brand-blue-soft)] flex items-center justify-center flex-shrink-0">
+                <Mail className="h-5 w-5 text-[var(--brand-blue)]" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-xs text-zinc-500">Email Address</p>
-                <p className="text-sm font-medium text-zinc-900 truncate">
+                <p className="text-xs text-muted-foreground">Email Address</p>
+                <p className="text-sm font-medium text-foreground truncate">
                   {mailStatus.email}
                 </p>
               </div>
@@ -239,12 +239,12 @@ export function AgentMailSection({
                 variant="ghost"
                 size="sm"
                 onClick={handleCopyEmail}
-                className="h-8 w-8 p-0 hover:bg-cyan-50"
+                className="h-8 w-8 p-0 hover:bg-[var(--brand-blue-soft)]"
               >
                 {copied ? (
                   <Check className="h-4 w-4 text-emerald-500" />
                 ) : (
-                  <Copy className="h-4 w-4 text-zinc-400" />
+                  <Copy className="h-4 w-4 text-muted-foreground" />
                 )}
               </Button>
             </div>
@@ -252,19 +252,19 @@ export function AgentMailSection({
             {/* Status indicators */}
             <div className="grid grid-cols-2 gap-3">
               <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50">
-                <Server className="h-4 w-4 text-zinc-400" />
+                <Server className="h-4 w-4 text-muted-foreground" />
                 <div className="min-w-0">
-                  <p className="text-xs text-zinc-500">IMAP</p>
-                  <p className="text-xs font-medium text-zinc-700 truncate">
+                  <p className="text-xs text-muted-foreground">IMAP</p>
+                  <p className="text-xs font-medium text-foreground truncate">
                     {mailStatus.imap_host || 'mail.agent-mail.online'}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 p-2 rounded-lg bg-zinc-50">
-                <Server className="h-4 w-4 text-zinc-400" />
+                <Server className="h-4 w-4 text-muted-foreground" />
                 <div className="min-w-0">
-                  <p className="text-xs text-zinc-500">SMTP</p>
-                  <p className="text-xs font-medium text-zinc-700 truncate">
+                  <p className="text-xs text-muted-foreground">SMTP</p>
+                  <p className="text-xs font-medium text-foreground truncate">
                     {mailStatus.smtp_host || 'mail.agent-mail.online'}
                   </p>
                 </div>
@@ -273,7 +273,7 @@ export function AgentMailSection({
 
             {/* Created date */}
             {mailStatus.created_at && (
-              <div className="flex items-center gap-2 text-xs text-zinc-500">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Clock className="h-3.5 w-3.5" />
                 <span>Created {formatDate(mailStatus.created_at)}</span>
               </div>
@@ -294,7 +294,7 @@ export function AgentMailSection({
                 className={`${
                   mailStatus.is_active
                     ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    : 'bg-zinc-50 text-zinc-500 border-zinc-200'
+                    : 'bg-zinc-50 text-muted-foreground border-zinc-200'
                 }`}
               >
                 {mailStatus.is_active ? (
@@ -316,11 +316,11 @@ export function AgentMailSection({
           <div className="space-y-4">
             <div className="text-center py-4">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-zinc-100 to-zinc-200 flex items-center justify-center mx-auto mb-4">
-                <Mail className="h-8 w-8 text-zinc-400" />
+                <Mail className="h-8 w-8 text-muted-foreground" />
               </div>
-              <p className="text-sm text-zinc-500 mb-1">No mail account configured</p>
-              <p className="text-xs text-zinc-400">
-                Activate to create: <span className="font-medium text-zinc-600">{previewEmail()}</span>
+              <p className="text-sm text-muted-foreground mb-1">No mail account configured</p>
+              <p className="text-xs text-muted-foreground">
+                Activate to create: <span className="font-medium text-muted-foreground">{previewEmail()}</span>
               </p>
             </div>
 
@@ -334,7 +334,7 @@ export function AgentMailSection({
             <Button
               onClick={handleActivateMail}
               disabled={activating}
-              className="w-full bg-gradient-to-r from-cyan-500 to-teal-500 hover:from-cyan-600 hover:to-teal-600 text-white"
+              className="w-full bg-gradient-to-r from-[#2047FF] to-[#C873E5] hover:from-[#2047FF] hover:to-[#C873E5] text-white"
             >
               {activating ? (
                 <>
@@ -349,7 +349,7 @@ export function AgentMailSection({
               )}
             </Button>
 
-            <p className="text-xs text-zinc-400 text-center">
+            <p className="text-xs text-muted-foreground text-center">
               This will create a mailbox on the mail server and store credentials securely.
             </p>
           </div>

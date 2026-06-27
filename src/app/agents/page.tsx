@@ -206,7 +206,7 @@ export default function AgentsPage() {
             </head>
             <body>
               <div class="header">
-                <h1>Agent Portal - Agents Report</h1>
+                <h1>WingCX - Agents Report</h1>
                 <p>Generated on ${new Date().toLocaleDateString()}</p>
                 <p>Total: ${agentsData.length} agents</p>
               </div>
@@ -237,7 +237,7 @@ export default function AgentsPage() {
   if (authLoading || !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-50">
-        <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-[var(--brand-blue)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -251,11 +251,11 @@ export default function AgentsPage() {
       <div className="space-y-8">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Card className="border-0 bg-gradient-to-br from-cyan-500 to-cyan-600 text-white">
+          <Card className="border-0 bg-gradient-to-br from-[#2047FF] to-[#C873E5] text-white">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-cyan-100 text-sm font-medium">Total Agents</p>
+                  <p className="text-white/80 text-sm font-medium">Total Agents</p>
                   <p className="text-4xl font-bold mt-1">{totalAgents}</p>
                 </div>
                 <div className="w-14 h-14 rounded-2xl bg-white/20 flex items-center justify-center">
@@ -323,13 +323,13 @@ export default function AgentsPage() {
           {/* Export Dropdown */}
           <div className="flex items-center gap-2">
             {selectedAgents.size > 0 && (
-              <span className="text-sm text-cyan-600 font-medium">
+              <span className="text-sm text-[var(--brand-blue)] font-medium">
                 {selectedAgents.size} selected
               </span>
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="h-12 gap-2 border-cyan-200 text-cyan-700 hover:bg-cyan-50 rounded-xl">
+                <Button variant="outline" className="h-12 gap-2 border-[rgba(32,71,255,0.3)] text-[var(--brand-blue)] hover:bg-[var(--brand-blue-soft)] rounded-xl">
                   <Download className="h-4 w-4" />
                   Export
                 </Button>
@@ -372,7 +372,7 @@ export default function AgentsPage() {
         {/* Agents Grid */}
         {loading ? (
           <div className="flex items-center justify-center py-20">
-            <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-[var(--brand-blue)] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : filteredAgents.length === 0 ? (
           <div className="text-center py-20">
@@ -397,7 +397,7 @@ export default function AgentsPage() {
                 <Card
                   key={agent.id}
                   onClick={() => router.push(`/agents/${agent.id}`)}
-                  className={`border-zinc-200 hover:border-cyan-300 hover:shadow-lg transition-all duration-300 cursor-pointer group overflow-hidden ${isSelected ? 'ring-2 ring-cyan-500 border-cyan-300' : ''}`}
+                  className={`border-zinc-200 hover:border-[rgba(32,71,255,0.3)] hover:shadow-lg transition-all duration-300 cursor-pointer group overflow-hidden ${isSelected ? 'ring-2 ring-[var(--brand-blue)] border-[rgba(32,71,255,0.3)]' : ''}`}
                 >
                   <CardContent className="p-6">
                     <div className="flex items-start gap-4">
@@ -408,12 +408,12 @@ export default function AgentsPage() {
                       >
                         <Checkbox
                           checked={isSelected}
-                          className="h-5 w-5 border-zinc-300 data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
+                          className="h-5 w-5 border-zinc-300 data-[state=checked]:bg-[var(--brand-blue)] data-[state=checked]:border-[var(--brand-blue)]"
                         />
                       </div>
 
                       {/* Avatar */}
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-400 to-teal-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-lg shadow-cyan-500/20">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#2047FF] to-[#C873E5] flex items-center justify-center text-white font-bold text-lg flex-shrink-0 shadow-lg shadow-[rgba(32,71,255,0.25)]">
                         {initials}
                       </div>
 
@@ -423,7 +423,7 @@ export default function AgentsPage() {
                           <h3 className="font-semibold text-zinc-900 truncate">{name}</h3>
                           <ArrowUpRight className="h-4 w-4 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                         </div>
-                        <p className="text-sm text-cyan-600 font-mono mt-0.5">
+                        <p className="text-sm text-[var(--brand-blue)] font-mono mt-0.5">
                           <span className="text-zinc-500 font-sans">Agent ID:</span> {agentIdDisplay}
                         </p>
                       </div>
@@ -450,7 +450,7 @@ export default function AgentsPage() {
                     {/* View Profile Button */}
                     <Button
                       variant="ghost"
-                      className="w-full mt-5 text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 group-hover:bg-cyan-50"
+                      className="w-full mt-5 text-[var(--brand-blue)] hover:text-[var(--brand-blue)] hover:bg-[var(--brand-blue-soft)] group-hover:bg-[var(--brand-blue-soft)]"
                     >
                       View Profile
                       <ChevronRight className="h-4 w-4 ml-1" />

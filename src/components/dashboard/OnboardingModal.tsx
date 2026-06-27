@@ -311,7 +311,7 @@ export function OnboardingModal({ open, onOpenChange, onComplete }: OnboardingMo
           <div className="mt-3">
             <div className="flex items-center justify-between text-xs text-zinc-500 mb-1">
               <span>Step {currentStep + 1} of {STEPS.length}</span>
-              <span className="font-medium text-teal-600">{Math.round(progress)}%</span>
+              <span className="font-medium text-[var(--brand-blue)]">{Math.round(progress)}%</span>
             </div>
             <Progress value={progress} className="h-1.5" />
           </div>
@@ -323,7 +323,7 @@ export function OnboardingModal({ open, onOpenChange, onComplete }: OnboardingMo
                 key={step.id}
                 className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium transition-all ${
                   index === currentStep
-                    ? 'bg-teal-100 text-teal-700'
+                    ? 'bg-[var(--brand-blue-soft)] text-[var(--brand-blue)]'
                     : index < currentStep
                     ? 'bg-emerald-100 text-emerald-700'
                     : 'bg-zinc-100 text-zinc-400'
@@ -442,7 +442,7 @@ export function OnboardingModal({ open, onOpenChange, onComplete }: OnboardingMo
                     <Badge
                       key={lang}
                       variant={formData.languages.includes(lang) ? 'default' : 'outline'}
-                      className={`cursor-pointer text-xs ${formData.languages.includes(lang) ? 'bg-teal-500' : ''}`}
+                      className={`cursor-pointer text-xs ${formData.languages.includes(lang) ? 'bg-[var(--brand-blue)]' : ''}`}
                       onClick={() => toggleLanguage(lang)}
                     >
                       {lang}
@@ -486,12 +486,12 @@ export function OnboardingModal({ open, onOpenChange, onComplete }: OnboardingMo
           </Button>
 
           {currentStep < STEPS.length - 1 ? (
-            <Button size="sm" onClick={handleNext} className="bg-teal-500 hover:bg-teal-600">
+            <Button size="sm" onClick={handleNext} className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
               Next
               <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           ) : (
-            <Button size="sm" onClick={handleSubmit} disabled={saving} className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 min-w-[100px]">
+            <Button size="sm" onClick={handleSubmit} disabled={saving} className="bg-gradient-to-r from-[#2047FF] to-[#C873E5] hover:from-[#2047FF] hover:to-[#C873E5] min-w-[100px]">
               {saving ? (
                 <><Loader2 className="h-4 w-4 animate-spin mr-1" />Saving...</>
               ) : (

@@ -51,7 +51,7 @@ import type { PipelineStatus, DocumentStatus } from '@/types';
 // Application statuses for the pipeline
 const APP_STAGES = [
   { status: 'pending', label: 'Pending', color: '#f59e0b', bgColor: 'bg-amber-50', borderColor: 'border-amber-200' },
-  { status: 'in_review', label: 'In Review', color: '#0891b2', bgColor: 'bg-cyan-50', borderColor: 'border-cyan-200' },
+  { status: 'in_review', label: 'In Review', color: '#0891b2', bgColor: 'bg-[var(--brand-blue-soft)]', borderColor: 'border-[rgba(32,71,255,0.3)]' },
   { status: 'approved', label: 'Approved', color: '#10b981', bgColor: 'bg-emerald-50', borderColor: 'border-emerald-200' },
   { status: 'rejected', label: 'Rejected', color: '#ef4444', bgColor: 'bg-red-50', borderColor: 'border-red-200' },
   { status: 'withdrawn', label: 'Withdrawn', color: '#6b7280', bgColor: 'bg-zinc-50', borderColor: 'border-zinc-200' },
@@ -494,7 +494,7 @@ export function AgentProfileSheet({
         <ScrollArea className="h-[calc(100vh-57px)]">
           {loading ? (
             <div className="flex items-center justify-center py-24">
-              <div className="w-10 h-10 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-10 h-10 border-4 border-[var(--brand-blue)] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : !application || !agent ? (
             <div className="text-center py-24">
@@ -504,7 +504,7 @@ export function AgentProfileSheet({
             <div className="p-4 space-y-4">
               {/* Profile Header with Status */}
               <Card className="border-zinc-200 overflow-hidden">
-                <div className="h-14 bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-500 relative">
+                <div className="h-14 bg-gradient-to-r from-[#2047FF] to-[#C873E5] relative">
                   {(agent.pipeline_status === 'approved' || agent.pipeline_status === 'hired' || agent.pipeline_status === 'active') && (
                     <div className="absolute top-2 right-2">
                       <Badge className="bg-white/90 text-emerald-600 gap-1 text-xs">
@@ -518,9 +518,9 @@ export function AgentProfileSheet({
                 <CardContent className="pt-0 pb-4 -mt-6">
                   <div className="flex items-end gap-4">
                     <div className="relative w-14 h-14">
-                      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-cyan-400 via-teal-400 to-emerald-400 p-[2px]">
+                      <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-[#2047FF] to-[#C873E5] p-[2px]">
                         <div className="w-full h-full rounded-xl bg-white flex items-center justify-center">
-                          <span className="text-base font-bold bg-gradient-to-br from-cyan-600 to-teal-600 bg-clip-text text-transparent">
+                          <span className="text-base font-bold bg-gradient-to-br from-[#2047FF] to-[#C873E5] bg-clip-text text-transparent">
                             {initials}
                           </span>
                         </div>
@@ -549,7 +549,7 @@ export function AgentProfileSheet({
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 gap-2 rounded-lg border-cyan-200 text-cyan-700 hover:bg-cyan-50 h-8 text-xs"
+                      className="flex-1 gap-2 rounded-lg border-[rgba(32,71,255,0.3)] text-[var(--brand-blue)] hover:bg-[var(--brand-blue-soft)] h-8 text-xs"
                       onClick={() => agent.profiles?.email && window.open(`mailto:${agent.profiles.email}`)}
                     >
                       <Mail className="h-3.5 w-3.5" />
@@ -572,7 +572,7 @@ export function AgentProfileSheet({
               <Card className="border-zinc-200">
                 <CardHeader className="pb-2 pt-3 px-4">
                   <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                    <Layers className="h-4 w-4 text-cyan-600" />
+                    <Layers className="h-4 w-4 text-[var(--brand-blue)]" />
                     Application Status
                   </CardTitle>
                 </CardHeader>
@@ -629,7 +629,7 @@ export function AgentProfileSheet({
               <Card className="border-zinc-200">
                 <CardHeader className="pb-2 pt-3 px-4">
                   <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                    <Download className="h-4 w-4 text-cyan-600" />
+                    <Download className="h-4 w-4 text-[var(--brand-blue)]" />
                     Export Candidate
                   </CardTitle>
                 </CardHeader>
@@ -677,10 +677,10 @@ export function AgentProfileSheet({
 
               {/* Application Responses */}
               {application.answers && application.answers.length > 0 && (
-                <Card className="border-zinc-200 border-cyan-200 bg-cyan-50/30">
+                <Card className="border-zinc-200 border-[rgba(32,71,255,0.3)] bg-[var(--brand-blue-soft)]">
                   <CardHeader className="pb-2 pt-3 px-4">
                     <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                      <MessageSquare className="h-4 w-4 text-cyan-600" />
+                      <MessageSquare className="h-4 w-4 text-[var(--brand-blue)]" />
                       Application Responses
                       <Badge variant="secondary" className="ml-auto text-xs">
                         {application.answers.filter(a => a.answer !== null).length}/{application.answers.length} answered
@@ -708,8 +708,8 @@ export function AgentProfileSheet({
                 <Card className="border-zinc-200">
                   <CardContent className="p-2.5">
                     <div className="flex items-center gap-2">
-                      <div className="w-7 h-7 rounded-lg bg-cyan-100 flex items-center justify-center">
-                        <Zap className="h-3.5 w-3.5 text-cyan-600" />
+                      <div className="w-7 h-7 rounded-lg bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                        <Zap className="h-3.5 w-3.5 text-[var(--brand-blue)]" />
                       </div>
                       <div>
                         <p className="text-base font-bold text-zinc-900">{agent.scores?.typing || 0}%</p>
@@ -774,7 +774,7 @@ export function AgentProfileSheet({
                       )}
                       {Array.isArray(agent.experience) && agent.experience.some(e => e.isCallCenter) && (
                         <div className="flex items-center gap-2 text-[11px] text-zinc-600">
-                          <Briefcase className="h-3 w-3 text-cyan-500" />
+                          <Briefcase className="h-3 w-3 text-[var(--brand-blue)]" />
                           <span>Call center experience</span>
                         </div>
                       )}
@@ -811,7 +811,7 @@ export function AgentProfileSheet({
               <Card className="border-zinc-200">
                 <CardHeader className="pb-2 pt-3 px-4">
                   <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                    <User className="h-4 w-4 text-cyan-600" />
+                    <User className="h-4 w-4 text-[var(--brand-blue)]" />
                     Contact Information
                   </CardTitle>
                 </CardHeader>
@@ -871,7 +871,7 @@ export function AgentProfileSheet({
               <Card className="border-zinc-200">
                 <CardHeader className="pb-2 pt-3 px-4">
                   <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                    <Monitor className="h-4 w-4 text-cyan-600" />
+                    <Monitor className="h-4 w-4 text-[var(--brand-blue)]" />
                     Equipment
                   </CardTitle>
                 </CardHeader>
@@ -902,7 +902,7 @@ export function AgentProfileSheet({
                 <Card className="border-zinc-200">
                   <CardHeader className="pb-2 pt-3 px-4">
                     <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                      <Briefcase className="h-4 w-4 text-cyan-600" />
+                      <Briefcase className="h-4 w-4 text-[var(--brand-blue)]" />
                       Experience
                     </CardTitle>
                   </CardHeader>
@@ -918,7 +918,7 @@ export function AgentProfileSheet({
                           <p className="text-[9px] text-zinc-400">
                             {exp.startDate} - {exp.endDate || 'Present'}
                             {exp.isCallCenter && (
-                              <Badge variant="outline" className="ml-1.5 text-[8px] py-0 px-1 bg-cyan-50 text-cyan-700 border-cyan-200">
+                              <Badge variant="outline" className="ml-1.5 text-[8px] py-0 px-1 bg-[var(--brand-blue-soft)] text-[var(--brand-blue)] border-[rgba(32,71,255,0.3)]">
                                 Call Center
                               </Badge>
                             )}
@@ -935,14 +935,14 @@ export function AgentProfileSheet({
                 <Card className="border-zinc-200">
                   <CardHeader className="pb-2 pt-3 px-4">
                     <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                      <Languages className="h-4 w-4 text-cyan-600" />
+                      <Languages className="h-4 w-4 text-[var(--brand-blue)]" />
                       Languages
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="px-4 pb-3">
                     <div className="flex flex-wrap gap-1.5">
                       {agent.languages.map((lang, idx) => (
-                        <Badge key={idx} variant="outline" className="bg-cyan-50 text-cyan-700 border-cyan-200 text-xs">
+                        <Badge key={idx} variant="outline" className="bg-[var(--brand-blue-soft)] text-[var(--brand-blue)] border-[rgba(32,71,255,0.3)] text-xs">
                           {lang}
                         </Badge>
                       ))}

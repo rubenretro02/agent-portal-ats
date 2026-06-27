@@ -92,21 +92,21 @@ export function AgentDashboard() {
   return (
     <div className="space-y-8 max-w-6xl mx-auto">
       {/* Hero Welcome Section */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-600 via-teal-500 to-cyan-500 p-8 text-white">
+      <div className="relative overflow-hidden rounded-2xl gradient-brand p-8 text-white">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-400/20 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
 
         <div className="relative z-10">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Sparkles className="h-5 w-5 text-yellow-300" />
-                <span className="text-teal-100 text-sm font-medium">Welcome back</span>
+                <span className="text-white/80 text-sm font-medium">Welcome back</span>
               </div>
               <h1 className="text-3xl font-bold mb-2">
                 Hello, {profile?.first_name || 'Agent'}!
               </h1>
-              <p className="text-teal-100 max-w-md">
+              <p className="text-white/80 max-w-md">
                 {onboardingProgress.complete
                   ? "Your profile is complete. Start exploring opportunities and grow your career."
                   : `Complete your profile to unlock all features. You're ${onboardingProgress.percent}% there!`
@@ -122,7 +122,7 @@ export function AgentDashboard() {
                 </div>
               ) : (
                 <Link href="/onboarding">
-                  <Button className="bg-white text-teal-600 hover:bg-teal-50">
+                  <Button className="bg-white text-[var(--brand-blue)] hover:bg-white/90">
                     Complete Profile
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>
@@ -150,13 +150,13 @@ export function AgentDashboard() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-0 shadow-lg shadow-teal-500/10 bg-gradient-to-br from-white to-teal-50">
+        <Card className="border-0 shadow-lg shadow-[rgba(32,71,255,0.10)] bg-gradient-to-br from-white to-[#EEF1FF]">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center">
-                <Briefcase className="h-5 w-5 text-teal-600" />
+              <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                <Briefcase className="h-5 w-5 text-[var(--brand-blue)]" />
               </div>
-              <TrendingUp className="h-4 w-4 text-teal-500" />
+              <TrendingUp className="h-4 w-4 text-[var(--brand-blue)]" />
             </div>
             <p className="text-2xl font-bold text-zinc-900">{opportunities.length}</p>
             <p className="text-sm text-zinc-500">Available Jobs</p>
@@ -189,13 +189,13 @@ export function AgentDashboard() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-lg shadow-cyan-500/10 bg-gradient-to-br from-white to-cyan-50">
+        <Card className="border-0 shadow-lg shadow-[rgba(200,115,229,0.10)] bg-gradient-to-br from-white to-[#FAF0FE]">
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-cyan-100 flex items-center justify-center">
-                <Award className="h-5 w-5 text-cyan-600" />
+              <div className="w-10 h-10 rounded-xl bg-[var(--brand-purple-soft)] flex items-center justify-center">
+                <Award className="h-5 w-5 text-[var(--brand-purple)]" />
               </div>
-              <Clock className="h-4 w-4 text-cyan-500" />
+              <Clock className="h-4 w-4 text-[var(--brand-purple)]" />
             </div>
             <p className="text-2xl font-bold text-zinc-900">
               {agent?.pipeline_status === 'active' ? 'Active' : 'Pending'}
@@ -272,7 +272,7 @@ export function AgentDashboard() {
                 <Card
                   key={opp.id}
                   className={`group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 ${
-                    index === 0 ? 'bg-gradient-to-br from-teal-500 to-cyan-600 text-white' : 'bg-white'
+                    index === 0 ? 'gradient-brand text-white' : 'bg-white'
                   }`}
                 >
                   {index === 0 && (
@@ -289,7 +289,7 @@ export function AgentDashboard() {
                       <h3 className={`font-semibold text-lg mb-1 ${index === 0 ? 'text-white' : 'text-zinc-900'}`}>
                         {opp.name}
                       </h3>
-                      <p className={`text-sm ${index === 0 ? 'text-teal-100' : 'text-zinc-500'}`}>
+                      <p className={`text-sm ${index === 0 ? 'text-white/75' : 'text-zinc-500'}`}>
                         {opp.client}
                       </p>
                     </div>
@@ -303,7 +303,7 @@ export function AgentDashboard() {
                       </Badge>
                     )}
 
-                    <div className={`flex items-center gap-4 mb-4 text-sm ${index === 0 ? 'text-teal-100' : 'text-zinc-500'}`}>
+                    <div className={`flex items-center gap-4 mb-4 text-sm ${index === 0 ? 'text-white/75' : 'text-zinc-500'}`}>
                       <div className="flex items-center gap-1">
                         <DollarSign className={`h-4 w-4 ${index === 0 ? 'text-emerald-300' : 'text-emerald-500'}`} />
                         <span className={`font-semibold ${index === 0 ? 'text-white' : 'text-zinc-900'}`}>
@@ -337,8 +337,8 @@ export function AgentDashboard() {
                       <Button
                         className={`w-full ${
                           index === 0
-                            ? 'bg-white text-teal-600 hover:bg-teal-50'
-                            : 'bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white shadow-lg shadow-teal-500/25'
+                            ? 'bg-white text-[var(--brand-blue)] hover:bg-white/90'
+                            : 'btn-brand h-10'
                         }`}
                         onClick={() => setSelectedOpportunity(opp.id)}
                       >
@@ -357,31 +357,31 @@ export function AgentDashboard() {
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Link href="/applications">
-          <Card className="group border-zinc-200 hover:border-teal-300 hover:shadow-lg transition-all cursor-pointer">
+          <Card className="group border-zinc-200 hover:border-primary/40 hover:shadow-lg transition-all cursor-pointer">
             <CardContent className="p-6 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-xl gradient-brand flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                 <Target className="h-6 w-6 text-white" />
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-zinc-900">My Applications</h3>
                 <p className="text-sm text-zinc-500">Track your application status</p>
               </div>
-              <ChevronRight className="h-5 w-5 text-zinc-400 group-hover:text-teal-500 group-hover:translate-x-1 transition-all" />
+              <ChevronRight className="h-5 w-5 text-zinc-400 group-hover:text-[var(--brand-blue)] group-hover:translate-x-1 transition-all" />
             </CardContent>
           </Card>
         </Link>
 
         <Link href="/profile">
-          <Card className="group border-zinc-200 hover:border-cyan-300 hover:shadow-lg transition-all cursor-pointer">
+          <Card className="group border-zinc-200 hover:border-[var(--brand-purple)]/40 hover:shadow-lg transition-all cursor-pointer">
             <CardContent className="p-6 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
+              <div className="w-12 h-12 rounded-xl gradient-brand flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
                 <Award className="h-6 w-6 text-white" />
               </div>
               <div className="flex-1">
                 <h3 className="font-semibold text-zinc-900">My Profile</h3>
                 <p className="text-sm text-zinc-500">View and update your information</p>
               </div>
-              <ChevronRight className="h-5 w-5 text-zinc-400 group-hover:text-cyan-500 group-hover:translate-x-1 transition-all" />
+              <ChevronRight className="h-5 w-5 text-zinc-400 group-hover:text-[var(--brand-purple)] group-hover:translate-x-1 transition-all" />
             </CardContent>
           </Card>
         </Link>
@@ -405,12 +405,12 @@ export function AgentDashboard() {
                   </p>
                   <p className="text-sm text-emerald-600">per hour</p>
                 </div>
-                <div className="bg-cyan-50 rounded-xl p-4 text-center">
-                  <Users className="h-6 w-6 text-cyan-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-cyan-700">
+                <div className="bg-[var(--brand-blue-soft)] rounded-xl p-4 text-center">
+                  <Users className="h-6 w-6 text-[var(--brand-blue)] mx-auto mb-2" />
+                  <p className="text-2xl font-bold text-[var(--brand-blue)]">
                     {selectedOpp.capacity?.openPositions || 0}
                   </p>
-                  <p className="text-sm text-cyan-600">open spots</p>
+                  <p className="text-sm text-[var(--brand-blue)]">open spots</p>
                 </div>
               </div>
             </div>
@@ -420,7 +420,7 @@ export function AgentDashboard() {
               Cancel
             </Button>
             <Button
-              className="bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600"
+              className="btn-brand"
               onClick={() => selectedOpp && handleApply(selectedOpp.id)}
               disabled={applying}
             >

@@ -42,11 +42,11 @@ export default function MessagesPage() {
           <Card className="border-zinc-200">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center">
-                  <Bell className="h-5 w-5 text-teal-600" />
+                <div className="w-10 h-10 rounded-lg bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                  <Bell className="h-5 w-5 text-[var(--brand-blue)]" />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-teal-600">{unreadMessages.length}</p>
+                  <p className="text-2xl font-bold text-[var(--brand-blue)]">{unreadMessages.length}</p>
                   <p className="text-xs text-zinc-500">{language === 'es' ? 'Sin leer' : 'Unread'}</p>
                 </div>
               </div>
@@ -68,14 +68,14 @@ export default function MessagesPage() {
               <Card
                 key={message.id}
                 className={`border transition-all cursor-pointer hover:shadow-md ${
-                  message.read ? 'border-zinc-200 bg-white' : 'border-teal-200 bg-teal-50/50'
+                  message.read ? 'border-zinc-200 bg-white' : 'border-[rgba(32,71,255,0.3)] bg-[var(--brand-blue-soft)]'
                 }`}
                 onClick={() => markAsRead(message.id, 'message')}
               >
                 <CardContent className="p-4">
                   <div className="flex items-start gap-4">
                     <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
-                      message.read ? 'bg-zinc-100' : 'bg-teal-500'
+                      message.read ? 'bg-zinc-100' : 'bg-[var(--brand-blue)]'
                     }`}>
                       <Mail className={`h-5 w-5 ${message.read ? 'text-zinc-500' : 'text-white'}`} />
                     </div>
@@ -85,7 +85,7 @@ export default function MessagesPage() {
                           {message.subject}
                         </h4>
                         {!message.read && (
-                          <Badge className="bg-teal-500 text-xs">{language === 'es' ? 'Nuevo' : 'New'}</Badge>
+                          <Badge className="bg-[var(--brand-blue)] text-xs">{language === 'es' ? 'Nuevo' : 'New'}</Badge>
                         )}
                       </div>
                       <p className="text-sm text-zinc-600 line-clamp-2 mb-2">{message.content}</p>

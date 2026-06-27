@@ -6,12 +6,18 @@ import Link from 'next/link';
 import { useAuthContext } from '@/components/providers/AuthProvider';
 import { useAuthStore } from '@/store/supabaseStore';
 import { useTranslation } from '@/hooks/useTranslation';
+import { WingMark } from '@/components/BrandMark';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Mail, Lock, Globe, ArrowRight, Eye, EyeOff, CheckCircle2, AlertCircle, AtSign } from 'lucide-react';
 
+/**
+ * WingCX registration — mirrors the unified login surface so the two
+ * auth screens share one identity. Logic is unchanged; only the visual
+ * language was migrated to the WingCX brand tokens.
+ */
 export default function RegisterPage() {
   const router = useRouter();
   const { signUp, isLoading: authLoading, isAuthenticated } = useAuthContext();
@@ -95,10 +101,10 @@ export default function RegisterPage() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-zinc-500">Loading...</p>
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+          <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>
     );
@@ -106,21 +112,21 @@ export default function RegisterPage() {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white p-8">
+      <div className="min-h-screen flex items-center justify-center bg-background p-8">
         <div className="max-w-md text-center">
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="h-8 w-8 text-emerald-600" />
           </div>
-          <h1 className="text-2xl font-bold text-zinc-900 mb-4">
+          <h1 className="text-2xl font-bold text-foreground mb-4">
             {language === 'es' ? '¡Registro Exitoso!' : 'Registration Successful!'}
           </h1>
-          <p className="text-zinc-600 mb-6">
+          <p className="text-muted-foreground mb-6">
             {language === 'es'
               ? 'Te hemos enviado un correo de confirmación. Por favor verifica tu email para activar tu cuenta.'
               : 'We have sent you a confirmation email. Please verify your email to activate your account.'}
           </p>
-          <Link href="/login">
-            <Button className="bg-teal-500 hover:bg-teal-600">
+          <Link href="/">
+            <Button className="btn-brand">
               {language === 'es' ? 'Ir al inicio de sesión' : 'Go to login'}
             </Button>
           </Link>
@@ -130,25 +136,21 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Panel */}
-      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-zinc-900 via-teal-900 to-cyan-900" />
-        <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/80 to-transparent" />
-
-        <div className="absolute top-20 left-20 w-64 h-64 bg-teal-500/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-40 right-20 w-80 h-80 bg-cyan-500/20 rounded-full blur-3xl" />
+    <div className="min-h-screen flex bg-background">
+      {/* Left Panel — branded gradient */}
+      <div className="hidden lg:flex lg:w-1/2 xl:w-[55%] relative overflow-hidden gradient-brand">
+        <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-32 right-16 w-80 h-80 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute inset-0 grid-noise opacity-20" />
 
         <div className="relative z-10 flex flex-col justify-between p-12 text-white">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">
-              AP
-            </div>
-            <span className="text-2xl font-bold">AgentHub</span>
+          <div className="flex items-center gap-2.5">
+            <WingMark className="w-8 h-8" />
+            <span className="text-2xl font-bold tracking-[-0.025em]">WingCX</span>
           </div>
 
           <div className="max-w-md">
-            <h2 className="text-4xl font-bold mb-4">
+            <h2 className="text-4xl font-bold mb-4 leading-tight">
               {language === 'es' ? 'Comienza tu carrera como agente' : 'Start your agent career'}
             </h2>
             <p className="text-lg text-white/80 leading-relaxed mb-8">
@@ -164,7 +166,7 @@ export default function RegisterPage() {
                 language === 'es' ? 'Trabajo 100% remoto' : '100% remote work',
               ].map((item) => (
                 <div key={item} className="flex items-center gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-teal-400" />
+                  <CheckCircle2 className="h-5 w-5 text-white" />
                   <span>{item}</span>
                 </div>
               ))}
@@ -175,14 +177,14 @@ export default function RegisterPage() {
         </div>
       </div>
 
-      {/* Right Panel - Form */}
-      <div className="flex-1 flex flex-col justify-center items-center p-8 bg-white">
+      {/* Right Panel — form */}
+      <div className="flex-1 flex flex-col justify-center items-center p-8 relative">
         <div className="absolute top-6 right-6">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setLanguage(language === 'en' ? 'es' : 'en')}
-            className="text-zinc-500 hover:text-zinc-900"
+            className="text-muted-foreground hover:text-foreground"
           >
             <Globe className="w-4 h-4 mr-2" />
             {language === 'en' ? 'ES' : 'EN'}
@@ -190,16 +192,18 @@ export default function RegisterPage() {
         </div>
 
         <div className="w-full max-w-md">
-          <div className="lg:hidden flex items-center justify-center gap-3 mb-8">
-            <div className="w-10 h-10 bg-gradient-to-br from-teal-400 to-cyan-500 rounded-xl flex items-center justify-center font-bold text-white">
-              AP
-            </div>
-            <span className="text-xl font-bold text-zinc-900">AgentHub</span>
+          {/* Mobile brand */}
+          <div className="lg:hidden flex items-center justify-center gap-2.5 mb-8">
+            <WingMark className="w-8 h-8" />
+            <span className="text-xl font-bold tracking-[-0.025em]">
+              <span className="text-foreground">Wing</span>
+              <span className="gradient-text">CX</span>
+            </span>
           </div>
 
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-zinc-900 mb-2">{t('auth', 'signup')}</h1>
-            <p className="text-zinc-500">
+            <h1 className="text-3xl font-bold text-foreground mb-2">{t('auth', 'signup')}</h1>
+            <p className="text-muted-foreground">
               {language === 'es' ? 'Crea tu cuenta en segundos' : 'Create your account in seconds'}
             </p>
           </div>
@@ -215,7 +219,7 @@ export default function RegisterPage() {
             <div className="space-y-2">
               <Label htmlFor="username">{language === 'es' ? 'Usuario' : 'Username'} *</Label>
               <div className="relative">
-                <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 h-5 w-5" />
+                <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
                 <Input
                   id="username"
                   type="text"
@@ -227,7 +231,7 @@ export default function RegisterPage() {
                   disabled={isLoading}
                 />
               </div>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-muted-foreground">
                 {language === 'es' ? 'Solo letras y números, mínimo 3 caracteres' : 'Only letters and numbers, minimum 3 characters'}
               </p>
             </div>
@@ -235,7 +239,7 @@ export default function RegisterPage() {
             <div className="space-y-2">
               <Label htmlFor="email">{t('auth', 'email')} *</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 h-5 w-5" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
                 <Input
                   id="email"
                   type="email"
@@ -252,7 +256,7 @@ export default function RegisterPage() {
             <div className="space-y-2">
               <Label htmlFor="password">{t('auth', 'password')} *</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 h-5 w-5" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -266,12 +270,12 @@ export default function RegisterPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-400"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                 >
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-muted-foreground">
                 {language === 'es' ? 'Mínimo 6 caracteres' : 'Minimum 6 characters'}
               </p>
             </div>
@@ -279,7 +283,7 @@ export default function RegisterPage() {
             <div className="space-y-2">
               <Label htmlFor="confirmPassword">{t('auth', 'confirmPassword')} *</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400 h-5 w-5" />
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-5 w-5" />
                 <Input
                   id="confirmPassword"
                   type="password"
@@ -293,40 +297,36 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <div className="flex items-start gap-3 p-3 bg-zinc-50 rounded-lg">
+            <div className="flex items-start gap-3 p-3 bg-muted rounded-lg">
               <Checkbox
                 id="terms"
                 checked={formData.acceptTerms}
                 onCheckedChange={(v) => updateForm('acceptTerms', v as boolean)}
                 disabled={isLoading}
               />
-              <label htmlFor="terms" className="text-sm text-zinc-600">
+              <label htmlFor="terms" className="text-sm text-muted-foreground">
                 {language === 'es'
                   ? 'Acepto los Términos de Servicio y la Política de Privacidad'
                   : 'I agree to the Terms of Service and Privacy Policy'}
               </label>
             </div>
 
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full h-12 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600"
-            >
+            <Button type="submit" disabled={isLoading} className="btn-brand w-full h-12 text-base">
               {isLoading ? (
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
-                <>
-                  {t('auth', 'signup')}
-                  <ArrowRight className="w-5 h-5 ml-2" />
-                </>
+                <div className="flex items-center gap-2">
+                  <span>{t('auth', 'signup')}</span>
+                  <ArrowRight className="w-5 h-5" />
+                </div>
               )}
             </Button>
           </form>
 
           <div className="mt-8 text-center">
-            <p className="text-zinc-500">
+            <p className="text-muted-foreground">
               {t('auth', 'hasAccount')}{' '}
-              <Link href="/login" className="text-teal-600 hover:text-teal-700 font-medium">
+              <Link href="/" className="text-[var(--brand-blue)] hover:underline font-medium">
                 {t('auth', 'login')}
               </Link>
             </p>

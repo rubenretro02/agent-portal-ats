@@ -267,11 +267,11 @@ export function AddressAutocomplete({
               key={result.place_id}
               type="button"
               className={`w-full px-4 py-3 text-left text-sm hover:bg-zinc-50 flex items-start gap-3 border-b border-zinc-100 last:border-0 ${
-                index === selectedIndex ? 'bg-teal-50' : ''
+                index === selectedIndex ? 'bg-[var(--brand-blue-soft)]' : ''
               }`}
               onClick={() => handleSelectSuggestion(result)}
             >
-              <MapPin className="h-4 w-4 text-teal-500 mt-0.5 flex-shrink-0" />
+              <MapPin className="h-4 w-4 text-[var(--brand-blue)] mt-0.5 flex-shrink-0" />
               <span className="text-zinc-700 line-clamp-2">{result.display_name}</span>
             </button>
           ))}

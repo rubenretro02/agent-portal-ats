@@ -120,7 +120,7 @@ export default function OpportunityQuestionsPage({ params }: PageProps) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--brand-blue)]" />
         </div>
       </AdminLayout>
     );
@@ -178,7 +178,7 @@ export default function OpportunityQuestionsPage({ params }: PageProps) {
                 </div>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-bold text-teal-600">{questions.length}</p>
+                <p className="text-2xl font-bold text-[var(--brand-blue)]">{questions.length}</p>
                 <p className="text-xs text-zinc-500">Questions</p>
               </div>
             </div>

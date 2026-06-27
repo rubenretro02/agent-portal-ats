@@ -77,7 +77,7 @@ export default function ApplicationsPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-[var(--brand-blue)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -102,8 +102,8 @@ export default function ApplicationsPage() {
           <Card className="border-zinc-200">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-teal-50">
-                  <FileText className="h-5 w-5 text-teal-600" />
+                <div className="p-2 rounded-lg bg-[var(--brand-blue-soft)]">
+                  <FileText className="h-5 w-5 text-[var(--brand-blue)]" />
                 </div>
                 <div>
                   <p className="text-2xl font-bold text-zinc-900">{applications.length}</p>
@@ -153,14 +153,14 @@ export default function ApplicationsPage() {
           <CardContent>
             {loading ? (
               <div className="flex items-center justify-center py-12">
-                <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+                <div className="w-10 h-10 border-4 border-[var(--brand-blue)] border-t-transparent rounded-full animate-spin" />
               </div>
             ) : applications.length === 0 ? (
               <div className="text-center py-12">
                 <Briefcase className="h-12 w-12 text-zinc-300 mx-auto mb-4" />
                 <p className="text-zinc-500 mb-4">You haven't applied to any opportunities yet</p>
                 <Link href="/opportunities">
-                  <Button className="bg-teal-500 hover:bg-teal-600">
+                  <Button className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
                     View Opportunities
                     <ArrowRight className="h-4 w-4 ml-2" />
                   </Button>

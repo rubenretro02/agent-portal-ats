@@ -67,20 +67,17 @@ export async function updateSession(request: NextRequest) {
     request.nextUrl.pathname.startsWith(path) && !request.nextUrl.pathname.includes('/admin/login')
   );
 
-  if (!user && isAgentProtectedPath) {
+  // Unauthenticated users on any protected route → unified login at root.
+  if (!user && (isAgentProtectedPath || isAdminProtectedPath)) {
     const url = request.nextUrl.clone();
-    url.pathname = '/login';
+    url.pathname = '/';
     return NextResponse.redirect(url);
   }
 
-  if (!user && isAdminProtectedPath) {
-    const url = request.nextUrl.clone();
-    url.pathname = '/admin/login';
-    return NextResponse.redirect(url);
-  }
-
-  // If user is logged in and tries to access login page, redirect appropriately
-  if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/register')) {
+  // Authenticated users on an auth route (root login, legacy login, register)
+  // → role home. AuthProvider/getRoleHomePath keep this in sync.
+  const authRoutes = ['/', '/login', '/admin/login', '/register'];
+  if (user && authRoutes.includes(request.nextUrl.pathname)) {
     const url = request.nextUrl.clone();
     url.pathname = '/dashboard';
     return NextResponse.redirect(url);

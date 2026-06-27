@@ -139,7 +139,7 @@ export default function OpportunityStagesPage({ params }: PageProps) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-teal-500" />
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--brand-blue)]" />
         </div>
       </AdminLayout>
     );
@@ -188,8 +188,8 @@ export default function OpportunityStagesPage({ params }: PageProps) {
         <div className="grid grid-cols-3 gap-4">
           <Card className="border-zinc-200">
             <CardContent className="p-4 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-teal-100 flex items-center justify-center">
-                <FileText className="h-6 w-6 text-teal-600" />
+              <div className="w-12 h-12 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                <FileText className="h-6 w-6 text-[var(--brand-blue)]" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-zinc-900">{stages.length}</p>
@@ -199,8 +199,8 @@ export default function OpportunityStagesPage({ params }: PageProps) {
           </Card>
           <Card className="border-zinc-200">
             <CardContent className="p-4 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-cyan-100 flex items-center justify-center">
-                <HelpCircle className="h-6 w-6 text-cyan-600" />
+              <div className="w-12 h-12 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                <HelpCircle className="h-6 w-6 text-[var(--brand-blue)]" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-zinc-900">{totalQuestions}</p>
@@ -256,7 +256,7 @@ export default function OpportunityStagesPage({ params }: PageProps) {
                         key={stage.id}
                         className="flex items-center gap-4 p-4 bg-zinc-50 rounded-lg"
                       >
-                        <div className="w-8 h-8 rounded-full bg-teal-500 text-white flex items-center justify-center font-medium">
+                        <div className="w-8 h-8 rounded-full bg-[var(--brand-blue)] text-white flex items-center justify-center font-medium">
                           {index + 1}
                         </div>
                         <div className="flex-1">

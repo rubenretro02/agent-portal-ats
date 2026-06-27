@@ -105,7 +105,7 @@ function SortableQuestion({ question, onEdit, onDelete, onDuplicate }: SortableQ
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
-      <Card className={`border-zinc-200 ${isDragging ? 'shadow-lg ring-2 ring-teal-500' : ''}`}>
+      <Card className={`border-zinc-200 ${isDragging ? 'shadow-lg ring-2 ring-[var(--brand-blue)]' : ''}`}>
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             {/* Drag Handle */}
@@ -119,8 +119,8 @@ function SortableQuestion({ question, onEdit, onDelete, onDuplicate }: SortableQ
             {/* Question Content */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
-                  <TypeIcon className="h-4 w-4 text-teal-600" />
+                <div className="w-8 h-8 rounded-lg bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                  <TypeIcon className="h-4 w-4 text-[var(--brand-blue)]" />
                 </div>
                 <div className="flex-1">
                   <p className="font-medium text-zinc-900 truncate">{question.question}</p>
@@ -264,7 +264,7 @@ export function QuestionBuilder({ questions, onQuestionsChange, onSave, isSaving
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={handleAddQuestion} className="bg-teal-500 hover:bg-teal-600">
+          <Button onClick={handleAddQuestion} className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
             <Plus className="h-4 w-4 mr-2" />
             Add Question
           </Button>
@@ -310,7 +310,7 @@ export function QuestionBuilder({ questions, onQuestionsChange, onSave, isSaving
       {/* Save Button */}
       {questions.length > 0 && (
         <div className="flex justify-end">
-          <Button onClick={() => onSave(questions)} disabled={isSaving} className="bg-teal-500 hover:bg-teal-600">
+          <Button onClick={() => onSave(questions)} disabled={isSaving} className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
             {isSaving ? (
               <>
                 <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin mr-2" />
@@ -553,7 +553,7 @@ function QuestionEditDialog({ question, isOpen, onClose, onSave, isNew }: Questi
 
         <DialogFooter>
           <Button variant="outline" onClick={onClose}>Cancel</Button>
-          <Button onClick={handleSave} disabled={!formData.question} className="bg-teal-500 hover:bg-teal-600">
+          <Button onClick={handleSave} disabled={!formData.question} className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
             {isNew ? 'Add Question' : 'Save Changes'}
           </Button>
         </DialogFooter>

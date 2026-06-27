@@ -4,18 +4,20 @@ import "./globals.css";
 import ClientBody from "./ClientBody";
 
 const geistSans = Geist({
-  variable: "--font-geist-sans",
+  variable: "--font-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+  variable: "--font-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "AgentHub - 1099 Agent Portal + ATS",
-  description: "Unified platform for 1099 call center agents. Recruit, onboard, and manage your remote workforce.",
+  title: "WingCX — Agent & Workforce Portal",
+  description: "WingCX portal for agents, recruiters, and admins. Apply, onboard, and manage your remote customer-service workforce from one platform.",
 };
 
 export default function RootLayout({

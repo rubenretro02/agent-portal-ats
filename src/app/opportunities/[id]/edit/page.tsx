@@ -111,10 +111,10 @@ function DraggableQuestionType({ type }: { type: typeof QUESTION_TYPES[number] }
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className={`flex items-center gap-3 p-3 bg-white border border-zinc-200 rounded-lg cursor-grab active:cursor-grabbing hover:border-teal-300 hover:shadow-sm transition-all ${isDragging ? 'opacity-50' : ''}`}
+      className={`flex items-center gap-3 p-3 bg-white border border-zinc-200 rounded-lg cursor-grab active:cursor-grabbing hover:border-[rgba(32,71,255,0.3)] hover:shadow-sm transition-all ${isDragging ? 'opacity-50' : ''}`}
     >
-      <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center">
-        <Icon className="h-4 w-4 text-teal-600" />
+      <div className="w-8 h-8 rounded-lg bg-[var(--brand-blue-soft)] flex items-center justify-center">
+        <Icon className="h-4 w-4 text-[var(--brand-blue)]" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-zinc-900">{type.label}</p>
@@ -132,7 +132,7 @@ function FormBuilderDropZone({ children, questions }: { children: React.ReactNod
     <div
       ref={setNodeRef}
       className={`min-h-[400px] rounded-xl border-2 border-dashed transition-all ${
-        isOver ? 'border-teal-400 bg-teal-50/50' : 'border-zinc-200'
+        isOver ? 'border-[var(--brand-blue)] bg-[var(--brand-blue-soft)]' : 'border-zinc-200'
       } ${questions.length === 0 ? 'flex items-center justify-center' : 'p-4 space-y-3'}`}
     >
       {questions.length === 0 ? (
@@ -186,8 +186,8 @@ function QuestionCard({
         <div {...attributes} {...listeners} className="mt-1 cursor-grab active:cursor-grabbing text-zinc-400 hover:text-zinc-600">
           <GripVertical className="h-5 w-5" />
         </div>
-        <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
-          <Icon className="h-4 w-4 text-teal-600" />
+        <div className="w-8 h-8 rounded-lg bg-[var(--brand-blue-soft)] flex items-center justify-center flex-shrink-0">
+          <Icon className="h-4 w-4 text-[var(--brand-blue)]" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
@@ -228,10 +228,10 @@ function StageCard({ stage, isSelected, onSelect, onRemove }: { stage: Applicati
     <div
       onClick={onSelect}
       className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all flex-1 ${
-        isSelected ? 'border-teal-500 bg-teal-50' : 'border-zinc-200 hover:border-zinc-300'
+        isSelected ? 'border-[var(--brand-blue)] bg-[var(--brand-blue-soft)]' : 'border-zinc-200 hover:border-zinc-300'
       }`}
     >
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isSelected ? 'bg-teal-500' : 'bg-zinc-100'}`}>
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isSelected ? 'bg-[var(--brand-blue)]' : 'bg-zinc-100'}`}>
         <Icon className={`h-5 w-5 ${isSelected ? 'text-white' : 'text-zinc-500'}`} />
       </div>
       <div className="flex-1 min-w-0">
@@ -451,7 +451,7 @@ export default function EditOpportunityPage({ params }: { params: Promise<{ id: 
     return (
       <UnifiedLayout title="Edit Opportunity">
         <div className="flex items-center justify-center py-24">
-          <Loader2 className="h-8 w-8 animate-spin text-teal-600" />
+          <Loader2 className="h-8 w-8 animate-spin text-[var(--brand-blue)]" />
         </div>
       </UnifiedLayout>
     );
@@ -488,7 +488,7 @@ export default function EditOpportunityPage({ params }: { params: Promise<{ id: 
             <Button variant="outline" className="gap-2">
               <Eye className="h-4 w-4" />Preview
             </Button>
-            <Button onClick={handleSave} disabled={saving || !formData.name || !formData.description || !formData.client} className="gap-2 bg-teal-600 hover:bg-teal-700">
+            <Button onClick={handleSave} disabled={saving || !formData.name || !formData.description || !formData.client} className="gap-2 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
               {saving ? <><Loader2 className="h-4 w-4 animate-spin" />Saving...</> : <><Save className="h-4 w-4" />Save Changes</>}
             </Button>
           </div>
@@ -501,7 +501,7 @@ export default function EditOpportunityPage({ params }: { params: Promise<{ id: 
           </button>
           <button onClick={() => setActiveTab('questions')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'questions' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>
             <HelpCircle className="h-4 w-4 inline mr-2" />Questions
-            {questions.length > 0 && <Badge className="ml-2 bg-teal-500">{questions.length}</Badge>}
+            {questions.length > 0 && <Badge className="ml-2 bg-[var(--brand-blue)]">{questions.length}</Badge>}
           </button>
           <button onClick={() => setActiveTab('stages')} className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'stages' ? 'bg-white text-zinc-900 shadow-sm' : 'text-zinc-500 hover:text-zinc-900'}`}>
             <Layers className="h-4 w-4 inline mr-2" />Stages
@@ -549,7 +549,7 @@ export default function EditOpportunityPage({ params }: { params: Promise<{ id: 
                       <Input type="number" min={0} value={formData.baseRate} onChange={(e) => setFormData({ ...formData, baseRate: Number(e.target.value) })} />
                     </div>
                     <div className="space-y-2">
-                      <Label className="flex items-center gap-2"><Clock className="h-4 w-4 text-cyan-500" />Training Hours</Label>
+                      <Label className="flex items-center gap-2"><Clock className="h-4 w-4 text-[var(--brand-blue)]" />Training Hours</Label>
                       <Input type="number" min={0} value={formData.trainingHours} onChange={(e) => setFormData({ ...formData, trainingHours: Number(e.target.value) })} />
                     </div>
                     <div className="space-y-2">
@@ -571,7 +571,7 @@ export default function EditOpportunityPage({ params }: { params: Promise<{ id: 
                     <Label className="flex items-center gap-2"><Globe className="h-4 w-4 text-indigo-500" />Required Languages</Label>
                     <div className="flex flex-wrap gap-2">
                       {LANGUAGES.map(lang => (
-                        <Badge key={lang} variant={formData.languages.includes(lang) ? 'default' : 'outline'} className={`cursor-pointer transition-all ${formData.languages.includes(lang) ? 'bg-teal-500 hover:bg-teal-600' : 'hover:bg-zinc-100'}`} onClick={() => toggleLanguage(lang)}>{lang}</Badge>
+                        <Badge key={lang} variant={formData.languages.includes(lang) ? 'default' : 'outline'} className={`cursor-pointer transition-all ${formData.languages.includes(lang) ? 'bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]' : 'hover:bg-zinc-100'}`} onClick={() => toggleLanguage(lang)}>{lang}</Badge>
                       ))}
                     </div>
                   </div>
@@ -649,7 +649,7 @@ export default function EditOpportunityPage({ params }: { params: Promise<{ id: 
             </div>
             <DragOverlay>
               {activeId?.startsWith('type-') && (
-                <div className="bg-white border-2 border-teal-400 rounded-lg p-3 shadow-xl">
+                <div className="bg-white border-2 border-[var(--brand-blue)] rounded-lg p-3 shadow-xl">
                   <p className="text-sm font-medium">{QUESTION_TYPES.find(t => `type-${t.value}` === activeId)?.label}</p>
                 </div>
               )}
@@ -666,7 +666,7 @@ export default function EditOpportunityPage({ params }: { params: Promise<{ id: 
                   <CardTitle>Application Stages</CardTitle>
                   <p className="text-sm text-zinc-500 mt-1">Configure the application flow</p>
                 </div>
-                <Button onClick={() => setShowStageDialog(true)} size="sm" className="gap-2 bg-teal-600 hover:bg-teal-700">
+                <Button onClick={() => setShowStageDialog(true)} size="sm" className="gap-2 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
                   <Plus className="h-4 w-4" />Add Stage
                 </Button>
               </CardHeader>
@@ -690,7 +690,7 @@ export default function EditOpportunityPage({ params }: { params: Promise<{ id: 
                   const Icon = template.icon;
                   const alreadyAdded = stages.some(s => s.type === template.type && template.type !== 'custom');
                   return (
-                    <button key={template.type} disabled={alreadyAdded} onClick={() => { setNewStageName(template.label); setNewStageType(template.type); setShowStageDialog(true); }} className={`flex items-center gap-3 p-4 rounded-xl border text-left transition-all ${alreadyAdded ? 'border-zinc-100 bg-zinc-50 opacity-50 cursor-not-allowed' : 'border-zinc-200 hover:border-teal-300 hover:bg-teal-50 cursor-pointer'}`}>
+                    <button key={template.type} disabled={alreadyAdded} onClick={() => { setNewStageName(template.label); setNewStageType(template.type); setShowStageDialog(true); }} className={`flex items-center gap-3 p-4 rounded-xl border text-left transition-all ${alreadyAdded ? 'border-zinc-100 bg-zinc-50 opacity-50 cursor-not-allowed' : 'border-zinc-200 hover:border-[rgba(32,71,255,0.3)] hover:bg-[var(--brand-blue-soft)] cursor-pointer'}`}>
                       <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center"><Icon className="h-5 w-5 text-zinc-500" /></div>
                       <div>
                         <p className="text-sm font-medium text-zinc-900">{template.label}</p>
@@ -755,7 +755,7 @@ export default function EditOpportunityPage({ params }: { params: Promise<{ id: 
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowQuestionDialog(false)}>Cancel</Button>
-            <Button onClick={() => { if (editingQuestion) { if (questions.find(q => q.id === editingQuestion.id)) { updateQuestion(editingQuestion); } else { setQuestions([...questions, editingQuestion]); setEditingQuestion(null); setShowQuestionDialog(false); } } }} disabled={!editingQuestion?.question?.trim()} className="bg-teal-600 hover:bg-teal-700">
+            <Button onClick={() => { if (editingQuestion) { if (questions.find(q => q.id === editingQuestion.id)) { updateQuestion(editingQuestion); } else { setQuestions([...questions, editingQuestion]); setEditingQuestion(null); setShowQuestionDialog(false); } } }} disabled={!editingQuestion?.question?.trim()} className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
               {questions.find(q => q.id === editingQuestion?.id) ? 'Save Changes' : 'Add Question'}
             </Button>
           </DialogFooter>
@@ -786,7 +786,7 @@ export default function EditOpportunityPage({ params }: { params: Promise<{ id: 
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowStageDialog(false)}>Cancel</Button>
-            <Button onClick={addStage} disabled={!newStageName.trim()} className="bg-teal-600 hover:bg-teal-700">Add Stage</Button>
+            <Button onClick={addStage} disabled={!newStageName.trim()} className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">Add Stage</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

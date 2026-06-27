@@ -202,7 +202,7 @@ export default function DocumentsPage() {
           <h2 className="text-lg font-semibold">{language === 'es' ? 'Mis Documentos' : 'My Documents'}</h2>
           <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-teal-500 hover:bg-teal-600">
+              <Button className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
                 <Plus className="h-4 w-4 mr-2" />
                 {t('documents', 'upload')}
               </Button>
@@ -228,7 +228,7 @@ export default function DocumentsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="border-2 border-dashed border-zinc-300 rounded-lg p-8 text-center hover:border-teal-400 transition-colors cursor-pointer">
+                <div className="border-2 border-dashed border-zinc-300 rounded-lg p-8 text-center hover:border-[var(--brand-blue)] transition-colors cursor-pointer">
                   <Upload className="h-8 w-8 text-zinc-400 mx-auto mb-2" />
                   <p className="text-sm text-zinc-600">
                     {language === 'es' ? 'Arrastra tu archivo aquí' : 'Drag your file here'}
@@ -238,7 +238,7 @@ export default function DocumentsPage() {
               </div>
               <DialogFooter>
                 <Button variant="outline" onClick={() => setUploadDialogOpen(false)}>{t('common', 'cancel')}</Button>
-                <Button onClick={handleUpload} disabled={uploading} className="bg-teal-500 hover:bg-teal-600">
+                <Button onClick={handleUpload} disabled={uploading} className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
                   {uploading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : t('documents', 'upload')}
                 </Button>
               </DialogFooter>

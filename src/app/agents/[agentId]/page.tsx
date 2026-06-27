@@ -322,7 +322,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
   if (authLoading || !profile) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-50">
-        <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-[var(--brand-blue)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -335,7 +335,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
     return (
       <UnifiedLayout title="Agent Profile">
         <div className="flex items-center justify-center py-24">
-          <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin" />
+          <div className="w-12 h-12 border-4 border-[var(--brand-blue)] border-t-transparent rounded-full animate-spin" />
         </div>
       </UnifiedLayout>
     );
@@ -387,7 +387,7 @@ const location = agent.address ?
             {/* Profile Hero Card */}
             <Card className="border-zinc-200 overflow-hidden">
               {/* Gradient Banner */}
-              <div className="h-20 bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-500 relative">
+              <div className="h-20 bg-gradient-to-r from-[#2047FF] to-[#C873E5] relative">
                 {/* Verified Badge */}
                 {agent.pipeline_status === 'approved' || agent.pipeline_status === 'hired' || agent.pipeline_status === 'active' ? (
                   <div className="absolute top-3 right-3">
@@ -402,9 +402,9 @@ const location = agent.address ?
               <CardContent className="pt-0 pb-6 -mt-12">
                 {/* Avatar with gradient ring */}
                 <div className="relative mx-auto w-24 h-24">
-                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-cyan-400 via-teal-400 to-emerald-400 p-[3px]">
+                  <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-[#2047FF] to-[#C873E5] p-[3px]">
                     <div className="w-full h-full rounded-2xl bg-white flex items-center justify-center">
-                      <span className="text-2xl font-bold bg-gradient-to-br from-cyan-600 to-teal-600 bg-clip-text text-transparent">
+                      <span className="text-2xl font-bold bg-gradient-to-br from-[#2047FF] to-[#C873E5] bg-clip-text text-transparent">
                         {initials}
                       </span>
                     </div>
@@ -489,7 +489,7 @@ const location = agent.address ?
                   <Button
                     variant="outline"
                     size="sm"
-                    className="flex-1 gap-2 rounded-xl border-cyan-200 text-cyan-700 hover:bg-cyan-50 hover:border-cyan-300 transition-all"
+                    className="flex-1 gap-2 rounded-xl border-[rgba(32,71,255,0.3)] text-[var(--brand-blue)] hover:bg-[var(--brand-blue-soft)] hover:border-[rgba(32,71,255,0.3)] transition-all"
                     onClick={() => agent.profiles?.email && window.open(`mailto:${agent.profiles.email}`)}
                   >
                     <Mail className="h-4 w-4" />
@@ -542,7 +542,7 @@ const location = agent.address ?
                   <p className="text-sm text-zinc-500 text-center py-4">No applications yet</p>
                 )}
                 {applications.length > 3 && (
-                  <Button variant="ghost" size="sm" className="w-full text-cyan-600 hover:text-cyan-700">
+                  <Button variant="ghost" size="sm" className="w-full text-[var(--brand-blue)] hover:text-[var(--brand-blue)]">
                     See {applications.length - 3} more
                   </Button>
                 )}
@@ -567,7 +567,7 @@ const location = agent.address ?
                         <p className="text-xs text-zinc-400 mt-0.5">
                           {exp.startDate} - {exp.endDate || 'Present'}
                           {exp.isCallCenter && (
-                            <Badge variant="outline" className="ml-2 text-[10px] py-0 px-1.5 bg-cyan-50 text-cyan-700 border-cyan-200">
+                            <Badge variant="outline" className="ml-2 text-[10px] py-0 px-1.5 bg-[var(--brand-blue-soft)] text-[var(--brand-blue)] border-[rgba(32,71,255,0.3)]">
                               Call Center
                             </Badge>
                           )}
@@ -590,7 +590,7 @@ const location = agent.address ?
                 value={agent.scores?.typing || 0}
                 label="Typing Test"
                 icon={Zap}
-                color="bg-cyan-100 text-cyan-600"
+                color="bg-[var(--brand-blue-soft)] text-[var(--brand-blue)]"
               />
               <ScoreCard
                 value={agent.scores?.communication || 0}
@@ -649,8 +649,8 @@ const location = agent.address ?
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-cyan-100 flex items-center justify-center flex-shrink-0">
-                      <Briefcase className="h-4 w-4 text-cyan-600" />
+                    <div className="w-8 h-8 rounded-lg bg-[var(--brand-blue-soft)] flex items-center justify-center flex-shrink-0">
+                      <Briefcase className="h-4 w-4 text-[var(--brand-blue)]" />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-zinc-900">Call center experience</p>
@@ -665,15 +665,15 @@ const location = agent.address ?
             <Card className="border-zinc-200">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                  <User className="h-4 w-4 text-cyan-600" />
+                  <User className="h-4 w-4 text-[var(--brand-blue)]" />
                   Contact Information
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center">
-                      <Mail className="h-5 w-5 text-cyan-600" />
+                    <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                      <Mail className="h-5 w-5 text-[var(--brand-blue)]" />
                     </div>
                     <div>
                       <p className="text-xs text-zinc-500">Email</p>
@@ -681,8 +681,8 @@ const location = agent.address ?
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center">
-                      <Phone className="h-5 w-5 text-cyan-600" />
+                    <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                      <Phone className="h-5 w-5 text-[var(--brand-blue)]" />
                     </div>
                     <div>
                       <p className="text-xs text-zinc-500">Phone</p>
@@ -690,8 +690,8 @@ const location = agent.address ?
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center">
-                      <Calendar className="h-5 w-5 text-cyan-600" />
+                    <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                      <Calendar className="h-5 w-5 text-[var(--brand-blue)]" />
                     </div>
                     <div>
 <p className="text-xs text-zinc-500">Applied On</p>
@@ -701,8 +701,8 @@ const location = agent.address ?
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center">
-                      <Hash className="h-5 w-5 text-cyan-600" />
+                    <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                      <Hash className="h-5 w-5 text-[var(--brand-blue)]" />
                     </div>
                     <div>
                       <p className="text-xs text-zinc-500">Agent ID</p>
@@ -710,8 +710,8 @@ const location = agent.address ?
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center">
-                      <Globe className="h-5 w-5 text-cyan-600" />
+                    <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                      <Globe className="h-5 w-5 text-[var(--brand-blue)]" />
                     </div>
                     <div>
                       <p className="text-xs text-zinc-500">Preferred Language</p>
@@ -721,8 +721,8 @@ const location = agent.address ?
                     </div>
                   </div>
                   <div className="flex items-start gap-3 col-span-2">
-                    <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center flex-shrink-0">
-                      <MapPin className="h-5 w-5 text-cyan-600" />
+                    <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center flex-shrink-0">
+                      <MapPin className="h-5 w-5 text-[var(--brand-blue)]" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs text-zinc-500">Full Address</p>
@@ -747,7 +747,7 @@ const location = agent.address ?
             <Card className="border-zinc-200">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                  <Monitor className="h-4 w-4 text-cyan-600" />
+                  <Monitor className="h-4 w-4 text-[var(--brand-blue)]" />
                   Equipment & Setup
                 </CardTitle>
               </CardHeader>
@@ -790,14 +790,14 @@ const location = agent.address ?
               <Card className="border-zinc-200">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                    <Languages className="h-4 w-4 text-cyan-600" />
+                    <Languages className="h-4 w-4 text-[var(--brand-blue)]" />
                     Languages
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="flex flex-wrap gap-2">
                     {agent.languages.map((lang, idx) => (
-                      <Badge key={idx} variant="outline" className="bg-cyan-50 text-cyan-700 border-cyan-200">
+                      <Badge key={idx} variant="outline" className="bg-[var(--brand-blue-soft)] text-[var(--brand-blue)] border-[rgba(32,71,255,0.3)]">
                         {lang}
                       </Badge>
                     ))}
@@ -810,7 +810,7 @@ const location = agent.address ?
             <Card className="border-zinc-200">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-cyan-600" />
+                  <FileText className="h-4 w-4 text-[var(--brand-blue)]" />
                   Documents
                 </CardTitle>
               </CardHeader>

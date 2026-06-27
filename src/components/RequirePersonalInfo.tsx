@@ -176,7 +176,7 @@ export function RequirePersonalInfo({ children }: RequirePersonalInfoProps) {
   if (isLoading) {
     return (
       <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-[var(--brand-blue)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -294,7 +294,7 @@ export function RequirePersonalInfo({ children }: RequirePersonalInfoProps) {
             <Button
               onClick={savePersonalInfo}
               disabled={saving}
-              className="w-full bg-teal-500 hover:bg-teal-600"
+              className="w-full bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]"
             >
               {saving ? (
                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Saving...</>

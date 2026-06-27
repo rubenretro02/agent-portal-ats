@@ -2,35 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   WingCX design system — ported from the marketing site (cxware)
+   Light, off-white surfaces · navy near-black type · brand
+   gradient blue → purple as the load-bearing accent.
+   ============================================================ */
+
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    /* ---- shadcn tokens (HSL channels) mapped to the WingCX brand ---- */
+    --background: 240 20% 99%;        /* off-white #FBFBFD */
+    --foreground: 222 47% 11%;        /* navy near-black */
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 222 47% 11%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
-    --radius: 0.5rem;
-    --chart-1: 12 76% 61%;
-    --chart-2: 173 58% 39%;
-    --chart-3: 197 37% 24%;
-    --chart-4: 43 74% 66%;
-    --chart-5: 27 87% 67%;
+    --popover-foreground: 222 47% 11%;
+
+    /* Primary = brand blue #2047FF */
+    --primary: 230 100% 56%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 14% 96%;
+    --secondary-foreground: 222 47% 11%;
+    --muted: 240 14% 96%;
+    --muted-foreground: 222 12% 42%;
+
+    /* Accent = soft brand-blue tint (used for hovers / active states) */
+    --accent: 230 100% 97%;
+    --accent-foreground: 230 80% 42%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 222 30% 91%;
+    --input: 222 30% 91%;
+    --ring: 230 100% 56%;
+    --radius: 0.75rem;
+
+    --chart-1: 230 100% 56%;
+    --chart-2: 285 69% 67%;
+    --chart-3: 199 89% 48%;
+    --chart-4: 160 84% 39%;
+    --chart-5: 35 92% 55%;
+
+    /* ---- WingCX brand variables (parity with cxware) ---- */
+    --brand-blue: #2047FF;
+    --brand-purple: #C873E5;
+    --brand-blue-soft: rgba(32, 71, 255, 0.10);
+    --brand-purple-soft: rgba(200, 115, 229, 0.10);
+    --grad: linear-gradient(90deg, #2047FF, #C873E5);
+    --grad-135: linear-gradient(135deg, #2047FF 0%, #C873E5 100%);
+    --grad-radial: radial-gradient(circle at 30% 30%, rgba(32, 71, 255, 0.18), transparent 60%),
+                   radial-gradient(circle at 70% 70%, rgba(200, 115, 229, 0.16), transparent 60%);
+
+    /* Shadows tuned for the light theme */
+    --shadow-brand: 0 8px 32px rgba(32, 71, 255, 0.28), 0 4px 16px rgba(200, 115, 229, 0.18);
+    --shadow-brand-soft: 0 4px 18px rgba(32, 71, 255, 0.16);
+    --shadow-elev-2: 0 8px 24px rgba(10, 18, 38, 0.08), 0 2px 6px rgba(10, 18, 38, 0.04);
+
+    /* Easing — premium cinema curves */
+    --ease-cinema: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   }
 
+  /* Dark theme kept for shadcn compatibility; the portal runs light. */
   .dark {
     --background: 240 10% 3.9%;
     --foreground: 0 0% 98%;
@@ -38,8 +74,8 @@
     --card-foreground: 0 0% 98%;
     --popover: 240 10% 3.9%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
+    --primary: 230 100% 64%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 240 3.7% 15.9%;
     --secondary-foreground: 0 0% 98%;
     --muted: 240 3.7% 15.9%;
@@ -50,12 +86,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 3.7% 15.9%;
     --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
+    --ring: 230 100% 64%;
   }
 }
 
@@ -65,5 +96,138 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: "ss01", "ss02", "cv11";
+  }
+  h1, h2, h3, h4, h5, h6 {
+    letter-spacing: -0.022em;
+  }
+  ::selection {
+    background: var(--brand-purple);
+    color: white;
+  }
+}
+
+/* ============================================================
+   Brand component helpers (ported subset from cxware)
+   ============================================================ */
+@layer components {
+  /* Gradient text — brand moment, selective use */
+  .gradient-text {
+    background: var(--grad);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+    -webkit-box-decoration-break: clone;
+            box-decoration-break: clone;
+  }
+
+  /* Filled gradient surfaces (hero panels, CTAs, avatars) */
+  .gradient-brand {
+    background: var(--grad-135);
+  }
+  .gradient-brand-soft {
+    background: var(--brand-blue-soft);
+  }
+
+  /* Primary gradient button — the signature WingCX CTA */
+  .btn-brand {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: var(--radius);
+    font-weight: 600;
+    color: #fff;
+    background: var(--grad);
+    background-size: 200% 100%;
+    background-position: 0% 50%;
+    box-shadow: var(--shadow-brand-soft);
+    border: 1px solid transparent;
+    transition:
+      transform 220ms var(--ease-spring),
+      box-shadow 350ms var(--ease-cinema),
+      background-position 350ms var(--ease-cinema);
+  }
+  .btn-brand:hover {
+    background-position: 100% 50%;
+    box-shadow: var(--shadow-brand);
+    transform: translateY(-1px);
+  }
+  .btn-brand:active { transform: translateY(0) scale(0.97); }
+
+  /* Brand icon tile */
+  .icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius);
+    background: var(--grad-135);
+    color: #fff;
+    box-shadow: var(--shadow-brand-soft);
+  }
+  .icon-box-soft {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius);
+    background: var(--brand-blue-soft);
+    color: var(--brand-blue);
+  }
+
+  /* Mono label / eyebrow */
+  .eyebrow-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-mono), ui-monospace, monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    font-weight: 600;
+  }
+  .eyebrow-brand > span {
+    background: var(--grad);
+    -webkit-background-clip: text;
+            background-clip: text;
+    color: transparent;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* Soft elevated surface */
+  .panel-hover {
+    transition:
+      border-color 280ms var(--ease-cinema),
+      transform 280ms var(--ease-cinema),
+      box-shadow 280ms var(--ease-cinema);
+  }
+  .panel-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elev-2);
+  }
+
+  /* Live status dot */
+  .live-dot {
+    position: relative;
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    background: var(--brand-purple);
+    box-shadow: 0 0 12px var(--brand-purple);
+  }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .glow-brand { box-shadow: var(--shadow-brand-soft); }
+  .grid-noise {
+    background-image:
+      linear-gradient(to right, rgba(10,18,38,0.04) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(10,18,38,0.04) 1px, transparent 1px);
+    background-size: 64px 64px;
   }
 }

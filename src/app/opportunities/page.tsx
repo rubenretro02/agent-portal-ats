@@ -150,7 +150,7 @@ export default function OpportunitiesPage() {
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-[var(--brand-blue)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -160,7 +160,7 @@ export default function OpportunitiesPage() {
       <div className="min-h-screen bg-zinc-50 flex items-center justify-center">
         <div className="text-center">
           <p className="text-zinc-500 mb-4">Please sign in</p>
-          <a href="/login" className="px-4 py-2 rounded-md bg-teal-500 text-white">Sign In</a>
+          <a href="/login" className="px-4 py-2 rounded-md bg-[var(--brand-blue)] text-white">Sign In</a>
         </div>
       </div>
     );
@@ -311,7 +311,7 @@ export default function OpportunitiesPage() {
         <div className="flex flex-wrap gap-2">
           {LANGUAGES.map(lang => (
             <Badge key={lang} variant={formData.languages.includes(lang) ? 'default' : 'outline'}
-              className={`cursor-pointer ${formData.languages.includes(lang) ? 'bg-cyan-500' : ''}`}
+              className={`cursor-pointer ${formData.languages.includes(lang) ? 'bg-[var(--brand-blue)]' : ''}`}
               onClick={() => toggleLanguage(lang)}>{lang}</Badge>
           ))}
         </div>
@@ -380,7 +380,7 @@ export default function OpportunitiesPage() {
             </Select>
           </div>
           {isAdmin && (
-            <Button onClick={() => router.push('/opportunities/create')} className="bg-cyan-600 hover:bg-cyan-700">
+            <Button onClick={() => router.push('/opportunities/create')} className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
               <Plus className="h-4 w-4 mr-2" />Create Opportunity
             </Button>
           )}
@@ -397,13 +397,13 @@ export default function OpportunitiesPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="w-10 h-10 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+            <div className="w-10 h-10 border-4 border-[var(--brand-blue)] border-t-transparent rounded-full animate-spin" />
           </div>
         ) : filteredOpportunities.length === 0 ? (
           <Card><CardContent className="py-12 text-center">
             <Briefcase className="h-12 w-12 text-zinc-300 mx-auto mb-4" />
             <p className="text-zinc-500">No opportunities found</p>
-            {isAdmin && <Button onClick={() => router.push('/opportunities/create')} className="mt-4 bg-cyan-600"><Plus className="h-4 w-4 mr-2" />Create</Button>}
+            {isAdmin && <Button onClick={() => router.push('/opportunities/create')} className="mt-4 bg-[var(--brand-blue)]"><Plus className="h-4 w-4 mr-2" />Create</Button>}
           </CardContent></Card>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -417,7 +417,7 @@ export default function OpportunitiesPage() {
               return (
                 <Card
                   key={opp.id}
-                  className={`border-zinc-200 hover:border-teal-300 hover:shadow-lg transition-all overflow-hidden cursor-pointer ${opp.status !== 'active' ? 'opacity-75' : ''}`}
+                  className={`border-zinc-200 hover:border-[rgba(32,71,255,0.3)] hover:shadow-lg transition-all overflow-hidden cursor-pointer ${opp.status !== 'active' ? 'opacity-75' : ''}`}
                   onClick={() => isAdmin && router.push(`/opportunities/${opp.id}`)}
                 >
                   {isAdmin && <div className={`h-1 ${opp.status === 'active' ? 'bg-emerald-500' : opp.status === 'draft' ? 'bg-amber-500' : 'bg-zinc-300'}`} />}
@@ -453,7 +453,7 @@ export default function OpportunitiesPage() {
                         ) : isApplied ? (
                           <Badge variant="secondary">Applied</Badge>
                         ) : (
-                          <Badge className="bg-teal-500">Open</Badge>
+                          <Badge className="bg-[var(--brand-blue)]">Open</Badge>
                         )}
                       </div>
                     </div>
@@ -475,7 +475,7 @@ export default function OpportunitiesPage() {
 
                     {/* Show question count for admins */}
                     {isAdmin && (
-                      <div className={`flex items-center gap-2 text-sm mb-4 ${questionCount > 0 ? 'text-teal-600' : 'text-zinc-400'}`}>
+                      <div className={`flex items-center gap-2 text-sm mb-4 ${questionCount > 0 ? 'text-[var(--brand-blue)]' : 'text-zinc-400'}`}>
                         <HelpCircle className="h-4 w-4" />
                         <span>{questionCount > 0 ? `${questionCount} questions` : 'No questions'}</span>
                       </div>
@@ -484,7 +484,7 @@ export default function OpportunitiesPage() {
                     {isAdmin ? (
                       <Button variant="outline" className="w-full" onClick={(e) => { e.stopPropagation(); router.push(`/opportunities/${opp.id}/edit`); }}><Edit className="h-4 w-4 mr-2" />Edit</Button>
                     ) : !isApplied ? (
-                      <Button className="w-full bg-teal-500 hover:bg-teal-600" onClick={() => handleApplyClick(opp)}>Apply<ArrowRight className="h-4 w-4 ml-2" /></Button>
+                      <Button className="w-full bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]" onClick={() => handleApplyClick(opp)}>Apply<ArrowRight className="h-4 w-4 ml-2" /></Button>
                     ) : (
                       <Button variant="outline" className="w-full" disabled><CheckCircle2 className="h-4 w-4 mr-2 text-emerald-500" />Applied</Button>
                     )}
@@ -503,7 +503,7 @@ export default function OpportunitiesPage() {
           <ScrollArea className="max-h-[60vh] pr-4"><OpportunityForm /></ScrollArea>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowCreateDialog(false)}>Cancel</Button>
-            <Button onClick={handleCreateOpportunity} disabled={saving || !formData.name || !formData.description || !formData.client} className="bg-cyan-600 hover:bg-cyan-700">
+            <Button onClick={handleCreateOpportunity} disabled={saving || !formData.name || !formData.description || !formData.client} className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
               {saving ? 'Creating...' : 'Create'}
             </Button>
           </DialogFooter>
@@ -517,7 +517,7 @@ export default function OpportunitiesPage() {
           <ScrollArea className="max-h-[60vh] pr-4"><OpportunityForm /></ScrollArea>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
-            <Button onClick={handleEditOpportunity} disabled={saving} className="bg-cyan-600 hover:bg-cyan-700">{saving ? 'Saving...' : 'Save'}</Button>
+            <Button onClick={handleEditOpportunity} disabled={saving} className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">{saving ? 'Saving...' : 'Save'}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -542,7 +542,7 @@ export default function OpportunitiesPage() {
             <DialogDescription className="my-4">Complete your profile before applying.</DialogDescription>
             <div className="flex gap-3 w-full">
               <Button variant="outline" className="flex-1" onClick={() => setShowOnboardingWarning(false)}>Browse</Button>
-              <Button className="flex-1 bg-teal-500" onClick={() => router.push('/onboarding')}>Complete Profile</Button>
+              <Button className="flex-1 bg-[var(--brand-blue)]" onClick={() => router.push('/onboarding')}>Complete Profile</Button>
             </div>
           </div>
         </DialogContent>

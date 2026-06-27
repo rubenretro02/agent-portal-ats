@@ -143,7 +143,7 @@ function SortableStage({
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
-      <Card className={`border-zinc-200 ${isDragging ? 'shadow-lg ring-2 ring-teal-500' : ''}`}>
+      <Card className={`border-zinc-200 ${isDragging ? 'shadow-lg ring-2 ring-[var(--brand-blue)]' : ''}`}>
         <CardHeader className="p-4">
           <div className="flex items-center gap-3">
             {/* Drag Handle */}
@@ -155,8 +155,8 @@ function SortableStage({
             </button>
 
             {/* Stage Icon */}
-            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${stage.color || 'bg-teal-100'}`}>
-              <StageIcon className="h-5 w-5 text-teal-600" />
+            <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${stage.color || 'bg-[var(--brand-blue-soft)]'}`}>
+              <StageIcon className="h-5 w-5 text-[var(--brand-blue)]" />
             </div>
 
             {/* Stage Info */}
@@ -478,7 +478,7 @@ export function StageBuilder({ stages, onStagesChange, onSave, isSaving, opportu
             Create and organize the stages of your application process
           </p>
         </div>
-        <Button onClick={handleAddStage} className="bg-teal-500 hover:bg-teal-600">
+        <Button onClick={handleAddStage} className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
           <Plus className="h-4 w-4 mr-2" />
           Add Stage
         </Button>
@@ -500,7 +500,7 @@ export function StageBuilder({ stages, onStagesChange, onSave, isSaving, opportu
               <Button onClick={handleCreateDefaultStages} variant="outline">
                 Use Default Template
               </Button>
-              <Button onClick={handleAddStage} className="bg-teal-500 hover:bg-teal-600">
+              <Button onClick={handleAddStage} className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
                 <Plus className="h-4 w-4 mr-2" />
                 Create Custom Stage
               </Button>
@@ -539,7 +539,7 @@ export function StageBuilder({ stages, onStagesChange, onSave, isSaving, opportu
           <Button
             onClick={() => onSave(stages)}
             disabled={isSaving}
-            className="bg-teal-500 hover:bg-teal-600"
+            className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]"
           >
             {isSaving ? (
               <>
@@ -630,13 +630,13 @@ function StageEditDialog({ stage, isOpen, onClose, onSave, isNew }: StageEditDia
                   key={type.value}
                   className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
                     formData.type === type.value
-                      ? 'border-teal-500 bg-teal-50'
+                      ? 'border-[var(--brand-blue)] bg-[var(--brand-blue-soft)]'
                       : 'border-zinc-200 hover:border-zinc-300'
                   }`}
                   onClick={() => setFormData({ ...formData, type: type.value })}
                 >
                   <div className="flex items-center gap-2">
-                    <type.icon className="h-4 w-4 text-teal-600" />
+                    <type.icon className="h-4 w-4 text-[var(--brand-blue)]" />
                     <span className="font-medium text-sm">{type.label}</span>
                   </div>
                   <p className="text-xs text-zinc-500 mt-1">{type.description}</p>
@@ -765,7 +765,7 @@ function StageEditDialog({ stage, isOpen, onClose, onSave, isNew }: StageEditDia
           <Button
             onClick={handleSave}
             disabled={!formData.name}
-            className="bg-teal-500 hover:bg-teal-600"
+            className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]"
           >
             {isNew ? 'Add Stage' : 'Save Changes'}
           </Button>
@@ -994,7 +994,7 @@ function QuestionEditDialog({ question, isOpen, onClose, onSave, isNew }: Questi
           <Button
             onClick={handleSave}
             disabled={!formData.question}
-            className="bg-teal-500 hover:bg-teal-600"
+            className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]"
           >
             {isNew ? 'Add Question' : 'Save Changes'}
           </Button>

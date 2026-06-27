@@ -50,7 +50,7 @@ export default function ProfilePage() {
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-50">
-        <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin" />
+        <div className="w-12 h-12 border-4 border-[var(--brand-blue)] border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -95,7 +95,7 @@ export default function ProfilePage() {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Profile Header */}
         <Card className="border-zinc-200 overflow-hidden">
-          <div className="h-24 bg-gradient-to-r from-teal-500 to-cyan-500" />
+          <div className="h-24 bg-gradient-to-r from-[#2047FF] to-[#C873E5]" />
           <CardContent className="relative pt-0 pb-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 -mt-12">
               <div className="w-24 h-24 rounded-full bg-white border-4 border-white shadow-lg flex items-center justify-center text-2xl font-bold text-zinc-600">
@@ -106,7 +106,7 @@ export default function ProfilePage() {
                   {profile.first_name} {profile.last_name}
                 </h1>
                 {(profile as unknown as { username?: string })?.username && (
-                  <p className="text-teal-600 font-medium">@{(profile as unknown as { username?: string }).username}</p>
+                  <p className="text-[var(--brand-blue)] font-medium">@{(profile as unknown as { username?: string }).username}</p>
                 )}
                 <p className="text-zinc-500">{profile.email}</p>
               </div>
@@ -140,7 +140,7 @@ export default function ProfilePage() {
                   <Button variant="outline" size="sm" onClick={() => setEditing(false)}>
                     <X className="h-4 w-4" />
                   </Button>
-                  <Button size="sm" onClick={handleSave} disabled={saving} className="bg-teal-500 hover:bg-teal-600">
+                  <Button size="sm" onClick={handleSave} disabled={saving} className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
                     <Save className="h-4 w-4 mr-2" />
                     Save
                   </Button>
@@ -194,7 +194,7 @@ export default function ProfilePage() {
                     <p>{address.country}</p>
                   </div>
                 ) : (
-                  <p className="text-zinc-400">Not specified - <a href="/onboarding" className="text-teal-600 hover:underline">Complete onboarding</a></p>
+                  <p className="text-zinc-400">Not specified - <a href="/onboarding" className="text-[var(--brand-blue)] hover:underline">Complete onboarding</a></p>
                 )}
               </div>
             </CardContent>
@@ -252,7 +252,7 @@ export default function ProfilePage() {
                     )}
                   </div>
                 ) : (
-                  <p className="text-zinc-400">Not specified - <a href="/onboarding" className="text-teal-600 hover:underline">Complete onboarding</a></p>
+                  <p className="text-zinc-400">Not specified - <a href="/onboarding" className="text-[var(--brand-blue)] hover:underline">Complete onboarding</a></p>
                 )}
               </div>
 
@@ -291,7 +291,7 @@ export default function ProfilePage() {
                     <p>Preferred shift: {availability.preferredShift || 'Not specified'}</p>
                   </div>
                 ) : (
-                  <p className="text-zinc-400">Not specified - <a href="/onboarding" className="text-teal-600 hover:underline">Complete onboarding</a></p>
+                  <p className="text-zinc-400">Not specified - <a href="/onboarding" className="text-[var(--brand-blue)] hover:underline">Complete onboarding</a></p>
                 )}
               </div>
             </CardContent>

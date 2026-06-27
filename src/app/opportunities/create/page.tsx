@@ -114,10 +114,10 @@ function DraggableQuestionType({ type }: { type: typeof QUESTION_TYPES[number] }
       ref={setNodeRef}
       {...attributes}
       {...listeners}
-      className={`flex items-center gap-3 p-3 bg-white border border-zinc-200 rounded-lg cursor-grab active:cursor-grabbing hover:border-teal-300 hover:shadow-sm transition-all ${isDragging ? 'opacity-50' : ''}`}
+      className={`flex items-center gap-3 p-3 bg-white border border-zinc-200 rounded-lg cursor-grab active:cursor-grabbing hover:border-[rgba(32,71,255,0.3)] hover:shadow-sm transition-all ${isDragging ? 'opacity-50' : ''}`}
     >
-      <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center">
-        <Icon className="h-4 w-4 text-teal-600" />
+      <div className="w-8 h-8 rounded-lg bg-[var(--brand-blue-soft)] flex items-center justify-center">
+        <Icon className="h-4 w-4 text-[var(--brand-blue)]" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium text-zinc-900">{type.label}</p>
@@ -136,7 +136,7 @@ function FormBuilderDropZone({ children, questions }: { children: React.ReactNod
     <div
       ref={setNodeRef}
       className={`min-h-[400px] rounded-xl border-2 border-dashed transition-all ${
-        isOver ? 'border-teal-400 bg-teal-50/50' : 'border-zinc-200'
+        isOver ? 'border-[var(--brand-blue)] bg-[var(--brand-blue-soft)]' : 'border-zinc-200'
       } ${questions.length === 0 ? 'flex items-center justify-center' : 'p-4 space-y-3'}`}
     >
       {questions.length === 0 ? (
@@ -196,8 +196,8 @@ function QuestionCard({
           <GripVertical className="h-5 w-5" />
         </div>
 
-        <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center flex-shrink-0">
-          <Icon className="h-4 w-4 text-teal-600" />
+        <div className="w-8 h-8 rounded-lg bg-[var(--brand-blue-soft)] flex items-center justify-center flex-shrink-0">
+          <Icon className="h-4 w-4 text-[var(--brand-blue)]" />
         </div>
 
         <div className="flex-1 min-w-0">
@@ -253,10 +253,10 @@ function StageCard({
     <div
       onClick={onSelect}
       className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer transition-all ${
-        isSelected ? 'border-teal-500 bg-teal-50' : 'border-zinc-200 hover:border-zinc-300'
+        isSelected ? 'border-[var(--brand-blue)] bg-[var(--brand-blue-soft)]' : 'border-zinc-200 hover:border-zinc-300'
       }`}
     >
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isSelected ? 'bg-teal-500' : 'bg-zinc-100'}`}>
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${isSelected ? 'bg-[var(--brand-blue)]' : 'bg-zinc-100'}`}>
         <Icon className={`h-5 w-5 ${isSelected ? 'text-white' : 'text-zinc-500'}`} />
       </div>
       <div className="flex-1 min-w-0">
@@ -499,7 +499,7 @@ export default function CreateOpportunityPage() {
           <Button
             onClick={handleSave}
             disabled={saving || !formData.name || !formData.description || !formData.client}
-            className="gap-2 bg-teal-600 hover:bg-teal-700"
+            className="gap-2 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]"
           >
             {saving ? (
               <><div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />Saving...</>
@@ -525,7 +525,7 @@ export default function CreateOpportunityPage() {
             <HelpCircle className="h-4 w-4 inline mr-2" />
             Questions
             {questions.length > 0 && (
-              <Badge className="ml-2 bg-teal-500">{questions.length}</Badge>
+              <Badge className="ml-2 bg-[var(--brand-blue)]">{questions.length}</Badge>
             )}
           </button>
           <button
@@ -613,7 +613,7 @@ export default function CreateOpportunityPage() {
                     </div>
                     <div className="space-y-2">
                       <Label className="flex items-center gap-2">
-                        <Clock className="h-4 w-4 text-cyan-500" />
+                        <Clock className="h-4 w-4 text-[var(--brand-blue)]" />
                         Training Hours
                       </Label>
                       <Input
@@ -664,7 +664,7 @@ export default function CreateOpportunityPage() {
                         <Badge
                           key={lang}
                           variant={formData.languages.includes(lang) ? 'default' : 'outline'}
-                          className={`cursor-pointer transition-all ${formData.languages.includes(lang) ? 'bg-teal-500 hover:bg-teal-600' : 'hover:bg-zinc-100'}`}
+                          className={`cursor-pointer transition-all ${formData.languages.includes(lang) ? 'bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]' : 'hover:bg-zinc-100'}`}
                           onClick={() => toggleLanguage(lang)}
                         >
                           {lang}
@@ -723,10 +723,10 @@ export default function CreateOpportunityPage() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-teal-50 to-cyan-50 border-teal-200">
+              <Card className="bg-gradient-to-br from-[var(--brand-blue-soft)] to-[var(--brand-purple-soft)] border-[rgba(32,71,255,0.3)]">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-3 mb-4">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2047FF] to-[#C873E5] flex items-center justify-center">
                       <Sparkles className="h-5 w-5 text-white" />
                     </div>
                     <div>
@@ -820,7 +820,7 @@ export default function CreateOpportunityPage() {
 
             <DragOverlay>
               {activeId?.startsWith('type-') && (
-                <div className="bg-white border-2 border-teal-400 rounded-lg p-3 shadow-xl">
+                <div className="bg-white border-2 border-[var(--brand-blue)] rounded-lg p-3 shadow-xl">
                   <p className="text-sm font-medium">
                     {QUESTION_TYPES.find(t => `type-${t.value}` === activeId)?.label}
                   </p>
@@ -839,7 +839,7 @@ export default function CreateOpportunityPage() {
                   <CardTitle>Application Stages</CardTitle>
                   <p className="text-sm text-zinc-500 mt-1">Click a stage to customize it</p>
                 </div>
-                <Button onClick={() => setShowStageDialog(true)} size="sm" className="gap-2 bg-teal-600 hover:bg-teal-700">
+                <Button onClick={() => setShowStageDialog(true)} size="sm" className="gap-2 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
                   <Plus className="h-4 w-4" />
                   Add Stage
                 </Button>
@@ -879,16 +879,16 @@ export default function CreateOpportunityPage() {
                       {/* Stage Card - Clickable */}
                       <div
                         onClick={() => setEditingStage(stage)}
-                        className="flex-1 flex items-center gap-3 p-3 rounded-xl border border-zinc-200 hover:border-teal-300 hover:bg-teal-50/50 cursor-pointer transition-all group"
+                        className="flex-1 flex items-center gap-3 p-3 rounded-xl border border-zinc-200 hover:border-[rgba(32,71,255,0.3)] hover:bg-[var(--brand-blue-soft)] cursor-pointer transition-all group"
                       >
-                        <div className="w-10 h-10 rounded-xl bg-zinc-100 group-hover:bg-teal-100 flex items-center justify-center transition-colors">
-                          <Icon className="h-5 w-5 text-zinc-500 group-hover:text-teal-600" />
+                        <div className="w-10 h-10 rounded-xl bg-zinc-100 group-hover:bg-[var(--brand-blue-soft)] flex items-center justify-center transition-colors">
+                          <Icon className="h-5 w-5 text-zinc-500 group-hover:text-[var(--brand-blue)]" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-zinc-900">{stage.name}</p>
                           <p className="text-xs text-zinc-500 truncate">{stage.description || 'Click to configure'}</p>
                         </div>
-                        <Settings className="h-4 w-4 text-zinc-300 group-hover:text-teal-500 transition-colors" />
+                        <Settings className="h-4 w-4 text-zinc-300 group-hover:text-[var(--brand-blue)] transition-colors" />
                       </div>
 
                       {/* Delete button */}
@@ -929,7 +929,7 @@ export default function CreateOpportunityPage() {
                       className={`flex items-center gap-3 p-4 rounded-xl border text-left transition-all ${
                         alreadyAdded
                           ? 'border-zinc-100 bg-zinc-50 opacity-50 cursor-not-allowed'
-                          : 'border-zinc-200 hover:border-teal-300 hover:bg-teal-50 cursor-pointer'
+                          : 'border-zinc-200 hover:border-[rgba(32,71,255,0.3)] hover:bg-[var(--brand-blue-soft)] cursor-pointer'
                       }`}
                     >
                       <div className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center">
@@ -975,8 +975,8 @@ export default function CreateOpportunityPage() {
                     const Icon = typeInfo?.icon || Type;
                     return (
                       <>
-                        <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
-                          <Icon className="h-4 w-4 text-teal-600" />
+                        <div className="w-8 h-8 rounded-lg bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                          <Icon className="h-4 w-4 text-[var(--brand-blue)]" />
                         </div>
                         <div>
                           <p className="font-medium text-zinc-900">{typeInfo?.label || editingQuestion.type}</p>
@@ -1059,7 +1059,7 @@ export default function CreateOpportunityPage() {
                 }
               }}
               disabled={!editingQuestion?.question?.trim()}
-              className="bg-teal-600 hover:bg-teal-700"
+              className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]"
             >
               {questions.find(q => q.id === editingQuestion?.id) ? 'Save Changes' : 'Add Question'}
             </Button>
@@ -1115,7 +1115,7 @@ export default function CreateOpportunityPage() {
             <Button
               onClick={addStage}
               disabled={!newStageName.trim()}
-              className="bg-teal-600 hover:bg-teal-700"
+              className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]"
             >
               Add Stage
             </Button>
@@ -1159,8 +1159,8 @@ export default function CreateOpportunityPage() {
                     const Icon = stageType?.icon || Settings;
                     return (
                       <>
-                        <div className="w-8 h-8 rounded-lg bg-teal-100 flex items-center justify-center">
-                          <Icon className="h-4 w-4 text-teal-600" />
+                        <div className="w-8 h-8 rounded-lg bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                          <Icon className="h-4 w-4 text-[var(--brand-blue)]" />
                         </div>
                         <div>
                           <p className="font-medium text-zinc-900">{stageType?.label || editingStage.type}</p>
@@ -1190,7 +1190,7 @@ export default function CreateOpportunityPage() {
             <Button
               onClick={updateStage}
               disabled={!editingStage?.name?.trim()}
-              className="bg-teal-600 hover:bg-teal-700"
+              className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]"
             >
               Save Changes
             </Button>

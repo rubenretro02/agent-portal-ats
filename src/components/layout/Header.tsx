@@ -79,7 +79,7 @@ export function Header({ title, onMenuClick }: HeaderProps) {
             <Button variant="ghost" size="icon" className="relative">
               <Bell size={20} className="text-zinc-600" />
               {unreadCount > 0 && (
-                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-teal-500 text-white text-xs">
+                <Badge className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-[var(--brand-blue)] text-white text-xs">
                   {unreadCount}
                 </Badge>
               )}
@@ -126,7 +126,7 @@ export function Header({ title, onMenuClick }: HeaderProps) {
                         </p>
                       </div>
                       {!notification.read && (
-                        <div className="w-2 h-2 bg-teal-500 rounded-full mt-1.5" />
+                        <div className="w-2 h-2 bg-[var(--brand-blue)] rounded-full mt-1.5" />
                       )}
                     </div>
                   </DropdownMenuItem>

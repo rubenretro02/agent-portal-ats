@@ -185,7 +185,7 @@ function DroppableColumn({
       {/* Drop zone */}
       <div
         ref={setNodeRef}
-        className={`flex-1 min-h-[480px] p-2 rounded-b-xl border border-t-0 space-y-2 transition-colors ${stage.color} ${isOver ? 'ring-2 ring-cyan-400 ring-inset bg-opacity-80' : ''}`}
+        className={`flex-1 min-h-[480px] p-2 rounded-b-xl border border-t-0 space-y-2 transition-colors ${stage.color} ${isOver ? 'ring-2 ring-[var(--brand-blue)] ring-inset bg-opacity-80' : ''}`}
       >
         {apps.map(app => (
           <DraggableCard
@@ -243,25 +243,25 @@ function DraggableCard({
       style={style}
       className={`group relative bg-white rounded-xl border shadow-sm transition-all select-none
         ${isDragging ? 'opacity-40 shadow-lg' : 'hover:shadow-md'}
-        ${isSelected ? 'ring-2 ring-cyan-500 border-cyan-300' : 'border-zinc-200 hover:border-zinc-300'}
+        ${isSelected ? 'ring-2 ring-[var(--brand-blue)] border-[rgba(32,71,255,0.3)]' : 'border-zinc-200 hover:border-zinc-300'}
       `}
     >
       <div className="p-3">
         <div className="flex items-start gap-2">
           {/* Checkbox */}
           <button
-            className="mt-0.5 text-zinc-400 hover:text-cyan-600 transition-colors flex-shrink-0"
+            className="mt-0.5 text-zinc-400 hover:text-[var(--brand-blue)] transition-colors flex-shrink-0"
             onClick={() => onSelect(app.id, !isSelected)}
           >
             {isSelected
-              ? <CheckSquare className="h-4 w-4 text-cyan-600" />
+              ? <CheckSquare className="h-4 w-4 text-[var(--brand-blue)]" />
               : <Square className="h-4 w-4" />}
           </button>
 
           {/* Avatar - Clickable */}
           <button
             onClick={() => onViewProfile(app.id)}
-            className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center flex-shrink-0 hover:from-cyan-600 hover:to-teal-600 transition-all hover:scale-105 cursor-pointer"
+            className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#2047FF] to-[#C873E5] flex items-center justify-center flex-shrink-0 hover:from-[#2047FF] hover:to-[#C873E5] transition-all hover:scale-105 cursor-pointer"
             title="View application"
           >
             <span className="text-white text-[10px] font-bold">{initials(app)}</span>
@@ -271,7 +271,7 @@ function DraggableCard({
           <div className="flex-1 min-w-0">
             <button
               onClick={() => onViewProfile(app.id)}
-              className="font-semibold text-xs text-zinc-900 truncate hover:text-cyan-600 transition-colors cursor-pointer text-left block max-w-full"
+              className="font-semibold text-xs text-zinc-900 truncate hover:text-[var(--brand-blue)] transition-colors cursor-pointer text-left block max-w-full"
               title="View application"
             >
               {fullName(app)}
@@ -283,7 +283,7 @@ function DraggableCard({
               title="View application"
             >
               <span className="text-zinc-500">Agent ID:</span>{' '}
-              <span className="text-cyan-600 font-mono hover:text-cyan-700">{app.agent?.agent_id?.replace('AGENT ', '')}</span>
+              <span className="text-[var(--brand-blue)] font-mono hover:text-[var(--brand-blue)]">{app.agent?.agent_id?.replace('AGENT ', '')}</span>
             </button>
           </div>
 
@@ -303,7 +303,7 @@ function DraggableCard({
             {nextStatus && (
               <Button
                 size="sm"
-                className="h-6 text-[10px] flex-1 bg-cyan-600 hover:bg-cyan-700 text-white px-2"
+                className="h-6 text-[10px] flex-1 bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)] text-white px-2"
                 disabled={isMoving}
                 onClick={() => onMove(app.id, nextStatus)}
               >
@@ -337,14 +337,14 @@ function DraggableCard({
 
 function OverlayCard({ app }: { app: Application }) {
   return (
-    <div className="bg-white rounded-xl border-2 border-cyan-400 shadow-2xl p-3 w-[220px] opacity-95">
+    <div className="bg-white rounded-xl border-2 border-[var(--brand-blue)] shadow-2xl p-3 w-[220px] opacity-95">
       <div className="flex items-center gap-2">
-        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center">
+        <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#2047FF] to-[#C873E5] flex items-center justify-center">
           <span className="text-white text-[10px] font-bold">{initials(app)}</span>
         </div>
         <div className="min-w-0">
           <p className="font-semibold text-xs text-zinc-900 truncate">{fullName(app)}</p>
-          <p className="text-[10px] text-cyan-600 font-mono">{app.agent?.agent_id?.replace('AGENT ', '')}</p>
+          <p className="text-[10px] text-[var(--brand-blue)] font-mono">{app.agent?.agent_id?.replace('AGENT ', '')}</p>
         </div>
       </div>
     </div>
@@ -622,7 +622,7 @@ export default function OpportunityDetailPage() {
   if (loading) return (
     <UnifiedLayout title="Loading...">
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-cyan-600" />
+        <Loader2 className="h-8 w-8 animate-spin text-[var(--brand-blue)]" />
       </div>
     </UnifiedLayout>
   );
@@ -674,15 +674,15 @@ export default function OpportunityDetailPage() {
           </div>
           {/* Global batch toolbar */}
           {totalSelected > 0 && (
-            <div className="flex items-center gap-2 bg-cyan-50 border border-cyan-200 rounded-xl px-4 py-2">
-              <span className="text-sm font-medium text-cyan-700">{totalSelected} selected</span>
-              <div className="w-px h-4 bg-cyan-200" />
+            <div className="flex items-center gap-2 bg-[var(--brand-blue-soft)] border border-[rgba(32,71,255,0.3)] rounded-xl px-4 py-2">
+              <span className="text-sm font-medium text-[var(--brand-blue)]">{totalSelected} selected</span>
+              <div className="w-px h-4 bg-[var(--brand-blue-soft)]" />
               {STAGES.filter(s => s.status !== 'pending' && s.status !== 'withdrawn').map(s => (
                 <Button
                   key={s.status}
                   size="sm"
                   variant="outline"
-                  className={`h-7 text-xs ${s.status === 'rejected' ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-cyan-200 text-cyan-700 hover:bg-cyan-50'}`}
+                  className={`h-7 text-xs ${s.status === 'rejected' ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-[rgba(32,71,255,0.3)] text-[var(--brand-blue)] hover:bg-[var(--brand-blue-soft)]'}`}
                   onClick={() => batchMove(s.status)}
                 >
                   Move to {s.label}
@@ -711,7 +711,7 @@ export default function OpportunityDetailPage() {
                   placeholder="Search by name, email or Agent ID..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full mt-1.5 px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none"
+                  className="w-full mt-1.5 px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:ring-2 focus:ring-[var(--brand-blue)] focus:border-transparent outline-none"
                 />
               </div>
               <div className="flex-1">
@@ -719,7 +719,7 @@ export default function OpportunityDetailPage() {
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value as 'all' | AppStatus)}
-                  className="w-full mt-1.5 px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none bg-white"
+                  className="w-full mt-1.5 px-3 py-2 border border-zinc-200 rounded-lg text-sm focus:ring-2 focus:ring-[var(--brand-blue)] focus:border-transparent outline-none bg-white"
                 >
                   <option value="all">All Statuses</option>
                   {STAGES.map(s => (
@@ -747,7 +747,7 @@ export default function OpportunityDetailPage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="border-cyan-200 text-cyan-700 hover:bg-cyan-50 gap-2"
+                    className="border-[rgba(32,71,255,0.3)] text-[var(--brand-blue)] hover:bg-[var(--brand-blue-soft)] gap-2"
                   >
                     <Download className="h-4 w-4" />
                     Export
@@ -810,8 +810,8 @@ export default function OpportunityDetailPage() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card className="border-zinc-200">
             <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center flex-shrink-0">
-                <Users className="h-5 w-5 text-cyan-600" />
+              <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center flex-shrink-0">
+                <Users className="h-5 w-5 text-[var(--brand-blue)]" />
               </div>
               <div>
                 <p className="text-xs text-zinc-500">Total Candidates</p>

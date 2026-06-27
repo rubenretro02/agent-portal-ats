@@ -152,7 +152,7 @@ export function AdminDashboard() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <RefreshCw className="w-8 h-8 animate-spin text-cyan-600" />
+        <RefreshCw className="w-8 h-8 animate-spin text-[var(--brand-blue)]" />
       </div>
     );
   }
@@ -182,7 +182,7 @@ export function AdminDashboard() {
     const strokeDashoffset = circumference - (ringValue / 100) * circumference;
 
     const cardContent = (
-      <Card className={`border-zinc-100 hover:shadow-lg transition-all ${href ? 'cursor-pointer hover:border-cyan-200 hover:scale-[1.02]' : ''}`}>
+      <Card className={`border-zinc-100 hover:shadow-lg transition-all ${href ? 'cursor-pointer hover:border-primary/30 hover:scale-[1.02]' : ''}`}>
         <CardContent className="p-5">
           <div className="flex items-start justify-between">
             <p className="text-sm font-medium text-zinc-500">{title}</p>
@@ -272,7 +272,7 @@ export function AdminDashboard() {
           title="Active Opportunities"
           value={metrics.activeOpportunities}
           icon={Briefcase}
-          ringColor="#6366f1"
+          ringColor="#2047FF"
           ringValue={60}
           subtitle="Open positions"
           href="/opportunities"
@@ -363,7 +363,7 @@ export function AdminDashboard() {
                       fontSize: '12px',
                     }}
                   />
-                  <Bar dataKey="applications" fill="#6366f1" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="applications" fill="#2047FF" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -419,7 +419,7 @@ export function AdminDashboard() {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base font-semibold">Recent Agents</CardTitle>
           <Link href="/agents">
-            <Button variant="ghost" size="sm" className="text-cyan-600 text-xs">
+            <Button variant="ghost" size="sm" className="text-[var(--brand-blue)] text-xs">
               View All
               <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
@@ -435,12 +435,12 @@ export function AdminDashboard() {
               return (
                 <Link key={agent.id} href={`/agents/${agent.id}`}>
                   <div className="flex flex-col items-center p-5 rounded-xl bg-zinc-50/80 hover:bg-zinc-100 transition-colors cursor-pointer group">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 flex items-center justify-center text-white font-semibold text-lg shadow-lg shadow-cyan-500/20 group-hover:shadow-cyan-500/30 transition-shadow">
+                    <div className="w-16 h-16 rounded-full gradient-brand flex items-center justify-center text-white font-semibold text-lg shadow-lg shadow-[rgba(32,71,255,0.20)] group-hover:shadow-[rgba(32,71,255,0.30)] transition-shadow">
                       {initials}
                     </div>
                     <p className="font-medium text-zinc-900 text-sm mt-3 text-center">{name}</p>
                     <p className="text-xs text-zinc-500 mt-0.5 truncate max-w-full">{agent.profiles?.email?.split('@')[0]}</p>
-                    <p className="text-[10px] text-cyan-600 font-mono mt-2 flex items-center gap-1">
+                    <p className="text-[10px] text-[var(--brand-blue)] font-mono mt-2 flex items-center gap-1">
                       ID: {agentId}
                       <ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </p>

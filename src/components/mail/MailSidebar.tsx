@@ -45,11 +45,11 @@ export function MailSidebar({ onCompose }: MailSidebarProps) {
   };
 
   return (
-    <aside className="w-56 bg-zinc-900/50 border-r border-zinc-800 flex flex-col p-3">
+    <aside className="w-56 bg-card border-r border-border flex flex-col p-3">
       {/* Compose Button */}
       <Button
         onClick={onCompose}
-        className="w-full mb-4 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white shadow-lg shadow-teal-500/25 transition-all duration-200 hover:shadow-teal-500/40"
+        className="w-full mb-4 bg-gradient-to-r from-[#2047FF] to-[#C873E5] hover:from-[#2047FF] hover:to-[#C873E5] text-white shadow-lg shadow-[rgba(32,71,255,0.25)] transition-all duration-200 hover:shadow-[rgba(32,71,255,0.25)]"
       >
         <Plus size={18} className="mr-2" />
         Compose
@@ -69,8 +69,8 @@ export function MailSidebar({ onCompose }: MailSidebarProps) {
               className={cn(
                 'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-all',
                 isActive
-                  ? 'bg-teal-500/20 text-teal-400'
-                  : 'text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200'
+                  ? 'bg-[rgba(32,71,255,0.2)] text-[var(--brand-blue)]'
+                  : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
               )}
             >
               <Icon size={18} />
@@ -78,7 +78,7 @@ export function MailSidebar({ onCompose }: MailSidebarProps) {
               {unreadCount > 0 && (
                 <span className={cn(
                   'text-xs px-2 py-0.5 rounded-full',
-                  isActive ? 'bg-teal-500 text-white' : 'bg-zinc-700 text-zinc-300'
+                  isActive ? 'bg-[var(--brand-blue)] text-white' : 'bg-muted text-foreground'
                 )}>
                   {unreadCount}
                 </span>
@@ -89,10 +89,10 @@ export function MailSidebar({ onCompose }: MailSidebarProps) {
       </nav>
 
       {/* Labels */}
-      <div className="mt-4 pt-4 border-t border-zinc-800">
+      <div className="mt-4 pt-4 border-t border-border">
         <div className="flex items-center justify-between px-3 mb-2">
-          <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Labels</span>
-          <button className="text-zinc-500 hover:text-zinc-300">
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Labels</span>
+          <button className="text-muted-foreground hover:text-foreground">
             <Plus size={14} />
           </button>
         </div>
@@ -100,7 +100,7 @@ export function MailSidebar({ onCompose }: MailSidebarProps) {
           {labels.map((label) => (
             <button
               key={label.name}
-              className="w-full flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 transition-all"
+              className="w-full flex items-center gap-3 px-3 py-1.5 rounded-lg text-sm text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
             >
               <Tag size={14} />
               <span className="flex-1 text-left">{label.name}</span>
@@ -111,12 +111,12 @@ export function MailSidebar({ onCompose }: MailSidebarProps) {
       </div>
 
       {/* Storage Info */}
-      <div className="mt-4 pt-4 border-t border-zinc-800 px-3">
-        <div className="text-xs text-zinc-500 mb-2">Storage</div>
-        <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-          <div className="h-full w-1/4 bg-gradient-to-r from-teal-500 to-cyan-500 rounded-full" />
+      <div className="mt-4 pt-4 border-t border-border px-3">
+        <div className="text-xs text-muted-foreground mb-2">Storage</div>
+        <div className="h-1.5 bg-secondary rounded-full overflow-hidden">
+          <div className="h-full w-1/4 bg-gradient-to-r from-[#2047FF] to-[#C873E5] rounded-full" />
         </div>
-        <div className="text-xs text-zinc-500 mt-1">2.5 GB of 10 GB used</div>
+        <div className="text-xs text-muted-foreground mt-1">2.5 GB of 10 GB used</div>
       </div>
     </aside>
   );

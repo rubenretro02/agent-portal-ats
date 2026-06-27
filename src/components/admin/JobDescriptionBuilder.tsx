@@ -131,7 +131,7 @@ function SortableSection({ section, onEdit, onDelete }: SortableSectionProps) {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes}>
-      <Card className={`border-zinc-200 ${isDragging ? 'shadow-lg ring-2 ring-teal-500' : ''}`}>
+      <Card className={`border-zinc-200 ${isDragging ? 'shadow-lg ring-2 ring-[var(--brand-blue)]' : ''}`}>
         <CardContent className="p-4">
           <div className="flex items-start gap-3">
             <button
@@ -141,7 +141,7 @@ function SortableSection({ section, onEdit, onDelete }: SortableSectionProps) {
               <GripVertical className="h-5 w-5" />
             </button>
 
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#2047FF] to-[#C873E5] flex items-center justify-center flex-shrink-0">
               <IconComponent className="h-5 w-5 text-white" />
             </div>
 
@@ -243,7 +243,7 @@ export function JobDescriptionBuilder({ sections, onChange }: JobDescriptionBuil
               ))}
             </SelectContent>
           </Select>
-          <Button onClick={handleAddSection} className="bg-teal-500 hover:bg-teal-600">
+          <Button onClick={handleAddSection} className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]">
             <Plus className="h-4 w-4 mr-2" />
             Add Section
           </Button>
@@ -367,7 +367,7 @@ function SectionEditDialog({ section, isOpen, onClose, onSave, isNew }: SectionE
                   onClick={() => setFormData({ ...formData, icon: name })}
                   className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all ${
                     formData.icon === name
-                      ? 'bg-teal-500 text-white'
+                      ? 'bg-[var(--brand-blue)] text-white'
                       : 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
                   }`}
                 >
@@ -410,7 +410,7 @@ function SectionEditDialog({ section, isOpen, onClose, onSave, isNew }: SectionE
           <Button
             onClick={handleSave}
             disabled={!formData.title || !formData.content}
-            className="bg-teal-500 hover:bg-teal-600"
+            className="bg-[var(--brand-blue)] hover:bg-[var(--brand-blue)]"
           >
             {isNew ? 'Add Section' : 'Save Changes'}
           </Button>
