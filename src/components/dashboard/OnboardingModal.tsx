@@ -31,13 +31,16 @@ import {
   Sparkles,
   Loader2,
   AlertCircle,
+  Keyboard,
 } from 'lucide-react';
+import { TypingTest, type TypingResult } from '@/components/onboarding/TypingTest';
 
 const STEPS = [
   { id: 'personal', title: 'Personal Info', icon: User },
   { id: 'address', title: 'Address', icon: MapPin },
   { id: 'experience', title: 'Experience', icon: Briefcase },
   { id: 'availability', title: 'Availability', icon: Globe },
+  { id: 'typing', title: 'Typing Test', icon: Keyboard },
 ];
 
 const MONTHS = [
@@ -86,6 +89,14 @@ export function OnboardingModal({ open, onOpenChange, onComplete }: OnboardingMo
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+
+  // Existing typing score (if any) makes the test read-only on re-entry.
+  const existingTyping = (agent as unknown as { scores?: { typing?: number; typingAccuracy?: number } } | null)?.scores;
+  const [typingResult, setTypingResult] = useState<TypingResult | null>(
+    existingTyping?.typing
+      ? { wpm: existingTyping.typing, accuracy: existingTyping.typingAccuracy ?? 100 }
+      : null
+  );
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -139,6 +150,12 @@ export function OnboardingModal({ open, onOpenChange, onComplete }: OnboardingMo
         hoursPerWeek: availability?.hoursPerWeek || '',
         preferredShift: availability?.preferredShift || '',
       }));
+
+      // Prefill an existing typing score so it shows as completed (read-only).
+      const scores = (agent as unknown as { scores?: { typing?: number; typingAccuracy?: number } }).scores;
+      if (scores?.typing) {
+        setTypingResult(prev => prev ?? { wpm: scores.typing as number, accuracy: scores.typingAccuracy ?? 100 });
+      }
     }
   }, [profile, agent]);
 
@@ -180,6 +197,12 @@ export function OnboardingModal({ open, onOpenChange, onComplete }: OnboardingMo
       case 3:
         if (formData.languages.length === 0 || !formData.hoursPerWeek || !formData.preferredShift) {
           setError('Please complete all fields');
+          return false;
+        }
+        break;
+      case 4:
+        if (!typingResult) {
+          setError('Please finish the typing test to continue');
           return false;
         }
         break;
@@ -233,7 +256,7 @@ export function OnboardingModal({ open, onOpenChange, onComplete }: OnboardingMo
         console.log('[Onboarding] Updating agent...', agent.id);
         const { adminDb } = await import('@/lib/adminDb');
 
-        const agentUpdateData = {
+        const agentUpdateData: Record<string, unknown> = {
           address: {
             street: formData.street,
             city: formData.city,
@@ -248,6 +271,16 @@ export function OnboardingModal({ open, onOpenChange, onComplete }: OnboardingMo
             preferredShift: formData.preferredShift,
           },
         };
+
+        // Persist the typing assessment into the agent's scores.
+        if (typingResult) {
+          const prevScores = (agent as unknown as { scores?: Record<string, number> }).scores || {};
+          agentUpdateData.scores = {
+            ...prevScores,
+            typing: typingResult.wpm,
+            typingAccuracy: typingResult.accuracy,
+          };
+        }
 
         console.log('[Onboarding] Agent update data:', agentUpdateData);
 
@@ -466,6 +499,23 @@ export function OnboardingModal({ open, onOpenChange, onComplete }: OnboardingMo
                   </Select>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* Step 4: Typing Test */}
+          {currentStep === 4 && (
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm font-medium text-zinc-900">Quick typing check</p>
+                <p className="text-xs text-zinc-500">
+                  Type the passage below as accurately as you can. We measure your words per minute and accuracy — this is used to match you with the right opportunities.
+                </p>
+              </div>
+              <TypingTest
+                seed={agent?.id || profile?.id || 'default'}
+                initialResult={typingResult}
+                onComplete={setTypingResult}
+              />
             </div>
           )}
 

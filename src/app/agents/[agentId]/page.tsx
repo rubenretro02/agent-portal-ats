@@ -34,7 +34,6 @@ import {
   ChevronRight,
   BadgeCheck,
   Zap,
-  Target,
   Award,
   Languages,
 } from 'lucide-react';
@@ -361,6 +360,19 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
   const age = null; // date_of_birth not in schema
   // Pipeline tracking is now handled in Opportunities page
   const overallScore = calculateOverallScore();
+
+  // Call-center readiness metrics, derived from data we already collect.
+  const typingWpm = agent.scores?.typing;
+  const internetMbps = agent.equipment?.internetSpeed;
+  const expData = agent.experience as unknown;
+  let experienceLabel = '—';
+  if (Array.isArray(expData) && expData.length > 0) {
+    experienceLabel = `${expData.length} ${expData.length === 1 ? 'role' : 'roles'}`;
+  } else if (expData && typeof expData === 'object') {
+    const ye = (expData as { yearsExperience?: string }).yearsExperience;
+    if (ye) experienceLabel = ye === '0' ? 'New' : `${ye} yr`;
+  }
+
 const location = agent.address ?
   `${agent.address.city || ''}${agent.address.city && agent.address.country ? ', ' : ''}${agent.address.country || ''}` :
   'N/A';
@@ -587,21 +599,21 @@ const location = agent.address ?
             {/* Score Cards Row */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <ScoreCard
-                value={agent.scores?.typing || 0}
-                label="Typing Test"
+                value={typingWpm ? `${typingWpm} WPM` : '—'}
+                label="Typing Speed"
                 icon={Zap}
                 color="bg-[var(--brand-blue-soft)] text-[var(--brand-blue)]"
               />
               <ScoreCard
-                value={agent.scores?.communication || 0}
-                label="Communication"
-                icon={Target}
-                color="bg-emerald-100 text-emerald-600"
+                value={internetMbps ? `${internetMbps} Mbps` : '—'}
+                label="Internet Speed"
+                icon={Wifi}
+                color="bg-cyan-100 text-cyan-600"
               />
               <ScoreCard
-                value={agent.scores?.leadership || 0}
-                label="Leadership"
-                icon={Award}
+                value={experienceLabel}
+                label="Experience"
+                icon={Briefcase}
                 color="bg-amber-100 text-amber-600"
               />
               <ScoreCard
@@ -694,9 +706,9 @@ const location = agent.address ?
                       <Calendar className="h-5 w-5 text-[var(--brand-blue)]" />
                     </div>
                     <div>
-<p className="text-xs text-zinc-500">Applied On</p>
+<p className="text-xs text-zinc-500">Joined</p>
   <p className="text-sm font-medium text-zinc-900">
-  {formatDate(agent.application_date || agent.created_at)}
+  {formatDate(agent.created_at)}
   </p>
                     </div>
                   </div>

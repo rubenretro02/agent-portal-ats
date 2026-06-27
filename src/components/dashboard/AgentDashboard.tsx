@@ -24,7 +24,6 @@ import {
   ArrowRight,
   Briefcase,
   Clock,
-  TrendingUp,
   Star,
   Zap,
   Target,
@@ -90,56 +89,55 @@ export function AgentDashboard() {
   const appliedCount = appliedOpportunityIds.length;
 
   return (
-    <div className="space-y-8 max-w-6xl mx-auto">
+    <div className="space-y-6 max-w-6xl mx-auto">
       {/* Hero Welcome Section */}
-      <div className="relative overflow-hidden rounded-2xl gradient-brand p-8 text-white">
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-        <div className="absolute bottom-0 left-0 w-48 h-48 bg-white/10 rounded-full blur-2xl translate-y-1/2 -translate-x-1/2" />
+      <div className="relative overflow-hidden rounded-3xl gradient-brand p-8 text-white">
+        <div className="absolute inset-0 grid-noise opacity-[0.15]" />
+        <div className="absolute -top-24 -right-16 w-72 h-72 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-24 -left-10 w-60 h-60 bg-white/10 rounded-full blur-3xl" />
 
         <div className="relative z-10">
-          <div className="flex items-start justify-between">
+          <div className="flex items-start justify-between gap-4">
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="h-5 w-5 text-yellow-300" />
-                <span className="text-white/80 text-sm font-medium">Welcome back</span>
+              <div className="inline-flex items-center gap-1.5 mb-3 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-sm text-xs font-medium">
+                <Sparkles className="h-3.5 w-3.5 text-yellow-200" />
+                Welcome back
               </div>
-              <h1 className="text-3xl font-bold mb-2">
-                Hello, {profile?.first_name || 'Agent'}!
+              <h1 className="text-3xl font-bold tracking-tight mb-1.5">
+                Hello, {profile?.first_name || 'Agent'}
               </h1>
-              <p className="text-white/80 max-w-md">
+              <p className="text-white/75 max-w-md text-[15px] leading-relaxed">
                 {onboardingProgress.complete
                   ? "Your profile is complete. Start exploring opportunities and grow your career."
-                  : `Complete your profile to unlock all features. You're ${onboardingProgress.percent}% there!`
+                  : `Complete your profile to unlock all features — you're ${onboardingProgress.percent}% there.`
                 }
               </p>
             </div>
 
-            <div className="hidden md:flex items-center gap-3">
+            <div className="hidden md:flex items-center">
               {onboardingProgress.complete ? (
-                <div className="flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full">
+                <div className="flex items-center gap-2 px-4 py-2 bg-white/15 backdrop-blur-sm rounded-full ring-1 ring-white/20">
                   <CheckCircle2 className="h-5 w-5 text-emerald-300" />
-                  <span className="font-medium">Profile Complete</span>
+                  <span className="font-medium text-sm">Profile Complete</span>
                 </div>
               ) : (
-                <Link href="/onboarding">
-                  <Button className="bg-white text-[var(--brand-blue)] hover:bg-white/90">
-                    Complete Profile
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </Link>
+                <Button onClick={() => setShowOnboardingModal(true)} className="bg-white text-[var(--brand-blue)] hover:bg-white/90 shadow-sm">
+                  Complete Profile
+                  <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
               )}
             </div>
           </div>
 
           {!onboardingProgress.complete && (
             <div className="mt-6">
-              <div className="flex items-center justify-between text-sm mb-2">
-                <span>Profile Completion</span>
-                <span className="font-bold">{onboardingProgress.percent}%</span>
+              <div className="flex items-center justify-between text-xs text-white/80 mb-1.5">
+                <span>Profile completion</span>
+                <span className="font-semibold">{onboardingProgress.percent}%</span>
               </div>
-              <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+              <div className="h-1.5 bg-white/20 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-gradient-to-r from-yellow-400 to-emerald-400 rounded-full transition-all duration-500"
+                  className="h-full bg-white rounded-full transition-all duration-700"
                   style={{ width: `${onboardingProgress.percent}%` }}
                 />
               </div>
@@ -149,60 +147,17 @@ export function AgentDashboard() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card className="border-0 shadow-lg shadow-[rgba(32,71,255,0.10)] bg-gradient-to-br from-white to-[#EEF1FF]">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center">
-                <Briefcase className="h-5 w-5 text-[var(--brand-blue)]" />
-              </div>
-              <TrendingUp className="h-4 w-4 text-[var(--brand-blue)]" />
-            </div>
-            <p className="text-2xl font-bold text-zinc-900">{opportunities.length}</p>
-            <p className="text-sm text-zinc-500">Available Jobs</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-lg shadow-emerald-500/10 bg-gradient-to-br from-white to-emerald-50">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center">
-                <Target className="h-5 w-5 text-emerald-600" />
-              </div>
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-            </div>
-            <p className="text-2xl font-bold text-zinc-900">{appliedCount}</p>
-            <p className="text-sm text-zinc-500">Applications</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-lg shadow-amber-500/10 bg-gradient-to-br from-white to-amber-50">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
-                <Star className="h-5 w-5 text-amber-600" />
-              </div>
-              <Zap className="h-4 w-4 text-amber-500" />
-            </div>
-            <p className="text-2xl font-bold text-zinc-900">{onboardingProgress.percent}%</p>
-            <p className="text-sm text-zinc-500">Profile Score</p>
-          </CardContent>
-        </Card>
-
-        <Card className="border-0 shadow-lg shadow-[rgba(200,115,229,0.10)] bg-gradient-to-br from-white to-[#FAF0FE]">
-          <CardContent className="p-5">
-            <div className="flex items-center justify-between mb-3">
-              <div className="w-10 h-10 rounded-xl bg-[var(--brand-purple-soft)] flex items-center justify-center">
-                <Award className="h-5 w-5 text-[var(--brand-purple)]" />
-              </div>
-              <Clock className="h-4 w-4 text-[var(--brand-purple)]" />
-            </div>
-            <p className="text-2xl font-bold text-zinc-900">
-              {agent?.pipeline_status === 'active' ? 'Active' : 'Pending'}
-            </p>
-            <p className="text-sm text-zinc-500">Status</p>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <StatCard icon={Briefcase} value={opportunities.length} label="Available Jobs" accent="text-[var(--brand-blue)]" chip="bg-[var(--brand-blue-soft)]" />
+        <StatCard icon={Target} value={appliedCount} label="Applications" accent="text-emerald-600" chip="bg-emerald-50" />
+        <StatCard icon={Star} value={`${onboardingProgress.percent}%`} label="Profile Score" accent="text-amber-600" chip="bg-amber-50" />
+        <StatCard
+          icon={Clock}
+          value={agent?.pipeline_status === 'active' ? 'Active' : 'Pending'}
+          label="Status"
+          accent="text-[var(--brand-purple)]"
+          chip="bg-[var(--brand-purple-soft)]"
+        />
       </div>
 
       {/* Onboarding Banner - only if not complete */}
@@ -238,13 +193,13 @@ export function AgentDashboard() {
 
       {/* Top Opportunities Section */}
       <div>
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-xl font-bold text-zinc-900">Top Opportunities</h2>
+            <h2 className="text-lg font-bold text-zinc-900 tracking-tight">Top Opportunities</h2>
             <p className="text-sm text-zinc-500">Hand-picked jobs matching your profile</p>
           </div>
           <Link href="/opportunities">
-            <Button variant="outline" className="gap-2">
+            <Button variant="ghost" className="gap-1.5 text-[var(--brand-blue)] hover:bg-[var(--brand-blue-soft)]">
               View All
               <ArrowRight className="h-4 w-4" />
             </Button>
@@ -271,8 +226,10 @@ export function AgentDashboard() {
               return (
                 <Card
                   key={opp.id}
-                  className={`group relative overflow-hidden border-0 shadow-lg hover:shadow-xl transition-all duration-300 ${
-                    index === 0 ? 'gradient-brand text-white' : 'bg-white'
+                  className={`group relative overflow-hidden rounded-2xl transition-all duration-300 ${
+                    index === 0
+                      ? 'gradient-brand text-white border-0 shadow-lg'
+                      : 'bg-white border border-zinc-200/80 shadow-sm hover:shadow-md hover:border-zinc-300'
                   }`}
                 >
                   {index === 0 && (
@@ -355,33 +312,33 @@ export function AgentDashboard() {
       </div>
 
       {/* Quick Actions */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         <Link href="/applications">
-          <Card className="group border-zinc-200 hover:border-primary/40 hover:shadow-lg transition-all cursor-pointer">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl gradient-brand flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <Target className="h-6 w-6 text-white" />
+          <Card className="group border border-zinc-200/80 shadow-sm rounded-2xl hover:shadow-md hover:border-zinc-300 transition-all cursor-pointer">
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className="w-11 h-11 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                <Target className="h-5 w-5 text-[var(--brand-blue)]" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-zinc-900">My Applications</h3>
+                <h3 className="font-semibold text-zinc-900 text-[15px]">My Applications</h3>
                 <p className="text-sm text-zinc-500">Track your application status</p>
               </div>
-              <ChevronRight className="h-5 w-5 text-zinc-400 group-hover:text-[var(--brand-blue)] group-hover:translate-x-1 transition-all" />
+              <ChevronRight className="h-5 w-5 text-zinc-300 group-hover:text-[var(--brand-blue)] group-hover:translate-x-0.5 transition-all" />
             </CardContent>
           </Card>
         </Link>
 
         <Link href="/profile">
-          <Card className="group border-zinc-200 hover:border-[var(--brand-purple)]/40 hover:shadow-lg transition-all cursor-pointer">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl gradient-brand flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                <Award className="h-6 w-6 text-white" />
+          <Card className="group border border-zinc-200/80 shadow-sm rounded-2xl hover:shadow-md hover:border-zinc-300 transition-all cursor-pointer">
+            <CardContent className="p-5 flex items-center gap-4">
+              <div className="w-11 h-11 rounded-xl bg-[var(--brand-purple-soft)] flex items-center justify-center shrink-0 transition-transform group-hover:scale-105">
+                <Award className="h-5 w-5 text-[var(--brand-purple)]" />
               </div>
               <div className="flex-1">
-                <h3 className="font-semibold text-zinc-900">My Profile</h3>
+                <h3 className="font-semibold text-zinc-900 text-[15px]">My Profile</h3>
                 <p className="text-sm text-zinc-500">View and update your information</p>
               </div>
-              <ChevronRight className="h-5 w-5 text-zinc-400 group-hover:text-[var(--brand-purple)] group-hover:translate-x-1 transition-all" />
+              <ChevronRight className="h-5 w-5 text-zinc-300 group-hover:text-[var(--brand-purple)] group-hover:translate-x-0.5 transition-all" />
             </CardContent>
           </Card>
         </Link>
@@ -430,5 +387,31 @@ export function AgentDashboard() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function StatCard({
+  icon: Icon,
+  value,
+  label,
+  accent,
+  chip,
+}: {
+  icon: React.ElementType;
+  value: string | number;
+  label: string;
+  accent: string;
+  chip: string;
+}) {
+  return (
+    <Card className="border border-zinc-200/80 shadow-sm rounded-2xl hover:shadow-md transition-shadow">
+      <CardContent className="p-4">
+        <div className={`w-9 h-9 rounded-xl ${chip} flex items-center justify-center mb-3`}>
+          <Icon className={`h-5 w-5 ${accent}`} />
+        </div>
+        <p className="text-2xl font-bold text-zinc-900 tracking-tight leading-none">{value}</p>
+        <p className="text-sm text-zinc-500 mt-1.5">{label}</p>
+      </CardContent>
+    </Card>
   );
 }

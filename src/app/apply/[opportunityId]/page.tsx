@@ -393,27 +393,43 @@ export default function ApplyPage() {
                   </div>
                 </section>
                 <section>
-                  <h2 className="text-lg font-semibold text-zinc-900 mb-4">Key Details</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-4 bg-emerald-50 rounded-xl">
-                      <DollarSign className="h-5 w-5 text-emerald-600 mb-2" />
-                      <p className="text-2xl font-bold text-zinc-900">${String(compensation?.baseRate || 0)}</p>
-                      <p className="text-sm text-zinc-500">per hour</p>
+                  <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wide mb-3">Key Details</h2>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="flex items-center gap-3 p-3 rounded-xl border border-zinc-200 bg-white">
+                      <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                        <DollarSign className="h-4 w-4 text-emerald-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-base font-bold text-zinc-900 leading-none">${String(compensation?.baseRate || 0)}</p>
+                        <p className="text-xs text-zinc-500 mt-1">per hour</p>
+                      </div>
                     </div>
-                    <div className="p-4 bg-[var(--brand-blue-soft)] rounded-xl">
-                      <Clock className="h-5 w-5 text-[var(--brand-blue)] mb-2" />
-                      <p className="text-2xl font-bold text-zinc-900">{String(training?.duration || 0)}h</p>
-                      <p className="text-sm text-zinc-500">training</p>
+                    <div className="flex items-center gap-3 p-3 rounded-xl border border-zinc-200 bg-white">
+                      <div className="w-9 h-9 rounded-lg bg-[var(--brand-blue-soft)] flex items-center justify-center shrink-0">
+                        <Clock className="h-4 w-4 text-[var(--brand-blue)]" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-base font-bold text-zinc-900 leading-none">{String(training?.duration || 0)}h</p>
+                        <p className="text-xs text-zinc-500 mt-1">training</p>
+                      </div>
                     </div>
-                    <div className="p-4 bg-amber-50 rounded-xl">
-                      <Users className="h-5 w-5 text-amber-600 mb-2" />
-                      <p className="text-2xl font-bold text-zinc-900">{opportunity?.capacity?.openPositions || 0}</p>
-                      <p className="text-sm text-zinc-500">positions</p>
+                    <div className="flex items-center gap-3 p-3 rounded-xl border border-zinc-200 bg-white">
+                      <div className="w-9 h-9 rounded-lg bg-amber-50 flex items-center justify-center shrink-0">
+                        <Users className="h-4 w-4 text-amber-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-base font-bold text-zinc-900 leading-none">{opportunity?.capacity?.openPositions || 0}</p>
+                        <p className="text-xs text-zinc-500 mt-1">positions</p>
+                      </div>
                     </div>
-                    <div className="p-4 bg-indigo-50 rounded-xl">
-                      <Globe className="h-5 w-5 text-indigo-600 mb-2" />
-                      <p className="text-2xl font-bold text-zinc-900">Remote</p>
-                      <p className="text-sm text-zinc-500">work from home</p>
+                    <div className="flex items-center gap-3 p-3 rounded-xl border border-zinc-200 bg-white">
+                      <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center shrink-0">
+                        <Globe className="h-4 w-4 text-indigo-600" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-base font-bold text-zinc-900 leading-none">Remote</p>
+                        <p className="text-xs text-zinc-500 mt-1">work from home</p>
+                      </div>
                     </div>
                   </div>
                 </section>
@@ -421,17 +437,17 @@ export default function ApplyPage() {
             )}
 
             {/* CTA */}
-            <div className="bg-gradient-to-r from-[#2047FF] to-[#C873E5] rounded-xl p-6 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-white/80 text-sm mb-1">Positions Available</p>
-                  <p className="text-3xl font-bold">{opportunity?.capacity?.openPositions || 0} spots</p>
+            <div className="gradient-brand rounded-2xl px-5 py-4 text-white flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+                  <Users className="h-5 w-5 text-white" />
                 </div>
-                <div className="text-right">
-                  <p className="text-white/80 text-sm mb-1">Ready to apply?</p>
-                  <p className="text-lg font-medium">Click "Next" to continue</p>
+                <div>
+                  <p className="text-xl font-bold leading-none">{opportunity?.capacity?.openPositions || 0} spots available</p>
+                  <p className="text-white/75 text-xs mt-1">Ready to apply? Click &ldquo;Next&rdquo; to continue.</p>
                 </div>
               </div>
+              <ArrowRight className="h-5 w-5 text-white/80 hidden sm:block" />
             </div>
           </div>
         );

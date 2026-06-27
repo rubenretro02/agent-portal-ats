@@ -9,6 +9,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
   Briefcase,
   Clock,
   CheckCircle2,
@@ -18,6 +25,8 @@ import {
   DollarSign,
   ArrowRight,
   FileText,
+  ChevronRight,
+  Building2,
 } from 'lucide-react';
 
 interface Application {
@@ -48,6 +57,7 @@ export default function ApplicationsPage() {
   const { agent, isLoading: authLoading } = useAuthContext();
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedApp, setSelectedApp] = useState<Application | null>(null);
 
   useEffect(() => {
     async function fetchApplications() {
@@ -176,21 +186,28 @@ export default function ApplicationsPage() {
                   return (
                     <div
                       key={application.id}
-                      className="border border-zinc-200 rounded-lg p-4 hover:border-zinc-300 transition-colors"
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => setSelectedApp(application)}
+                      onKeyDown={(e) => { if (e.key === 'Enter') setSelectedApp(application); }}
+                      className="group border border-zinc-200 rounded-lg p-4 hover:border-[var(--brand-blue)]/40 hover:shadow-sm transition-all cursor-pointer"
                     >
                       <div className="flex flex-col sm:flex-row sm:items-start gap-4">
                         <div className="flex-1">
-                          <div className="flex items-start justify-between mb-2">
+                          <div className="flex items-start justify-between gap-3 mb-2">
                             <div>
-                              <h3 className="font-semibold text-zinc-900">
+                              <h3 className="font-semibold text-zinc-900 group-hover:text-[var(--brand-blue)] transition-colors">
                                 {opportunity?.name || 'Opportunity not available'}
                               </h3>
                               <p className="text-sm text-zinc-500">{opportunity?.client}</p>
                             </div>
-                            <Badge className={statusConfig.color}>
-                              <StatusIcon className="h-3 w-3 mr-1" />
-                              {statusConfig.label}
-                            </Badge>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <Badge className={statusConfig.color}>
+                                <StatusIcon className="h-3 w-3 mr-1" />
+                                {statusConfig.label}
+                              </Badge>
+                              <ChevronRight className="h-4 w-4 text-zinc-300 group-hover:text-[var(--brand-blue)] group-hover:translate-x-0.5 transition-all" />
+                            </div>
                           </div>
 
                           {opportunity?.description && (
@@ -246,6 +263,85 @@ export default function ApplicationsPage() {
           </div>
         )}
       </div>
+
+      {/* Gig Detail Dialog */}
+      <Dialog open={!!selectedApp} onOpenChange={(o) => !o && setSelectedApp(null)}>
+        <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
+          {selectedApp && (() => {
+            const opp = selectedApp.opportunity;
+            const cfg = STATUS_CONFIG[selectedApp.status] || STATUS_CONFIG.pending;
+            const StatusIcon = cfg.icon;
+            const comp = opp?.compensation as Record<string, unknown> | null;
+            return (
+              <>
+                <DialogHeader>
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-xl gradient-brand flex items-center justify-center shrink-0">
+                      <Building2 className="h-6 w-6 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <DialogTitle className="text-xl">{opp?.name || 'Opportunity'}</DialogTitle>
+                      <DialogDescription>{opp?.client}</DialogDescription>
+                    </div>
+                  </div>
+                </DialogHeader>
+
+                <div className="space-y-5 pt-2">
+                  <Badge className={`${cfg.color} w-fit`}>
+                    <StatusIcon className="h-3 w-3 mr-1" />
+                    {cfg.label}
+                  </Badge>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="flex items-center gap-3 p-3 rounded-xl border border-zinc-200">
+                      <div className="w-9 h-9 rounded-lg bg-emerald-50 flex items-center justify-center shrink-0">
+                        <DollarSign className="h-4 w-4 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-base font-bold text-zinc-900 leading-none">${String(comp?.baseRate || 0)}</p>
+                        <p className="text-xs text-zinc-500 mt-1">per hour</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 rounded-xl border border-zinc-200">
+                      <div className="w-9 h-9 rounded-lg bg-[var(--brand-blue-soft)] flex items-center justify-center shrink-0">
+                        <Calendar className="h-4 w-4 text-[var(--brand-blue)]" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold text-zinc-900 leading-none">{formatDate(selectedApp.submitted_at)}</p>
+                        <p className="text-xs text-zinc-500 mt-1">applied</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {opp?.description && (
+                    <div>
+                      <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">Description</p>
+                      <p className="text-sm text-zinc-600 leading-relaxed whitespace-pre-wrap">{opp.description}</p>
+                    </div>
+                  )}
+
+                  {opp?.tags && opp.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                      {opp.tags.map((tag) => (
+                        <span key={tag} className="text-xs px-2.5 py-1 bg-zinc-100 text-zinc-600 rounded-full">{tag}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {opp?.id && (
+                    <Link href={`/opportunities/${opp.id}`}>
+                      <Button variant="outline" className="w-full gap-2">
+                        View full opportunity
+                        <ArrowRight className="h-4 w-4" />
+                      </Button>
+                    </Link>
+                  )}
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </UnifiedLayout>
     </RequirePersonalInfo>
   );
