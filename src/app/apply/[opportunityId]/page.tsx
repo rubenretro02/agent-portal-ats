@@ -612,8 +612,6 @@ export default function ApplyPage() {
     );
   }
 
-  const compensation = opportunity.compensation as Record<string, unknown> | null;
-  const training = opportunity.training as Record<string, unknown> | null;
   const StageIcon = currentStage ? STAGE_ICONS[currentStage.type] : FileText;
   const applicantName = `${profile?.first_name || ''} ${profile?.last_name || ''}`.trim() || 'Applicant';
 
@@ -633,21 +631,7 @@ export default function ApplyPage() {
             <h2 className="text-lg font-bold text-zinc-900 mb-1">{opportunity.name}</h2>
             <p className="text-sm text-zinc-500">{opportunity.client}</p>
           </div>
-          <div className="space-y-4 mb-8">
-            <div className="flex items-center gap-3 text-sm">
-              <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center"><DollarSign className="h-4 w-4 text-emerald-600" /></div>
-              <div><p className="font-semibold text-zinc-900">${String(compensation?.baseRate || 0)}/hr</p><p className="text-xs text-zinc-500">Base Rate</p></div>
-            </div>
-            <div className="flex items-center gap-3 text-sm">
-              <div className="w-8 h-8 rounded-lg bg-[var(--brand-blue-soft)] flex items-center justify-center"><Clock className="h-4 w-4 text-[var(--brand-blue)]" /></div>
-              <div><p className="font-semibold text-zinc-900">{String(training?.duration || 0)} hours</p><p className="text-xs text-zinc-500">Training</p></div>
-            </div>
-            <div className="flex items-center gap-3 text-sm">
-              <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center"><Users className="h-4 w-4 text-amber-600" /></div>
-              <div><p className="font-semibold text-zinc-900">{opportunity.capacity?.openPositions || 0} spots</p><p className="text-xs text-zinc-500">Available</p></div>
-            </div>
-          </div>
-          <div className="border-t border-zinc-100 pt-6">
+          <div className="mt-6">
             <p className="text-xs text-zinc-400">You&apos;re working on</p>
             <p className="text-sm font-bold text-zinc-900 mb-4">{currentParent?.title || 'Application'}</p>
             <div className="space-y-1">

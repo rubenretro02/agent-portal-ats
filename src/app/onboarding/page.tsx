@@ -357,7 +357,8 @@ export default function OnboardingPage() {
     setExiting(true);
     rememberStep(current);
     await persist();
-    router.push('/dashboard');
+    // Full page load so the dashboard reads the freshly saved profile.
+    window.location.href = '/dashboard';
   };
 
   const applicantName = `${formData.firstName || profile?.first_name || ''} ${formData.lastName || profile?.last_name || ''}`.trim() || 'Your application';

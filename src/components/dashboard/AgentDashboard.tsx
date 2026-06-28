@@ -45,6 +45,8 @@ export function AgentDashboard() {
       { key: 'experience', done: !!experience?.yearsExperience, label: 'Experience' },
       { key: 'languages', done: !!(langs && langs.length > 0), label: 'Languages' },
       { key: 'availability', done: !!(availability?.hoursPerWeek && availability?.preferredShift), label: 'Availability' },
+      { key: 'typing', done: !!((agent as unknown as { scores?: { typing?: number } }).scores?.typing), label: 'Typing Test' },
+      { key: 'systemcheck', done: !!((agent as unknown as { system_check?: unknown }).system_check), label: 'System Check' },
     ];
 
     const completed = checks.filter(c => c.done).length;
