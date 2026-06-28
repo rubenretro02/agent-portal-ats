@@ -9,14 +9,6 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import {
   CheckCircle2,
   DollarSign,
   Users,
@@ -29,15 +21,12 @@ import {
   ChevronRight,
   Sparkles,
 } from 'lucide-react';
-import type { ApplicationAnswer } from '@/types';
 
 export function AgentDashboard() {
   const router = useRouter();
   const { profile, agent } = useAuthContext();
-  const { opportunities, fetchOpportunities, appliedOpportunityIds, fetchAppliedOpportunities, applyToOpportunity } = useOpportunityStore();
+  const { opportunities, fetchOpportunities, appliedOpportunityIds, fetchAppliedOpportunities } = useOpportunityStore();
 
-  const [selectedOpportunity, setSelectedOpportunity] = useState<string | null>(null);
-  const [applying, setApplying] = useState(false);
 
   // Calculate onboarding progress
   const onboardingProgress = useMemo(() => {
@@ -73,15 +62,6 @@ export function AgentDashboard() {
     fetchAppliedOpportunities();
   }, [fetchOpportunities, fetchAppliedOpportunities]);
 
-  const handleApply = async (opportunityId: string) => {
-    setApplying(true);
-    const answers: ApplicationAnswer[] = [];
-    await applyToOpportunity(opportunityId, answers);
-    setApplying(false);
-    setSelectedOpportunity(null);
-  };
-
-  const selectedOpp = opportunities.find(o => o.id === selectedOpportunity);
   const topOpportunities = opportunities.slice(0, 3);
   const appliedCount = appliedOpportunityIds.length;
 
@@ -295,7 +275,7 @@ export function AgentDashboard() {
                             ? 'bg-white text-[var(--brand-blue)] hover:bg-white/90'
                             : 'btn-brand h-10'
                         }`}
-                        onClick={() => setSelectedOpportunity(opp.id)}
+                        onClick={() => router.push(`/apply/${opp.id}`)}
                       >
                         Apply Now
                         <ArrowRight className="h-4 w-4 ml-2" />
@@ -342,48 +322,6 @@ export function AgentDashboard() {
         </Link>
       </div>
 
-      {/* Apply Dialog */}
-      <Dialog open={!!selectedOpportunity} onOpenChange={() => setSelectedOpportunity(null)}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="text-xl">{selectedOpp?.name}</DialogTitle>
-            <DialogDescription>{selectedOpp?.client}</DialogDescription>
-          </DialogHeader>
-          {selectedOpp && (
-            <div className="space-y-4 py-4">
-              <p className="text-zinc-600">{selectedOpp.description}</p>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-emerald-50 rounded-xl p-4 text-center">
-                  <DollarSign className="h-6 w-6 text-emerald-500 mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-emerald-700">
-                    ${String((selectedOpp.compensation as Record<string, unknown>)?.baseRate || 0)}
-                  </p>
-                  <p className="text-sm text-emerald-600">per hour</p>
-                </div>
-                <div className="bg-[var(--brand-blue-soft)] rounded-xl p-4 text-center">
-                  <Users className="h-6 w-6 text-[var(--brand-blue)] mx-auto mb-2" />
-                  <p className="text-2xl font-bold text-[var(--brand-blue)]">
-                    {selectedOpp.capacity?.openPositions || 0}
-                  </p>
-                  <p className="text-sm text-[var(--brand-blue)]">open spots</p>
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedOpportunity(null)}>
-              Cancel
-            </Button>
-            <Button
-              className="btn-brand"
-              onClick={() => selectedOpp && handleApply(selectedOpp.id)}
-              disabled={applying}
-            >
-              {applying ? 'Submitting...' : 'Confirm Application'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
