@@ -173,10 +173,18 @@ export default function ProfilePage() {
   const saveTyping = async (result: TypingResult) => {
     if (!agent) return;
     const { adminDb } = await import('@/lib/adminDb');
-    const prevScores = (agent as unknown as { scores?: Record<string, number> }).scores || {};
+    const prevScores = (agent as unknown as { scores?: Record<string, unknown> }).scores || {};
+    const hist = Array.isArray(prevScores.typingHistory) ? prevScores.typingHistory as unknown[] : [];
     await adminDb({
       action: 'update', table: 'agents',
-      data: { scores: { ...prevScores, typing: result.wpm, typingAccuracy: result.accuracy } },
+      data: {
+        scores: {
+          ...prevScores,
+          typing: result.wpm,
+          typingAccuracy: result.accuracy,
+          typingHistory: [...hist, { wpm: result.wpm, accuracy: result.accuracy, date: new Date().toISOString() }].slice(-10),
+        },
+      },
       match: { id: agent.id },
     });
     await refreshProfile();
@@ -185,6 +193,8 @@ export default function ProfilePage() {
   const saveSystem = async (result: SystemCheckResult) => {
     if (!agent) return;
     const { adminDb } = await import('@/lib/adminDb');
+    const prevScores = (agent as unknown as { scores?: Record<string, unknown> }).scores || {};
+    const sysHist = Array.isArray(prevScores.systemCheckHistory) ? prevScores.systemCheckHistory as unknown[] : [];
     await adminDb({
       action: 'update', table: 'agents',
       data: {
@@ -197,6 +207,16 @@ export default function ProfilePage() {
           internetSpeed: result.internetSpeed.downloadMbps,
           cpuCores: result.hardware.cpuCores,
           ramGB: result.hardware.ramGB,
+        },
+        scores: {
+          ...prevScores,
+          systemCheckHistory: [...sysHist, {
+            date: new Date().toISOString(),
+            downloadMbps: result.internetSpeed.downloadMbps,
+            uploadMbps: result.internetSpeed.uploadMbps,
+            cpuCores: result.hardware.cpuCores,
+            ramGB: result.hardware.ramGB,
+          }].slice(-10),
         },
       },
       match: { id: agent.id },

@@ -174,50 +174,40 @@ export default function OnboardingPage() {
     }
   }, [profile, agent]);
 
-  const STEP_KEY = 'wingcx_onboarding_step';
-
   // Pull the freshest profile/agent on entry so a returning applicant doesn't
   // see a stale (cached) form that requires a manual page refresh.
+  const [dataReady, setDataReady] = useState(false);
   useEffect(() => {
-    refreshProfile();
+    refreshProfile().finally(() => setDataReady(true));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Resume where the applicant left off: prefer the explicitly saved step,
-  // otherwise the first incomplete sub-stage.
+  // Resume at the first incomplete sub-stage, computed purely from the agent's
+  // own saved data (NOT from any shared browser storage), so a brand-new
+  // account on the same browser always starts fresh.
   const positioned = useRef(false);
   useEffect(() => {
-    if (positioned.current || !profile || !agent) return;
-
-    let target = -1;
-    try {
-      const saved = typeof window !== 'undefined' ? window.localStorage.getItem(STEP_KEY) : null;
-      if (saved !== null) target = Math.max(0, Math.min(parseInt(saved, 10) || 0, FLOW.length - 1));
-    } catch { /* ignore */ }
-
-    if (target < 0) {
-      const profileExt = profile as unknown as { sex?: string; date_of_birth?: string };
-      const addr = agent.address as Record<string, string> | null;
-      const exp = agent.experience as Record<string, string> | null;
-      const avail = agent.availability as Record<string, string> | null;
-      const langs = agent.languages as string[] | null;
-      const sc = (agent as unknown as { scores?: { typing?: number } }).scores;
-      const sysCheck = (agent as unknown as { system_check?: SystemCheckResult }).system_check;
-      const done: Record<string, boolean> = {
-        details: !!(profile.first_name && profile.last_name && profile.phone && profileExt.sex && profileExt.date_of_birth),
-        address: !!(addr?.street && addr?.city && addr?.state && addr?.zipCode),
-        experience: !!exp?.yearsExperience,
-        availability: !!(avail?.hoursPerWeek && avail?.preferredShift),
-        languages: !!(langs && langs.length > 0),
-        typing: !!sc?.typing,
-        systemcheck: !!sysCheck,
-      };
-      target = FLOW.findIndex(s => !done[s.id]);
-    }
-
-    if (target > 0) setCurrent(target);
+    if (positioned.current || !dataReady || !profile || !agent) return;
+    const profileExt = profile as unknown as { sex?: string; date_of_birth?: string };
+    const addr = agent.address as Record<string, string> | null;
+    const exp = agent.experience as Record<string, string> | null;
+    const avail = agent.availability as Record<string, string> | null;
+    const langs = agent.languages as string[] | null;
+    const sc = (agent as unknown as { scores?: { typing?: number } }).scores;
+    const sysCheck = (agent as unknown as { system_check?: SystemCheckResult }).system_check;
+    const done: Record<string, boolean> = {
+      details: !!(profile.first_name && profile.last_name && profile.phone && profileExt.sex && profileExt.date_of_birth),
+      address: !!(addr?.street && addr?.city && addr?.state && addr?.zipCode),
+      experience: !!exp?.yearsExperience,
+      availability: !!(avail?.hoursPerWeek && avail?.preferredShift),
+      languages: !!(langs && langs.length > 0),
+      typing: !!sc?.typing,
+      systemcheck: !!sysCheck,
+    };
+    const firstIncomplete = FLOW.findIndex(s => !done[s.id]);
+    if (firstIncomplete > 0) setCurrent(firstIncomplete);
     positioned.current = true;
-  }, [profile, agent, FLOW]);
+  }, [dataReady, profile, agent, FLOW]);
 
   const updateField = (field: string, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -231,7 +221,7 @@ export default function OnboardingPage() {
 
   // Persist whatever is filled so far (best effort) — used by Save & exit and
   // as an autosave checkpoint between parent stages.
-  const persist = async () => {
+  const persist = async (finalize = false) => {
     try {
       // Merge-safe: only send fields that actually have a value, so a partial
       // save never wipes data captured on another step.
@@ -266,10 +256,32 @@ export default function OnboardingPage() {
         if (formData.hoursPerWeek || formData.preferredShift) {
           data.availability = { hoursPerWeek: formData.hoursPerWeek, preferredShift: formData.preferredShift };
         }
+        // Scores + assessment history all live inside the scores jsonb (no new column).
+        const prevScores = (agent as unknown as { scores?: Record<string, unknown> }).scores || {};
+        const scoresUpdate: Record<string, unknown> = { ...prevScores };
+        let scoresChanged = false;
         if (typingResult) {
-          const prevScores = (agent as unknown as { scores?: Record<string, number> }).scores || {};
-          data.scores = { ...prevScores, typing: typingResult.wpm, typingAccuracy: typingResult.accuracy };
+          scoresUpdate.typing = typingResult.wpm;
+          scoresUpdate.typingAccuracy = typingResult.accuracy;
+          scoresChanged = true;
+          if (finalize) {
+            const hist = Array.isArray(prevScores.typingHistory) ? prevScores.typingHistory as unknown[] : [];
+            scoresUpdate.typingHistory = [...hist, { wpm: typingResult.wpm, accuracy: typingResult.accuracy, date: new Date().toISOString() }].slice(-10);
+          }
         }
+        if (finalize && systemCheckResult) {
+          const sysHist = Array.isArray(prevScores.systemCheckHistory) ? prevScores.systemCheckHistory as unknown[] : [];
+          scoresUpdate.systemCheckHistory = [...sysHist, {
+            date: new Date().toISOString(),
+            downloadMbps: systemCheckResult.internetSpeed.downloadMbps,
+            uploadMbps: systemCheckResult.internetSpeed.uploadMbps,
+            cpuCores: systemCheckResult.hardware.cpuCores,
+            ramGB: systemCheckResult.hardware.ramGB,
+          }].slice(-10);
+          scoresChanged = true;
+        }
+        if (scoresChanged) data.scores = scoresUpdate;
+
         if (systemCheckResult) {
           data.system_check = systemCheckResult;
           data.system_check_date = new Date().toISOString();
@@ -324,25 +336,19 @@ export default function OnboardingPage() {
 
   const cur = FLOW[current];
 
-  const rememberStep = (n: number) => {
-    try { window.localStorage.setItem(STEP_KEY, String(n)); } catch { /* ignore */ }
-  };
-
   const handleNext = async () => {
     if (!validate(cur.id)) return;
     // Save on every step so nothing is lost if the applicant leaves.
+    // The final step records an assessment-history entry.
     setSaving(true);
-    await persist();
+    await persist(current === FLOW.length - 1);
     setSaving(false);
 
     if (current < FLOW.length - 1) {
-      const nextIndex = current + 1;
-      rememberStep(nextIndex);
-      setCurrent(nextIndex);
+      setCurrent(current + 1);
       setError('');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
-      try { window.localStorage.removeItem(STEP_KEY); } catch { /* ignore */ }
       await refreshProfile();
       setSuccess(true);
       setTimeout(() => router.replace('/dashboard'), 1800);
@@ -355,7 +361,6 @@ export default function OnboardingPage() {
 
   const handleSaveExit = async () => {
     setExiting(true);
-    rememberStep(current);
     await persist();
     // Full page load so the dashboard reads the freshly saved profile.
     window.location.href = '/dashboard';

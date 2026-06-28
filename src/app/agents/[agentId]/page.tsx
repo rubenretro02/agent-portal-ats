@@ -186,14 +186,14 @@ function ScoreGauge({ score, label, size = 120 }: { score: number; label: string
 function ScoreCard({ value, label, icon: Icon, color }: { value: number | string; label: string; icon: React.ElementType; color: string }) {
   return (
     <Card className="border-zinc-200 hover:shadow-md transition-shadow">
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-3xl font-bold text-zinc-900">{typeof value === 'number' ? `${value}%` : value}</p>
-            <p className="text-sm text-zinc-500 mt-1">{label}</p>
+      <CardContent className="p-3">
+        <div className="flex items-center justify-between gap-2">
+          <div className="min-w-0">
+            <p className="text-xl font-bold text-zinc-900 leading-none truncate">{typeof value === 'number' ? `${value}%` : value}</p>
+            <p className="text-xs text-zinc-500 mt-1 truncate">{label}</p>
           </div>
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${color}`}>
-            <Icon className="h-5 w-5" />
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
+            <Icon className="h-4 w-4" />
           </div>
         </div>
       </CardContent>
@@ -861,6 +861,55 @@ const location = agent.address ?
                           <span className={`text-sm font-medium text-zinc-900 text-right truncate ${r.mono ? 'font-mono text-xs' : ''}`}>{r.value}</span>
                         </div>
                       ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })()}
+
+            {/* Assessment History — past typing tests & system checks (latest first) */}
+            {(() => {
+              const scoresAny = agent.scores as unknown as {
+                typingHistory?: { wpm: number; accuracy: number; date: string }[];
+                systemCheckHistory?: { date: string; downloadMbps: number; uploadMbps: number; cpuCores: number; ramGB: number }[];
+              } | null;
+              const typingHist = scoresAny?.typingHistory || [];
+              const sysHist = scoresAny?.systemCheckHistory || [];
+              if (typingHist.length === 0 && sysHist.length === 0) return null;
+              return (
+                <Card className="border-zinc-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
+                      <Clock className="h-4 w-4 text-[var(--brand-blue)]" />
+                      Assessment History
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">Typing tests</p>
+                      {typingHist.length ? (
+                        <div className="space-y-1.5">
+                          {[...typingHist].reverse().map((h, i) => (
+                            <div key={i} className={`flex items-center justify-between text-sm ${i === 0 ? 'font-semibold' : ''}`}>
+                              <span className="text-zinc-500">{formatDate(h.date)}{i === 0 ? ' · latest' : ''}</span>
+                              <span className="text-zinc-900">{h.wpm} WPM · {h.accuracy}%</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : <p className="text-sm text-zinc-400">None</p>}
+                    </div>
+                    <div>
+                      <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">System checks</p>
+                      {sysHist.length ? (
+                        <div className="space-y-1.5">
+                          {[...sysHist].reverse().map((h, i) => (
+                            <div key={i} className={`flex items-center justify-between text-sm ${i === 0 ? 'font-semibold' : ''}`}>
+                              <span className="text-zinc-500">{formatDate(h.date)}{i === 0 ? ' · latest' : ''}</span>
+                              <span className="text-zinc-900">↓{h.downloadMbps} ↑{h.uploadMbps} Mbps</span>
+                            </div>
+                          ))}
+                        </div>
+                      ) : <p className="text-sm text-zinc-400">None</p>}
                     </div>
                   </CardContent>
                 </Card>
