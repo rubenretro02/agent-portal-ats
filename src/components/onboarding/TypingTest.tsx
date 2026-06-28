@@ -2,7 +2,7 @@
 
 import { useMemo, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Keyboard, Gauge, Target, RotateCcw, CheckCircle2, Lock } from 'lucide-react';
+import { Keyboard, Gauge, Target, RotateCcw, CheckCircle2 } from 'lucide-react';
 
 /**
  * Call-center typing assessment.
@@ -135,10 +135,7 @@ export function TypingTest({ seed, initialResult, onComplete }: TypingTestProps)
             placeholder="Start typing the text above exactly as shown…"
             className="w-full h-24 rounded-xl border border-zinc-300 p-3 text-[15px] font-mono resize-none focus:outline-none focus:border-[var(--brand-blue)] focus:ring-2 focus:ring-[rgba(32,71,255,0.15)]"
           />
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-zinc-400 flex items-center gap-1">
-              <Lock className="h-3 w-3" /> Pasting is disabled — type it yourself.
-            </p>
+          <div className="flex items-center justify-end">
             {typed.length > 0 && (
               <Button type="button" variant="ghost" size="sm" onClick={reset} className="text-zinc-500 gap-1.5">
                 <RotateCcw className="h-3.5 w-3.5" /> Restart

@@ -652,6 +652,8 @@ export default function ApplyPage() {
             <p className="text-sm font-bold text-zinc-900 mb-4">{currentParent?.title || 'Application'}</p>
             <div className="space-y-1">
               {parentGroups.map((p, pi) => {
+                // Only reveal the current and completed parent stages.
+                if (pi > currentParentIdx) return null;
                 const firstStage = stages[p.indices[0]];
                 const Icon = STAGE_ICONS[firstStage.type];
                 const parentActive = pi === currentParentIdx;

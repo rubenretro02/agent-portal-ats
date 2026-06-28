@@ -214,29 +214,39 @@ export default function OnboardingPage() {
   // as an autosave checkpoint between parent stages.
   const persist = async () => {
     try {
-      const body: Record<string, unknown> = {
-        first_name: formData.firstName,
-        last_name: formData.lastName,
-        phone: formData.phone,
-        sex: formData.sex,
-      };
+      // Merge-safe: only send fields that actually have a value, so a partial
+      // save never wipes data captured on another step.
+      const body: Record<string, unknown> = {};
+      if (formData.firstName) body.first_name = formData.firstName;
+      if (formData.lastName) body.last_name = formData.lastName;
+      if (formData.phone) body.phone = formData.phone;
+      if (formData.sex) body.sex = formData.sex;
       if (formData.dobYear && formData.dobMonth && formData.dobDay) {
         body.date_of_birth = `${formData.dobYear}-${formData.dobMonth}-${formData.dobDay}`;
       }
-      await fetch('/api/profile/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
+      if (Object.keys(body).length > 0) {
+        await fetch('/api/profile/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+      }
 
       if (agent) {
         const { adminDb } = await import('@/lib/adminDb');
-        const data: Record<string, unknown> = {
-          address: { street: formData.street, city: formData.city, state: formData.state, zipCode: formData.zipCode, country: 'USA' },
-          experience: { yearsExperience: formData.yearsExperience },
-          languages: formData.languages,
-          availability: { hoursPerWeek: formData.hoursPerWeek, preferredShift: formData.preferredShift },
-        };
+        const data: Record<string, unknown> = {};
+        if (formData.street || formData.city || formData.state || formData.zipCode) {
+          data.address = { street: formData.street, city: formData.city, state: formData.state, zipCode: formData.zipCode, country: 'USA' };
+        }
+        if (formData.yearsExperience) {
+          data.experience = { yearsExperience: formData.yearsExperience };
+        }
+        if (formData.languages.length > 0) {
+          data.languages = formData.languages;
+        }
+        if (formData.hoursPerWeek || formData.preferredShift) {
+          data.availability = { hoursPerWeek: formData.hoursPerWeek, preferredShift: formData.preferredShift };
+        }
         if (typingResult) {
           const prevScores = (agent as unknown as { scores?: Record<string, number> }).scores || {};
           data.scores = { ...prevScores, typing: typingResult.wpm, typingAccuracy: typingResult.accuracy };
@@ -253,7 +263,9 @@ export default function OnboardingPage() {
             ramGB: systemCheckResult.hardware.ramGB,
           };
         }
-        await adminDb({ action: 'update', table: 'agents', data, match: { id: agent.id } });
+        if (Object.keys(data).length > 0) {
+          await adminDb({ action: 'update', table: 'agents', data, match: { id: agent.id } });
+        }
       }
     } catch (err) {
       console.error('[Onboarding] persist error:', err);
