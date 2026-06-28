@@ -174,29 +174,48 @@ export default function OnboardingPage() {
     }
   }, [profile, agent]);
 
-  // Resume at the first incomplete sub-stage (once data has loaded) so coming
-  // back doesn't start over from the beginning.
+  const STEP_KEY = 'wingcx_onboarding_step';
+
+  // Pull the freshest profile/agent on entry so a returning applicant doesn't
+  // see a stale (cached) form that requires a manual page refresh.
+  useEffect(() => {
+    refreshProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Resume where the applicant left off: prefer the explicitly saved step,
+  // otherwise the first incomplete sub-stage.
   const positioned = useRef(false);
   useEffect(() => {
     if (positioned.current || !profile || !agent) return;
-    const profileExt = profile as unknown as { sex?: string; date_of_birth?: string };
-    const addr = agent.address as Record<string, string> | null;
-    const exp = agent.experience as Record<string, string> | null;
-    const avail = agent.availability as Record<string, string> | null;
-    const langs = agent.languages as string[] | null;
-    const sc = (agent as unknown as { scores?: { typing?: number } }).scores;
-    const sysCheck = (agent as unknown as { system_check?: SystemCheckResult }).system_check;
-    const done: Record<string, boolean> = {
-      details: !!(profile.first_name && profile.last_name && profile.phone && profileExt.sex && profileExt.date_of_birth),
-      address: !!(addr?.street && addr?.city && addr?.state && addr?.zipCode),
-      experience: !!exp?.yearsExperience,
-      availability: !!(avail?.hoursPerWeek && avail?.preferredShift),
-      languages: !!(langs && langs.length > 0),
-      typing: !!sc?.typing,
-      systemcheck: !!sysCheck,
-    };
-    const firstIncomplete = FLOW.findIndex(s => !done[s.id]);
-    if (firstIncomplete > 0) setCurrent(firstIncomplete);
+
+    let target = -1;
+    try {
+      const saved = typeof window !== 'undefined' ? window.localStorage.getItem(STEP_KEY) : null;
+      if (saved !== null) target = Math.max(0, Math.min(parseInt(saved, 10) || 0, FLOW.length - 1));
+    } catch { /* ignore */ }
+
+    if (target < 0) {
+      const profileExt = profile as unknown as { sex?: string; date_of_birth?: string };
+      const addr = agent.address as Record<string, string> | null;
+      const exp = agent.experience as Record<string, string> | null;
+      const avail = agent.availability as Record<string, string> | null;
+      const langs = agent.languages as string[] | null;
+      const sc = (agent as unknown as { scores?: { typing?: number } }).scores;
+      const sysCheck = (agent as unknown as { system_check?: SystemCheckResult }).system_check;
+      const done: Record<string, boolean> = {
+        details: !!(profile.first_name && profile.last_name && profile.phone && profileExt.sex && profileExt.date_of_birth),
+        address: !!(addr?.street && addr?.city && addr?.state && addr?.zipCode),
+        experience: !!exp?.yearsExperience,
+        availability: !!(avail?.hoursPerWeek && avail?.preferredShift),
+        languages: !!(langs && langs.length > 0),
+        typing: !!sc?.typing,
+        systemcheck: !!sysCheck,
+      };
+      target = FLOW.findIndex(s => !done[s.id]);
+    }
+
+    if (target > 0) setCurrent(target);
     positioned.current = true;
   }, [profile, agent, FLOW]);
 
@@ -305,6 +324,10 @@ export default function OnboardingPage() {
 
   const cur = FLOW[current];
 
+  const rememberStep = (n: number) => {
+    try { window.localStorage.setItem(STEP_KEY, String(n)); } catch { /* ignore */ }
+  };
+
   const handleNext = async () => {
     if (!validate(cur.id)) return;
     // Save on every step so nothing is lost if the applicant leaves.
@@ -313,10 +336,13 @@ export default function OnboardingPage() {
     setSaving(false);
 
     if (current < FLOW.length - 1) {
-      setCurrent(current + 1);
+      const nextIndex = current + 1;
+      rememberStep(nextIndex);
+      setCurrent(nextIndex);
       setError('');
       window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
+      try { window.localStorage.removeItem(STEP_KEY); } catch { /* ignore */ }
       await refreshProfile();
       setSuccess(true);
       setTimeout(() => router.replace('/dashboard'), 1800);
@@ -329,6 +355,7 @@ export default function OnboardingPage() {
 
   const handleSaveExit = async () => {
     setExiting(true);
+    rememberStep(current);
     await persist();
     router.push('/dashboard');
   };
