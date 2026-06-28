@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuthContext } from '@/components/providers/AuthProvider';
 import { useOpportunityStore } from '@/store/supabaseStore';
-import { OnboardingModal } from './OnboardingModal';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -34,12 +33,11 @@ import type { ApplicationAnswer } from '@/types';
 
 export function AgentDashboard() {
   const router = useRouter();
-  const { profile, agent, refreshProfile } = useAuthContext();
+  const { profile, agent } = useAuthContext();
   const { opportunities, fetchOpportunities, appliedOpportunityIds, fetchAppliedOpportunities, applyToOpportunity } = useOpportunityStore();
 
   const [selectedOpportunity, setSelectedOpportunity] = useState<string | null>(null);
   const [applying, setApplying] = useState(false);
-  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
 
   // Calculate onboarding progress
   const onboardingProgress = useMemo(() => {
@@ -120,7 +118,7 @@ export function AgentDashboard() {
                   <span className="font-medium text-sm">Profile Complete</span>
                 </div>
               ) : (
-                <Button onClick={() => setShowOnboardingModal(true)} className="bg-white text-[var(--brand-blue)] hover:bg-white/90 shadow-sm">
+                <Button onClick={() => router.push('/onboarding')} className="bg-white text-[var(--brand-blue)] hover:bg-white/90 shadow-sm">
                   Complete Profile
                   <ArrowRight className="h-4 w-4 ml-2" />
                 </Button>
@@ -180,7 +178,7 @@ export function AgentDashboard() {
                 <p className="text-sm text-zinc-600">Required to apply for opportunities</p>
               </div>
               <Button
-                onClick={() => setShowOnboardingModal(true)}
+                onClick={() => router.push('/onboarding')}
                 className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white"
               >
                 Complete Now
@@ -190,13 +188,6 @@ export function AgentDashboard() {
           </CardContent>
         </Card>
       )}
-
-      {/* Onboarding Modal */}
-      <OnboardingModal
-        open={showOnboardingModal}
-        onOpenChange={setShowOnboardingModal}
-        onComplete={() => refreshProfile()}
-      />
 
       {/* Top Opportunities Section */}
       <div>
