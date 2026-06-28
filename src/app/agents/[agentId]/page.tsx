@@ -80,6 +80,8 @@ interface AgentProfile {
     email: string;
     phone: string | null;
     ssn_last4?: string | null;
+    date_of_birth?: string | null;
+    sex?: string | null;
   } | null;
 }
 
@@ -691,11 +693,65 @@ const location = agent.address ?
               </Card>
             </div>
 
-            {/* Contact & Personal Information */}
+            {/* Personal Details */}
             <Card className="border-zinc-200">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
                   <User className="h-4 w-4 text-[var(--brand-blue)]" />
+                  Personal Details
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                      <User className="h-5 w-5 text-[var(--brand-blue)]" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-500">Full Name</p>
+                      <p className="text-sm font-medium text-zinc-900">{fullName}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                      <Calendar className="h-5 w-5 text-[var(--brand-blue)]" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-500">Date of Birth</p>
+                      <p className="text-sm font-medium text-zinc-900">
+                        {agent.profiles?.date_of_birth ? formatDate(agent.profiles.date_of_birth) : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                      <User className="h-5 w-5 text-[var(--brand-blue)]" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-500">Sex</p>
+                      <p className="text-sm font-medium text-zinc-900 capitalize">{agent.profiles?.sex || 'N/A'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                      <Shield className="h-5 w-5 text-[var(--brand-blue)]" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-zinc-500">SSN (last 4)</p>
+                      <p className="text-sm font-medium text-zinc-900 font-mono">
+                        {agent.profiles?.ssn_last4 ? `••• ${agent.profiles.ssn_last4}` : 'N/A'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Contact & Personal Information */}
+            <Card className="border-zinc-200">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-sm font-semibold text-zinc-900 flex items-center gap-2">
+                  <Mail className="h-4 w-4 text-[var(--brand-blue)]" />
                   Contact Information
                 </CardTitle>
               </CardHeader>
@@ -750,17 +806,6 @@ const location = agent.address ?
                       </p>
                     </div>
                   </div>
-                  {agent.profiles?.ssn_last4 && (
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center">
-                        <Shield className="h-5 w-5 text-[var(--brand-blue)]" />
-                      </div>
-                      <div>
-                        <p className="text-xs text-zinc-500">SSN (last 4)</p>
-                        <p className="text-sm font-medium text-zinc-900 font-mono">••• {agent.profiles.ssn_last4}</p>
-                      </div>
-                    </div>
-                  )}
                   <div className="flex items-start gap-3 col-span-2">
                     <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center flex-shrink-0">
                       <MapPin className="h-5 w-5 text-[var(--brand-blue)]" />
