@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuthContext } from '@/components/providers/AuthProvider';
 import { useOpportunityStore } from '@/store/supabaseStore';
@@ -175,6 +175,28 @@ export default function ApplyPage() {
   const currentParentIdx = parentGroups.findIndex(p => p.indices.includes(currentStageIndex));
   const currentParent = parentGroups[currentParentIdx];
 
+  // Resume an in-progress application: stage + answers are saved per
+  // user+opportunity (so it never leaks across accounts) and restored on return.
+  const draftKey = profile?.id ? `wingcx_apply_${profile.id}_${opportunityId}` : null;
+  const restored = useRef(false);
+  useEffect(() => {
+    if (restored.current || !draftKey || loading || !opportunity) return;
+    try {
+      const raw = window.localStorage.getItem(draftKey);
+      if (raw) {
+        const d = JSON.parse(raw);
+        if (typeof d.stage === 'number' && d.stage > 0 && d.stage < stages.length) setCurrentStageIndex(d.stage);
+        if (d.answers && typeof d.answers === 'object') setAnswers(d.answers);
+      }
+    } catch { /* ignore */ }
+    restored.current = true;
+  }, [draftKey, loading, opportunity, stages.length]);
+
+  useEffect(() => {
+    if (!restored.current || !draftKey || submitted) return;
+    try { window.localStorage.setItem(draftKey, JSON.stringify({ stage: currentStageIndex, answers })); } catch { /* ignore */ }
+  }, [currentStageIndex, answers, draftKey, submitted]);
+
   const handleExit = () => router.push('/opportunities');
   const handleNext = () => isLastStage ? handleSubmit() : setCurrentStageIndex(prev => prev + 1);
   const handleBack = () => !isFirstStage && setCurrentStageIndex(prev => prev - 1);
@@ -188,7 +210,10 @@ export default function ApplyPage() {
     }));
     const result = await applyToOpportunity(opportunity.id, applicationAnswers);
     setSubmitting(false);
-    if (result.success) setSubmitted(true);
+    if (result.success) {
+      if (draftKey) { try { window.localStorage.removeItem(draftKey); } catch { /* ignore */ } }
+      setSubmitted(true);
+    }
   };
 
   const updateAnswer = (questionId: string, value: string | string[] | number | boolean) => {

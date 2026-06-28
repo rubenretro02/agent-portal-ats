@@ -131,14 +131,14 @@ export default function OnboardingPage() {
   );
 
   const [formData, setFormData] = useState({
-    firstName: '', lastName: '', phone: '', sex: '', dobMonth: '', dobDay: '', dobYear: '',
+    firstName: '', lastName: '', phone: '', sex: '', dobMonth: '', dobDay: '', dobYear: '', ssnLast4: '',
     street: '', city: '', state: '', zipCode: '',
     yearsExperience: '', languages: [] as string[], hoursPerWeek: '', preferredShift: '',
   });
 
   useEffect(() => {
     if (profile) {
-      const profileExt = profile as unknown as { sex?: string; date_of_birth?: string };
+      const profileExt = profile as unknown as { sex?: string; date_of_birth?: string; ssn_last4?: string };
       const dob = profileExt.date_of_birth?.split('-') || [];
       setFormData(prev => ({
         ...prev,
@@ -149,6 +149,7 @@ export default function OnboardingPage() {
         dobYear: dob[0] || '',
         dobMonth: dob[1] || '',
         dobDay: dob[2] || '',
+        ssnLast4: profileExt.ssn_last4 || '',
       }));
     }
     if (agent) {
@@ -252,6 +253,16 @@ export default function OnboardingPage() {
         });
       }
 
+      // SSN last 4 saved in its own best-effort call so a not-yet-migrated
+      // column can never break the main profile save.
+      if (/^\d{4}$/.test(formData.ssnLast4)) {
+        fetch('/api/profile/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ssn_last4: formData.ssnLast4 }),
+        }).catch(() => { /* column may not exist yet */ });
+      }
+
       if (agent) {
         const { adminDb } = await import('@/lib/adminDb');
         const data: Record<string, unknown> = {};
@@ -313,6 +324,9 @@ export default function OnboardingPage() {
       case 'details':
         if (!formData.firstName || !formData.lastName || !formData.phone || !formData.sex || !formData.dobMonth || !formData.dobDay || !formData.dobYear) {
           setError('Please fill in all fields'); return false;
+        }
+        if (!/^\d{4}$/.test(formData.ssnLast4)) {
+          setError('Please enter the last 4 digits of your SSN'); return false;
         }
         break;
       case 'address':
@@ -527,21 +541,35 @@ export default function OnboardingPage() {
                       </Select>
                     </div>
                   </div>
-                  <div className="space-y-1.5">
-                    <Label>Date of birth *</Label>
-                    <div className="grid grid-cols-3 gap-3">
-                      <Select value={formData.dobMonth} onValueChange={(v) => updateField('dobMonth', v)}>
-                        <SelectTrigger className="h-11"><SelectValue placeholder="Month" /></SelectTrigger>
-                        <SelectContent>{MONTHS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
-                      </Select>
-                      <Select value={formData.dobDay} onValueChange={(v) => updateField('dobDay', v)}>
-                        <SelectTrigger className="h-11"><SelectValue placeholder="Day" /></SelectTrigger>
-                        <SelectContent>{DAYS.map(d => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}</SelectContent>
-                      </Select>
-                      <Select value={formData.dobYear} onValueChange={(v) => updateField('dobYear', v)}>
-                        <SelectTrigger className="h-11"><SelectValue placeholder="Year" /></SelectTrigger>
-                        <SelectContent>{YEARS.map(y => <SelectItem key={y.value} value={y.value}>{y.label}</SelectItem>)}</SelectContent>
-                      </Select>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-1.5">
+                      <Label>Date of birth *</Label>
+                      <div className="grid grid-cols-3 gap-2">
+                        <Select value={formData.dobMonth} onValueChange={(v) => updateField('dobMonth', v)}>
+                          <SelectTrigger className="h-11"><SelectValue placeholder="Month" /></SelectTrigger>
+                          <SelectContent>{MONTHS.map(m => <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                        <Select value={formData.dobDay} onValueChange={(v) => updateField('dobDay', v)}>
+                          <SelectTrigger className="h-11"><SelectValue placeholder="Day" /></SelectTrigger>
+                          <SelectContent>{DAYS.map(d => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                        <Select value={formData.dobYear} onValueChange={(v) => updateField('dobYear', v)}>
+                          <SelectTrigger className="h-11"><SelectValue placeholder="Year" /></SelectTrigger>
+                          <SelectContent>{YEARS.map(y => <SelectItem key={y.value} value={y.value}>{y.label}</SelectItem>)}</SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label>Last 4 of SSN *</Label>
+                      <Input
+                        className="h-11"
+                        inputMode="numeric"
+                        maxLength={4}
+                        placeholder="1234"
+                        value={formData.ssnLast4}
+                        onChange={(e) => updateField('ssnLast4', e.target.value.replace(/\D/g, '').slice(0, 4))}
+                      />
+                      <p className="text-xs text-zinc-400">Used for identity verification only.</p>
                     </div>
                   </div>
                 </div>

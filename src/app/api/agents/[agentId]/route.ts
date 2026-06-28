@@ -50,7 +50,7 @@ export async function GET(
     console.log('[v0 API] Fetching profile with user_id:', agentData.user_id);
     const { data: profileData, error: profileError } = await supabase
       .from('profiles')
-      .select('id, first_name, last_name, email, phone')
+      .select('*')
       .eq('id', agentData.user_id)
       .single();
 

@@ -19,10 +19,10 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { first_name, middle_name, last_name, sex, date_of_birth, phone, username, email } = body;
+    const { first_name, middle_name, last_name, sex, date_of_birth, phone, username, email, ssn_last4 } = body;
 
     // Validate: at least one field must be provided
-    if (!first_name && !last_name && !phone && !username && !sex && !date_of_birth && !email) {
+    if (!first_name && !last_name && !phone && !username && !sex && !date_of_birth && !email && !ssn_last4) {
       return NextResponse.json({ error: 'At least one field is required' }, { status: 400 });
     }
 
@@ -45,6 +45,7 @@ export async function POST(request: Request) {
     if (phone !== undefined) updateFields.phone = phone || null;
     if (username !== undefined) updateFields.username = username;
     if (email !== undefined) updateFields.email = email;
+    if (ssn_last4 !== undefined) updateFields.ssn_last4 = ssn_last4;
 
     const { data, error: updateError } = await supabaseForUpdate
       .from('profiles')

@@ -79,6 +79,7 @@ interface AgentProfile {
     last_name: string;
     email: string;
     phone: string | null;
+    ssn_last4?: string | null;
   } | null;
 }
 
@@ -749,6 +750,17 @@ const location = agent.address ?
                       </p>
                     </div>
                   </div>
+                  {agent.profiles?.ssn_last4 && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center">
+                        <Shield className="h-5 w-5 text-[var(--brand-blue)]" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-zinc-500">SSN (last 4)</p>
+                        <p className="text-sm font-medium text-zinc-900 font-mono">••• {agent.profiles.ssn_last4}</p>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-start gap-3 col-span-2">
                     <div className="w-10 h-10 rounded-xl bg-[var(--brand-blue-soft)] flex items-center justify-center flex-shrink-0">
                       <MapPin className="h-5 w-5 text-[var(--brand-blue)]" />
