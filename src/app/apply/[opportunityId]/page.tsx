@@ -47,6 +47,7 @@ import {
   Award,
   BookOpen,
   User,
+  ChevronRight,
 } from 'lucide-react';
 import type { ApplicationAnswer, ApplicationQuestion, ApplicationStage, StageType, JobSection } from '@/types';
 import { checkRequirements, type JobRequirements, type SystemCheckResult } from '@/lib/systemCheck';
@@ -153,6 +154,26 @@ export default function ApplyPage() {
   const currentStage = stages[currentStageIndex];
   const isLastStage = currentStageIndex === totalStages - 1;
   const isFirstStage = currentStageIndex === 0;
+
+  // Group stages by their optional `group` into parent stages (Fountain-style).
+  // Ungrouped stages are their own parent.
+  const parentGroups = useMemo(() => {
+    const groups: { title: string; indices: number[] }[] = [];
+    stages.forEach((st, i) => {
+      const g = st.group;
+      if (g) {
+        const existing = groups.find(p => p.title === g);
+        if (existing) existing.indices.push(i);
+        else groups.push({ title: g, indices: [i] });
+      } else {
+        groups.push({ title: st.name, indices: [i] });
+      }
+    });
+    return groups;
+  }, [stages]);
+
+  const currentParentIdx = parentGroups.findIndex(p => p.indices.includes(currentStageIndex));
+  const currentParent = parentGroups[currentParentIdx];
 
   const handleExit = () => router.push('/opportunities');
   const handleNext = () => isLastStage ? handleSubmit() : setCurrentStageIndex(prev => prev + 1);
@@ -627,16 +648,36 @@ export default function ApplyPage() {
             </div>
           </div>
           <div className="border-t border-zinc-100 pt-6">
-            <p className="text-xs font-medium text-zinc-500 uppercase tracking-wider mb-4">Stages</p>
-            <div className="space-y-2">
-              {stages.map((stage, index) => {
-                const Icon = STAGE_ICONS[stage.type];
+            <p className="text-xs text-zinc-400">You&apos;re working on</p>
+            <p className="text-sm font-bold text-zinc-900 mb-4">{currentParent?.title || 'Application'}</p>
+            <div className="space-y-1">
+              {parentGroups.map((p, pi) => {
+                const firstStage = stages[p.indices[0]];
+                const Icon = STAGE_ICONS[firstStage.type];
+                const parentActive = pi === currentParentIdx;
+                const parentDone = p.indices.every(idx => idx < currentStageIndex);
+                const hasSubs = p.indices.length > 1;
                 return (
-                  <div key={stage.id} className={`flex items-center gap-3 p-2 rounded-lg transition-all ${index === currentStageIndex ? 'bg-[var(--brand-blue-soft)] text-[var(--brand-blue)]' : index < currentStageIndex ? 'text-emerald-600' : 'text-zinc-400'}`}>
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${index === currentStageIndex ? 'bg-[var(--brand-blue)] text-white' : index < currentStageIndex ? 'bg-emerald-500 text-white' : 'bg-zinc-200 text-zinc-500'}`}>
-                      {index < currentStageIndex ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-3 w-3" />}
+                  <div key={p.title + pi}>
+                    <div className={`flex items-center gap-3 p-2 rounded-lg transition-all ${parentActive ? 'bg-[var(--brand-blue-soft)] text-[var(--brand-blue)]' : parentDone ? 'text-emerald-600' : 'text-zinc-400'}`}>
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-medium ${parentActive ? 'bg-[var(--brand-blue)] text-white' : parentDone ? 'bg-emerald-500 text-white' : 'bg-zinc-200 text-zinc-500'}`}>
+                        {parentDone ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-3 w-3" />}
+                      </div>
+                      <span className="text-sm font-medium truncate">{p.title}</span>
                     </div>
-                    <span className="text-sm font-medium truncate">{stage.name}</span>
+                    {parentActive && hasSubs && (
+                      <div className="ml-[1.6rem] mt-1 mb-1 space-y-1.5 border-l border-zinc-200 pl-3">
+                        {p.indices.map(idx => {
+                          const subActive = idx === currentStageIndex;
+                          const subDone = idx < currentStageIndex;
+                          return (
+                            <div key={idx} className={`text-xs ${subActive ? 'text-[var(--brand-blue)] font-semibold' : subDone ? 'text-zinc-500' : 'text-zinc-400'}`}>
+                              {subDone ? '✓ ' : ''}{stages[idx].name}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -683,6 +724,13 @@ export default function ApplyPage() {
         {/* Scrollable Content Area */}
         <div className="flex-1 overflow-auto">
           <div className="max-w-3xl mx-auto px-6 py-8">
+            {currentParent && currentParent.indices.length > 1 && (
+              <div className="flex items-center gap-1.5 text-sm text-zinc-400 mb-5">
+                <span>{currentParent.title}</span>
+                <ChevronRight className="h-3.5 w-3.5" />
+                <span className="text-zinc-700 font-medium">{currentStage?.name}</span>
+              </div>
+            )}
             {currentStage && renderStageContent(currentStage)}
           </div>
         </div>

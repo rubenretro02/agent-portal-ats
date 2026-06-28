@@ -342,6 +342,7 @@ export default function CreateOpportunityPage() {
   const [newStageName, setNewStageName] = useState('');
   const [newStageType, setNewStageType] = useState<StageType>('custom');
   const [newStageDescription, setNewStageDescription] = useState('');
+  const [newStageGroup, setNewStageGroup] = useState('');
   const [editingStage, setEditingStage] = useState<ApplicationStage | null>(null);
 
   // UI state
@@ -424,6 +425,7 @@ export default function CreateOpportunityPage() {
       order: stages.length,
       isRequired: false,
       content: {},
+      group: newStageGroup.trim() || undefined,
     };
     // Insert before the Review & Submit stage
     const reviewIndex = stages.findIndex(s => s.name === 'Review & Submit');
@@ -436,6 +438,7 @@ export default function CreateOpportunityPage() {
     }
     setNewStageName('');
     setNewStageDescription('');
+    setNewStageGroup('');
     setShowStageDialog(false);
   };
 
@@ -1166,6 +1169,15 @@ export default function CreateOpportunityPage() {
               />
             </div>
             <div className="space-y-2">
+              <Label>Parent group (optional)</Label>
+              <Input
+                placeholder='e.g. "Systems & Equipment Confirmation"'
+                value={newStageGroup}
+                onChange={(e) => setNewStageGroup(e.target.value)}
+              />
+              <p className="text-xs text-zinc-500">Stages with the same group name are shown together as sub-stages of that parent.</p>
+            </div>
+            <div className="space-y-2">
               <Label>Stage Type</Label>
               <Select value={newStageType} onValueChange={(v) => setNewStageType(v as StageType)}>
                 <SelectTrigger>
@@ -1222,6 +1234,16 @@ export default function CreateOpportunityPage() {
                   onChange={(e) => setEditingStage({ ...editingStage, description: e.target.value })}
                   rows={3}
                 />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Parent group (optional)</Label>
+                <Input
+                  placeholder='e.g. "Systems & Equipment Confirmation"'
+                  value={editingStage.group || ''}
+                  onChange={(e) => setEditingStage({ ...editingStage, group: e.target.value || undefined })}
+                />
+                <p className="text-xs text-zinc-500">Stages sharing a group render as sub-stages of that parent.</p>
               </div>
 
               {/* Stage Type - Read Only */}

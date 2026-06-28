@@ -309,6 +309,7 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
             order: s.order as number,
             isRequired: s.is_required as boolean,
             content: s.content as Record<string, unknown> | undefined,
+            group: (s.content as Record<string, unknown> | undefined)?.group as string | undefined,
             questions: s.questions as ApplicationQuestion[] | undefined,
           })),
         jobSections: (opp.job_sections as JobSection[]) || [],
@@ -471,7 +472,7 @@ export const useOpportunityStore = create<OpportunityState>((set, get) => ({
           type: s.type,
           order: index,
           is_required: s.isRequired || false,
-          content: s.content || {},
+          content: { ...(s.content || {}), group: s.group || null },
           questions: s.questions || [],
         }));
 

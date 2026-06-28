@@ -194,6 +194,10 @@ export interface ApplicationStage {
   order: number;
   isRequired: boolean;
 
+  // Optional parent grouping. Stages sharing a `group` render as sub-stages
+  // of that parent (shown collapsed in the sidebar, one sub-stage per screen).
+  group?: string;
+
   // For 'info' type - displays job description, requirements, etc.
   content?: {
     showJobDescription?: boolean;
