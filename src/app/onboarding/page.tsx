@@ -175,10 +175,16 @@ export default function OnboardingPage() {
   }, [profile, agent]);
 
   // Pull the freshest profile/agent on entry so a returning applicant doesn't
-  // see a stale (cached) form that requires a manual page refresh.
+  // see a stale (cached) form that requires a manual page refresh. A short
+  // blank spinner hides the resume "jump" so the user lands directly on their
+  // step without seeing step 1 flash first.
   const [dataReady, setDataReady] = useState(false);
+  const [positionedDone, setPositionedDone] = useState(false);
+  const [minElapsed, setMinElapsed] = useState(false);
   useEffect(() => {
     refreshProfile().finally(() => setDataReady(true));
+    const t = setTimeout(() => setMinElapsed(true), 1000);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -187,27 +193,32 @@ export default function OnboardingPage() {
   // account on the same browser always starts fresh.
   const positioned = useRef(false);
   useEffect(() => {
-    if (positioned.current || !dataReady || !profile || !agent) return;
-    const profileExt = profile as unknown as { sex?: string; date_of_birth?: string };
-    const addr = agent.address as Record<string, string> | null;
-    const exp = agent.experience as Record<string, string> | null;
-    const avail = agent.availability as Record<string, string> | null;
-    const langs = agent.languages as string[] | null;
-    const sc = (agent as unknown as { scores?: { typing?: number } }).scores;
-    const sysCheck = (agent as unknown as { system_check?: SystemCheckResult }).system_check;
-    const done: Record<string, boolean> = {
-      details: !!(profile.first_name && profile.last_name && profile.phone && profileExt.sex && profileExt.date_of_birth),
-      address: !!(addr?.street && addr?.city && addr?.state && addr?.zipCode),
-      experience: !!exp?.yearsExperience,
-      availability: !!(avail?.hoursPerWeek && avail?.preferredShift),
-      languages: !!(langs && langs.length > 0),
-      typing: !!sc?.typing,
-      systemcheck: !!sysCheck,
-    };
-    const firstIncomplete = FLOW.findIndex(s => !done[s.id]);
-    if (firstIncomplete > 0) setCurrent(firstIncomplete);
+    if (positioned.current || !dataReady) return;
+    if (profile && agent) {
+      const profileExt = profile as unknown as { sex?: string; date_of_birth?: string };
+      const addr = agent.address as Record<string, string> | null;
+      const exp = agent.experience as Record<string, string> | null;
+      const avail = agent.availability as Record<string, string> | null;
+      const langs = agent.languages as string[] | null;
+      const sc = (agent as unknown as { scores?: { typing?: number } }).scores;
+      const sysCheck = (agent as unknown as { system_check?: SystemCheckResult }).system_check;
+      const done: Record<string, boolean> = {
+        details: !!(profile.first_name && profile.last_name && profile.phone && profileExt.sex && profileExt.date_of_birth),
+        address: !!(addr?.street && addr?.city && addr?.state && addr?.zipCode),
+        experience: !!exp?.yearsExperience,
+        availability: !!(avail?.hoursPerWeek && avail?.preferredShift),
+        languages: !!(langs && langs.length > 0),
+        typing: !!sc?.typing,
+        systemcheck: !!sysCheck,
+      };
+      const firstIncomplete = FLOW.findIndex(s => !done[s.id]);
+      if (firstIncomplete > 0) setCurrent(firstIncomplete);
+    }
     positioned.current = true;
+    setPositionedDone(true);
   }, [dataReady, profile, agent, FLOW]);
+
+  const booting = !(positionedDone && minElapsed);
 
   const updateField = (field: string, value: string | string[]) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -372,6 +383,15 @@ export default function OnboardingPage() {
   // Allow going back only within the same parent stage; once a stage is
   // completed and saved, you move forward and can't return to it.
   const canGoBack = current > 0 && FLOW[current - 1].parentIndex === cur.parentIndex;
+
+  if (booting) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white gap-4">
+        <div className="w-10 h-10 border-4 border-[var(--brand-blue)] border-t-transparent rounded-full animate-spin" />
+        <p className="text-sm text-zinc-400">Loading your application…</p>
+      </div>
+    );
+  }
 
   if (success) {
     return (
