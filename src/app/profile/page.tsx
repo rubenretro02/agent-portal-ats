@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { UnifiedLayout } from '@/components/layout/UnifiedLayout';
 import { RequirePersonalInfo } from '@/components/RequirePersonalInfo';
 import { useAuthContext } from '@/components/providers/AuthProvider';
+import { getSupabaseClient } from '@/lib/supabase/client';
 import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 import { TypingTest, type TypingResult } from '@/components/onboarding/TypingTest';
 import { SystemCheck } from '@/components/SystemCheck';
@@ -38,18 +39,20 @@ const US_STATES = [
 
 export default function ProfilePage() {
   const router = useRouter();
-  const { profile, agent, isLoading, refreshProfile } = useAuthContext();
+  const { user, profile, agent, isLoading, refreshProfile } = useAuthContext();
+  const supabase = getSupabaseClient();
 
   const [editingContact, setEditingContact] = useState(false);
   const [editingWork, setEditingWork] = useState(false);
   const [savingContact, setSavingContact] = useState(false);
   const [savingWork, setSavingWork] = useState(false);
   const [contactErr, setContactErr] = useState('');
+  const [contactMsg, setContactMsg] = useState('');
   const [showTyping, setShowTyping] = useState(false);
   const [showSystem, setShowSystem] = useState(false);
 
   const [contactForm, setContactForm] = useState({
-    username: '', phone: '', street: '', city: '', state: '', zipCode: '',
+    email: '', phone: '', street: '', city: '', state: '', zipCode: '',
   });
   const [workForm, setWorkForm] = useState({
     yearsExperience: '', languages: [] as string[], hoursPerWeek: '', preferredShift: '',
@@ -59,7 +62,7 @@ export default function ProfilePage() {
     if (profile) {
       const address = (agent?.address as Record<string, string> | null) || {};
       setContactForm({
-        username: (profile as unknown as { username?: string })?.username || '',
+        email: profile.email || '',
         phone: profile.phone || '',
         street: address.street || '',
         city: address.city || '',
@@ -97,24 +100,33 @@ export default function ProfilePage() {
 
   const saveContact = async () => {
     setContactErr('');
-    if (contactForm.username && (contactForm.username.length < 3 || !/^[a-zA-Z0-9]+$/.test(contactForm.username))) {
-      setContactErr('Username must be at least 3 letters/numbers, no spaces.');
+    setContactMsg('');
+    const emailChanged = contactForm.email.trim().toLowerCase() !== (profile?.email || '').toLowerCase();
+    if (emailChanged && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contactForm.email.trim())) {
+      setContactErr('Please enter a valid email address.');
       return;
     }
     setSavingContact(true);
     try {
+      // Email change goes through Supabase Auth (sends a confirmation link).
+      if (emailChanged) {
+        const { error: authErr } = await supabase.auth.updateUser({ email: contactForm.email.trim() });
+        if (authErr) throw new Error(authErr.message);
+      }
+
       const res = await fetch('/api/profile/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phone: contactForm.phone,
-          ...(contactForm.username ? { username: contactForm.username.toLowerCase() } : {}),
+          ...(emailChanged ? { email: contactForm.email.trim() } : {}),
         }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));
         throw new Error(d.error || 'Failed to update');
       }
+
       if (agent) {
         const { adminDb } = await import('@/lib/adminDb');
         await adminDb({
@@ -123,8 +135,10 @@ export default function ProfilePage() {
           match: { id: agent.id },
         });
       }
+
       await refreshProfile();
       setEditingContact(false);
+      if (emailChanged) setContactMsg(`A confirmation link was sent to ${contactForm.email.trim()}. The change applies once you confirm it.`);
     } catch (err) {
       console.error('Error saving contact:', err);
       setContactErr(err instanceof Error ? err.message : 'Failed to save');
@@ -202,7 +216,8 @@ export default function ProfilePage() {
   const languages = agent?.languages as string[] | null;
   const availability = agent?.availability as Record<string, string> | null;
   const scores = (agent as unknown as { scores?: { typing?: number; typingAccuracy?: number } })?.scores;
-  const username = (profile as unknown as { username?: string })?.username;
+  // Username is set at sign-up and stored in the auth user metadata (read-only).
+  const username = (user?.user_metadata?.username as string | undefined) || (profile as unknown as { username?: string })?.username;
 
   const initials = `${profile.first_name?.[0] || ''}${profile.last_name?.[0] || ''}`.toUpperCase();
 
@@ -257,24 +272,25 @@ export default function ProfilePage() {
               )}
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Username */}
+              {/* Username (set at sign-up, read-only) */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-2 text-zinc-500"><AtSign className="h-4 w-4" /> Username</Label>
-                {editingContact ? (
-                  <Input
-                    value={contactForm.username}
-                    onChange={(e) => setContactForm({ ...contactForm, username: e.target.value.toLowerCase().replace(/[^a-z0-9]/g, '') })}
-                    placeholder="Choose a username"
-                  />
-                ) : (
-                  <p className="text-zinc-900 py-2">{username ? `@${username}` : <span className="text-zinc-400">Not set</span>}</p>
-                )}
+                <p className="text-zinc-900 py-2">{username ? `@${username}` : <span className="text-zinc-400">Not set</span>}</p>
               </div>
 
-              {/* Email (read-only) */}
+              {/* Email (editable — change goes through email confirmation) */}
               <div className="space-y-2">
                 <Label className="flex items-center gap-2 text-zinc-500"><Mail className="h-4 w-4" /> Email</Label>
-                <Input value={profile.email} disabled className="bg-zinc-50" />
+                {editingContact ? (
+                  <Input
+                    type="email"
+                    value={contactForm.email}
+                    onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
+                    placeholder="you@email.com"
+                  />
+                ) : (
+                  <p className="text-zinc-900 py-2">{profile.email}</p>
+                )}
               </div>
 
               {/* Phone */}
@@ -328,6 +344,7 @@ export default function ProfilePage() {
               </div>
 
               {contactErr && <p className="text-sm text-red-600">{contactErr}</p>}
+              {contactMsg && <p className="text-sm text-emerald-600">{contactMsg}</p>}
             </CardContent>
           </Card>
 

@@ -271,8 +271,12 @@ export default function OnboardingPage() {
     if (!validate(cur.id)) return;
     if (current < FLOW.length - 1) {
       const next = FLOW[current + 1];
-      // Autosave checkpoint when finishing a parent stage.
-      if (next.parentIndex !== cur.parentIndex) persist();
+      // Finishing a parent stage: save before advancing (you can't return here).
+      if (next.parentIndex !== cur.parentIndex) {
+        setSaving(true);
+        await persist();
+        setSaving(false);
+      }
       setCurrent(current + 1);
       setError('');
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -299,6 +303,9 @@ export default function OnboardingPage() {
   const applicantName = `${formData.firstName || profile?.first_name || ''} ${formData.lastName || profile?.last_name || ''}`.trim() || 'Your application';
   const isLast = current === FLOW.length - 1;
   const progress = Math.round(((current + 1) / FLOW.length) * 100);
+  // Allow going back only within the same parent stage; once a stage is
+  // completed and saved, you move forward and can't return to it.
+  const canGoBack = current > 0 && FLOW[current - 1].parentIndex === cur.parentIndex;
 
   if (success) {
     return (
@@ -339,6 +346,8 @@ export default function OnboardingPage() {
 
           <nav className="mt-6 space-y-1">
             {STAGES.map((st, si) => {
+              // Only reveal the current stage and the ones already completed.
+              if (si > cur.parentIndex) return null;
               const StageIcon = st.icon;
               const parentDone = si < cur.parentIndex;
               const parentActive = si === cur.parentIndex;
@@ -564,9 +573,13 @@ export default function OnboardingPage() {
 
           <div className="border-t border-zinc-100 px-5 sm:px-8 py-4">
             <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
-              <Button variant="outline" onClick={handleBack} disabled={current === 0} className="gap-2">
-                <ArrowLeft className="h-4 w-4" /> Previous
-              </Button>
+              {canGoBack ? (
+                <Button variant="outline" onClick={handleBack} className="gap-2">
+                  <ArrowLeft className="h-4 w-4" /> Previous
+                </Button>
+              ) : (
+                <div />
+              )}
               <Button onClick={handleNext} disabled={saving} className="btn-brand gap-2 min-w-[140px]">
                 {saving ? (<><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>)
                   : isLast ? (<>Submit <CheckCircle2 className="h-4 w-4" /></>)
