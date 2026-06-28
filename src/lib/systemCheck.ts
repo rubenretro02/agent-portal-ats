@@ -290,6 +290,53 @@ export async function runSystemCheck(): Promise<SystemCheckResult> {
   return result;
 }
 
+// Compact, flat snapshot of a system check stored in the agent's assessment
+// history. Holds every field an auditor needs to compare runs (same machine,
+// same IP, same connection, etc.).
+export interface SystemCheckHistoryEntry {
+  date: string;
+  downloadMbps: number;
+  uploadMbps: number;
+  latencyMs: number;
+  cpuCores: number;
+  ramGB: number | null;
+  screenW: number;
+  screenH: number;
+  browser: string;
+  platform: string;
+  ip: string;
+  isp: string;
+  city: string;
+  region: string;
+  country: string;
+  hasWebcam: boolean;
+  hasMicrophone: boolean;
+  isVpn: boolean;
+}
+
+export function buildSysHistoryEntry(r: SystemCheckResult): SystemCheckHistoryEntry {
+  return {
+    date: new Date().toISOString(),
+    downloadMbps: r.internetSpeed.downloadMbps,
+    uploadMbps: r.internetSpeed.uploadMbps,
+    latencyMs: r.internetSpeed.latencyMs,
+    cpuCores: r.hardware.cpuCores,
+    ramGB: r.hardware.ramGB,
+    screenW: r.screen.width,
+    screenH: r.screen.height,
+    browser: `${r.browser.name} ${r.browser.version}`.trim(),
+    platform: r.hardware.platform,
+    ip: r.ipInfo.ip,
+    isp: r.ipInfo.isp,
+    city: r.ipInfo.city,
+    region: r.ipInfo.region,
+    country: r.ipInfo.country,
+    hasWebcam: r.mediaDevices.hasWebcam,
+    hasMicrophone: r.mediaDevices.hasMicrophone,
+    isVpn: r.ipInfo.isVpn || r.ipInfo.isProxy,
+  };
+}
+
 // Check if system meets job requirements
 export interface JobRequirements {
   minInternetSpeed?: number; // Mbps

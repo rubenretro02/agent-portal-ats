@@ -10,6 +10,13 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import {
   ArrowLeft,
   Mail,
   Phone,
@@ -43,7 +50,7 @@ import {
 } from 'lucide-react';
 import { PIPELINE_STAGES, DOCUMENT_TYPES } from '@/lib/constants';
 import type { PipelineStatus, DocumentStatus } from '@/types';
-import type { SystemCheckResult } from '@/lib/systemCheck';
+import type { SystemCheckResult, SystemCheckHistoryEntry } from '@/lib/systemCheck';
 import { AgentMailSection } from '@/components/mail/AgentMailSection';
 
 interface AgentProfile {
@@ -209,6 +216,7 @@ export default function AgentProfilePage({ params }: { params: Promise<{ agentId
   const [documents, setDocuments] = useState<AgentDocument[]>([]);
   const [applications, setApplications] = useState<AgentApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSys, setSelectedSys] = useState<Partial<SystemCheckHistoryEntry> | null>(null);
 
   // Redirect if not admin/recruiter
   useEffect(() => {
@@ -871,7 +879,7 @@ const location = agent.address ?
             {(() => {
               const scoresAny = agent.scores as unknown as {
                 typingHistory?: { wpm: number; accuracy: number; date: string }[];
-                systemCheckHistory?: { date: string; downloadMbps: number; uploadMbps: number; cpuCores: number; ramGB: number }[];
+                systemCheckHistory?: Partial<SystemCheckHistoryEntry>[];
               } | null;
               const typingHist = scoresAny?.typingHistory || [];
               const sysHist = scoresAny?.systemCheckHistory || [];
@@ -899,14 +907,25 @@ const location = agent.address ?
                       ) : <p className="text-sm text-zinc-400">None</p>}
                     </div>
                     <div>
-                      <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">System checks</p>
+                      <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wide mb-2">System checks <span className="font-normal normal-case text-zinc-400">· click to audit</span></p>
                       {sysHist.length ? (
-                        <div className="space-y-1.5">
+                        <div className="space-y-1">
                           {[...sysHist].reverse().map((h, i) => (
-                            <div key={i} className={`flex items-center justify-between text-sm ${i === 0 ? 'font-semibold' : ''}`}>
-                              <span className="text-zinc-500">{formatDate(h.date)}{i === 0 ? ' · latest' : ''}</span>
-                              <span className="text-zinc-900">↓{h.downloadMbps} ↑{h.uploadMbps} Mbps</span>
-                            </div>
+                            <button
+                              key={i}
+                              type="button"
+                              onClick={() => setSelectedSys(h)}
+                              className={`w-full flex items-center justify-between gap-3 text-sm text-left px-2 py-1.5 -mx-2 rounded-lg hover:bg-zinc-50 transition-colors ${i === 0 ? 'font-semibold' : ''}`}
+                            >
+                              <span className="text-zinc-500 flex items-center gap-1.5">
+                                {formatDate(h.date)}{i === 0 ? ' · latest' : ''}
+                                {h.isVpn && <ShieldAlert className="h-3 w-3 text-amber-500" />}
+                              </span>
+                              <span className="text-zinc-900 flex items-center gap-1.5">
+                                ↓{h.downloadMbps} ↑{h.uploadMbps} Mbps
+                                <Eye className="h-3.5 w-3.5 text-zinc-400" />
+                              </span>
+                            </button>
                           ))}
                         </div>
                       ) : <p className="text-sm text-zinc-400">None</p>}
@@ -987,6 +1006,55 @@ const location = agent.address ?
           </div>
         </div>
       </div>
+
+      {/* System check detail (audit view) */}
+      <Dialog open={!!selectedSys} onOpenChange={(o) => !o && setSelectedSys(null)}>
+        <DialogContent className="sm:max-w-lg">
+          {selectedSys && (() => {
+            const s = selectedSys;
+            const rows: { label: string; value: string; mono?: boolean }[] = [
+              { label: 'Date', value: s.date ? formatDate(s.date) : '—' },
+              { label: 'Download', value: s.downloadMbps != null ? `${s.downloadMbps} Mbps` : '—' },
+              { label: 'Upload', value: s.uploadMbps != null ? `${s.uploadMbps} Mbps` : '—' },
+              { label: 'Latency', value: s.latencyMs != null ? `${s.latencyMs} ms` : '—' },
+              { label: 'CPU Cores', value: s.cpuCores != null ? String(s.cpuCores) : '—' },
+              { label: 'RAM', value: s.ramGB != null ? `${s.ramGB} GB` : '—' },
+              { label: 'Screen', value: s.screenW ? `${s.screenW} × ${s.screenH}` : '—' },
+              { label: 'Browser', value: s.browser || '—' },
+              { label: 'Platform', value: s.platform || '—' },
+              { label: 'IP Address', value: s.ip || '—', mono: true },
+              { label: 'ISP', value: s.isp || '—' },
+              { label: 'Location', value: [s.city, s.region, s.country].filter((v) => v && v !== 'unknown').join(', ') || '—' },
+              { label: 'Webcam / Mic', value: `${s.hasWebcam ? 'Webcam' : 'No webcam'} · ${s.hasMicrophone ? 'Mic' : 'No mic'}` },
+              { label: 'Connection', value: s.isVpn ? 'VPN / Proxy detected' : 'Direct' },
+            ];
+            return (
+              <>
+                <DialogHeader>
+                  <div className="flex items-center gap-2">
+                    <Cpu className="h-5 w-5 text-[var(--brand-blue)]" />
+                    <DialogTitle>System Check</DialogTitle>
+                    {s.isVpn ? (
+                      <Badge className="bg-amber-100 text-amber-700 border-0 gap-1"><ShieldAlert className="h-3 w-3" /> VPN</Badge>
+                    ) : (
+                      <Badge className="bg-emerald-100 text-emerald-700 border-0 gap-1"><Shield className="h-3 w-3" /> Direct</Badge>
+                    )}
+                  </div>
+                  <DialogDescription>Full snapshot for audit — compare machine, IP and connection across runs.</DialogDescription>
+                </DialogHeader>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2.5 rounded-xl border border-zinc-200 p-4 mt-2">
+                  {rows.map((r) => (
+                    <div key={r.label} className="flex items-center justify-between gap-3">
+                      <span className="text-xs text-zinc-500">{r.label}</span>
+                      <span className={`text-sm font-medium text-zinc-900 text-right truncate ${r.mono ? 'font-mono text-xs' : ''}`}>{r.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </UnifiedLayout>
   );
 }

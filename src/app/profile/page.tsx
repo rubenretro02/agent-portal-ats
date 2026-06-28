@@ -9,7 +9,7 @@ import { getSupabaseClient } from '@/lib/supabase/client';
 import { AddressAutocomplete } from '@/components/AddressAutocomplete';
 import { TypingTest, type TypingResult } from '@/components/onboarding/TypingTest';
 import { SystemCheck } from '@/components/SystemCheck';
-import type { SystemCheckResult } from '@/lib/systemCheck';
+import { buildSysHistoryEntry, type SystemCheckResult } from '@/lib/systemCheck';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -210,13 +210,7 @@ export default function ProfilePage() {
         },
         scores: {
           ...prevScores,
-          systemCheckHistory: [...sysHist, {
-            date: new Date().toISOString(),
-            downloadMbps: result.internetSpeed.downloadMbps,
-            uploadMbps: result.internetSpeed.uploadMbps,
-            cpuCores: result.hardware.cpuCores,
-            ramGB: result.hardware.ramGB,
-          }].slice(-10),
+          systemCheckHistory: [...sysHist, buildSysHistoryEntry(result)].slice(-20),
         },
       },
       match: { id: agent.id },

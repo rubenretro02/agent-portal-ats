@@ -30,7 +30,7 @@ import {
 } from 'lucide-react';
 import { TypingTest, type TypingResult } from '@/components/onboarding/TypingTest';
 import { SystemCheck } from '@/components/SystemCheck';
-import type { SystemCheckResult } from '@/lib/systemCheck';
+import { buildSysHistoryEntry, type SystemCheckResult } from '@/lib/systemCheck';
 
 // Two-level structure: parent stages each contain sub-stages. The sidebar
 // shows parent stages (collapsed); the active parent expands its sub-stages.
@@ -282,13 +282,7 @@ export default function OnboardingPage() {
         }
         if (finalize && systemCheckResult) {
           const sysHist = Array.isArray(prevScores.systemCheckHistory) ? prevScores.systemCheckHistory as unknown[] : [];
-          scoresUpdate.systemCheckHistory = [...sysHist, {
-            date: new Date().toISOString(),
-            downloadMbps: systemCheckResult.internetSpeed.downloadMbps,
-            uploadMbps: systemCheckResult.internetSpeed.uploadMbps,
-            cpuCores: systemCheckResult.hardware.cpuCores,
-            ramGB: systemCheckResult.hardware.ramGB,
-          }].slice(-10);
+          scoresUpdate.systemCheckHistory = [...sysHist, buildSysHistoryEntry(systemCheckResult)].slice(-20);
           scoresChanged = true;
         }
         if (scoresChanged) data.scores = scoresUpdate;
