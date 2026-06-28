@@ -24,6 +24,8 @@ import {
   FileText,
   FileJson,
   Filter,
+  LayoutGrid,
+  Workflow,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -49,12 +51,40 @@ interface AgentWithProfile {
   pipeline_stage: number;
   created_at: string;
   scores: Record<string, number> | null;
+  address?: Record<string, unknown> | null;
+  experience?: Record<string, unknown> | null;
+  availability?: Record<string, unknown> | null;
+  languages?: string[] | null;
+  system_check?: unknown;
   profiles: {
     first_name: string;
     last_name: string;
     email: string;
     phone?: string;
   } | null;
+}
+
+// Onboarding pipeline columns — agents auto-bucket into the stage they're
+// currently on, computed from their saved data (no manual drag).
+const ONBOARDING_COLUMNS = [
+  { key: 'personal', title: 'Personal Info', head: 'bg-[var(--brand-blue-soft)] text-[var(--brand-blue)]', count: 'bg-[var(--brand-blue)] text-white' },
+  { key: 'work', title: 'Experience & Availability', head: 'bg-amber-50 text-amber-700', count: 'bg-amber-500 text-white' },
+  { key: 'skills', title: 'Skills & System', head: 'bg-violet-50 text-violet-700', count: 'bg-violet-500 text-white' },
+  { key: 'complete', title: 'Completed', head: 'bg-emerald-50 text-emerald-700', count: 'bg-emerald-500 text-white' },
+] as const;
+
+function getOnboardingStage(agent: AgentWithProfile): string {
+  const addr = agent.address as Record<string, string> | null;
+  const exp = agent.experience as Record<string, string> | null;
+  const avail = agent.availability as Record<string, string> | null;
+  const langs = agent.languages;
+  const personalDone = !!(addr?.street && addr?.city && addr?.state && addr?.zipCode);
+  const workDone = !!(exp?.yearsExperience && avail?.hoursPerWeek && avail?.preferredShift && langs && langs.length > 0);
+  const skillsDone = !!(agent.scores?.typing && agent.system_check);
+  if (!personalDone) return 'personal';
+  if (!workDone) return 'work';
+  if (!skillsDone) return 'skills';
+  return 'complete';
 }
 
 export default function AgentsPage() {
@@ -65,6 +95,7 @@ export default function AgentsPage() {
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [selectedAgents, setSelectedAgents] = useState<Set<string>>(new Set());
+  const [viewMode, setViewMode] = useState<'cards' | 'pipeline'>('cards');
 
   useEffect(() => {
     if (!authLoading && profile && profile.role === 'agent') {
@@ -320,8 +351,22 @@ export default function AgentsPage() {
             </Select>
           </div>
 
-          {/* Export Dropdown */}
+          {/* View toggle + Export */}
           <div className="flex items-center gap-2">
+            <div className="flex items-center rounded-xl border border-zinc-200 bg-white p-1">
+              <button
+                onClick={() => setViewMode('cards')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'cards' ? 'bg-[var(--brand-blue-soft)] text-[var(--brand-blue)]' : 'text-zinc-500 hover:text-zinc-900'}`}
+              >
+                <LayoutGrid className="h-4 w-4" /> Cards
+              </button>
+              <button
+                onClick={() => setViewMode('pipeline')}
+                className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === 'pipeline' ? 'bg-[var(--brand-blue-soft)] text-[var(--brand-blue)]' : 'text-zinc-500 hover:text-zinc-900'}`}
+              >
+                <Workflow className="h-4 w-4" /> Pipeline
+              </button>
+            </div>
             {selectedAgents.size > 0 && (
               <span className="text-sm text-[var(--brand-blue)] font-medium">
                 {selectedAgents.size} selected
@@ -380,7 +425,7 @@ export default function AgentsPage() {
             <p className="text-zinc-500 text-lg">No agents found</p>
             <p className="text-zinc-400 text-sm mt-1">Try adjusting your search</p>
           </div>
-        ) : (
+        ) : viewMode === 'cards' ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredAgents.map((agent) => {
               const name = `${agent.profiles?.first_name || ''} ${agent.profiles?.last_name || ''}`.trim() || 'Unknown';
@@ -457,6 +502,46 @@ export default function AgentsPage() {
                     </Button>
                   </CardContent>
                 </Card>
+              );
+            })}
+          </div>
+        ) : (
+          /* Pipeline view — agents bucketed by onboarding stage */
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+            {ONBOARDING_COLUMNS.map((col) => {
+              const colAgents = filteredAgents.filter((a) => getOnboardingStage(a) === col.key);
+              return (
+                <div key={col.key} className="rounded-2xl border border-zinc-200 bg-zinc-50/60 flex flex-col min-h-[320px]">
+                  <div className={`flex items-center justify-between px-4 py-3 rounded-t-2xl ${col.head}`}>
+                    <span className="font-semibold text-sm">{col.title}</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${col.count}`}>{colAgents.length}</span>
+                  </div>
+                  <div className="p-3 space-y-2 flex-1 overflow-y-auto">
+                    {colAgents.length === 0 ? (
+                      <p className="text-center text-xs text-zinc-400 py-10">No agents</p>
+                    ) : (
+                      colAgents.map((a) => {
+                        const name = `${a.profiles?.first_name || ''} ${a.profiles?.last_name || ''}`.trim() || 'Unknown';
+                        const initials = name.split(' ').map((n) => n[0]).join('').substring(0, 2).toUpperCase();
+                        return (
+                          <div
+                            key={a.id}
+                            onClick={() => router.push(`/agents/${a.id}`)}
+                            className="bg-white rounded-xl border border-zinc-200 p-3 cursor-pointer hover:border-[rgba(32,71,255,0.3)] hover:shadow-sm transition-all flex items-center gap-3"
+                          >
+                            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#2047FF] to-[#C873E5] flex items-center justify-center text-white text-xs font-bold shrink-0">
+                              {initials}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-sm font-medium text-zinc-900 truncate">{name}</p>
+                              <p className="text-xs text-zinc-500 truncate">{a.profiles?.email || a.agent_id?.replace('AGENT ', '')}</p>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
               );
             })}
           </div>
